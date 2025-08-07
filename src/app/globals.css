@@ -1,4 +1,9 @@
-@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Siemreap&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 
 :root {
   --background: #ffffff;
