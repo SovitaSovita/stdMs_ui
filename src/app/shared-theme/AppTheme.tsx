@@ -19,6 +19,12 @@ interface AppThemeProps {
 
 export default function AppTheme(props: AppThemeProps) {
   const { children, disableCustomTheme, themeComponents } = props;
+  const [mounted, setMounted] = React.useState(false);
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const theme = React.useMemo(() => {
     return disableCustomTheme
       ? {}
@@ -42,9 +48,13 @@ export default function AppTheme(props: AppThemeProps) {
           },
         });
   }, [disableCustomTheme, themeComponents]);
+
+  if (!mounted) return null; // Avoid running ThemeProvider before mount
+
   if (disableCustomTheme) {
-    return <React.Fragment>{children}</React.Fragment>;
+    return <>{children}</>;
   }
+
   return (
     <ThemeProvider theme={theme} disableTransitionOnChange>
       {children}

@@ -6,5 +6,12 @@ export const Paths = {
     class: {
         getClassList: "/api/v1/classes",
         getInfoClass: "/api/v1/info-classes",
+        getInfoClassById: (id: string) => {
+            return `/api/v1/info-class/${id}`
+        },
     },
+    student: {
+        getInfoList: (stuId: number) => `/api/v1/students/${stuId}`,
+        upsert: "/api/v1/student",
+    }
 }

@@ -1,65 +1,17 @@
 "use client";
 
-import { Box, Typography } from "@mui/material";
+import {
+  StudentsInfo,
+  StudentsRequestUpsertType,
+  StuInfoDetailResponseType,
+} from "@/app/constants/type";
+import { InsertOneStudentDialog } from "@/app/dashboard/components/Dialog/InsertOneStudentDialog";
+import { classroomAtom } from "@/app/libs/jotai/classroomAtom";
+import StudentService from "@/app/service/StudentService";
+import { Box, Button, Typography } from "@mui/material";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
-import { useMemo } from "react";
-
-const rows = [
-  {
-    id: 1,
-    fullName: "Snow",
-    dateOfBirth: "Jon",
-    gender: "F",
-  },
-  {
-    id: 2,
-    fullName: "Lannister",
-    dateOfBirth: "Cersei",
-    gender: "M",
-  },
-  {
-    id: 3,
-    fullName: "Lannister",
-    dateOfBirth: "Jaime",
-    gender: "M",
-  },
-  {
-    id: 4,
-    fullName: "Stark",
-    dateOfBirth: "Arya",
-    gender: "M",
-  },
-  {
-    id: 5,
-    fullName: "Targaryen",
-    dateOfBirth: "Daenerys",
-    gender: "F",
-  },
-  {
-    id: 6,
-    fullName: "Melisandre",
-    dateOfBirth: null,
-    gender: "M",
-  },
-  {
-    id: 7,
-    fullName: "Clifford",
-    dateOfBirth: "Ferrara",
-    gender: "F",
-  },
-  {
-    id: 8,
-    fullName: "Frances",
-    dateOfBirth: "Rossini",
-    gender: "F",
-  },
-  {
-    id: 9,
-    fullName: "Roxie",
-    dateOfBirth: "Harvey",
-    gender: "M",
-  },
-];
+import { useAtomValue } from "jotai";
+import { useEffect, useMemo, useState } from "react";
 
 export default function Page() {
   const columns: GridColDef<(typeof rows)[number]>[] = [
@@ -100,13 +52,119 @@ export default function Page() {
       sortable: false,
       disableColumnMenu: true,
     },
+    {
+      field: "fatherName",
+      headerName: "ឈ្មោះឪពុក",
+      headerClassName: "font-siemreap",
+      width: 150,
+      editable: true,
+      sortable: false,
+      disableColumnMenu: true,
+    },
+    {
+      field: "fatherOccupation",
+      headerName: "មុខរបរ",
+      headerClassName: "font-siemreap",
+      width: 150,
+      editable: true,
+      sortable: false,
+      disableColumnMenu: true,
+    },
+    {
+      field: "montherName",
+      headerName: "ឈ្មោះម្ដាយ",
+      headerClassName: "font-siemreap",
+      width: 150,
+      editable: true,
+      sortable: false,
+      disableColumnMenu: true,
+    },
+    {
+      field: "montherOccupation",
+      headerName: "មុខរបរ",
+      headerClassName: "font-siemreap",
+      width: 150,
+      editable: true,
+      sortable: false,
+      disableColumnMenu: true,
+    },
+    {
+      field: "placeOfBirth",
+      headerName: "ទីកន្លែងកំណើត",
+      headerClassName: "font-siemreap",
+      width: 200,
+      editable: true,
+      sortable: false,
+      disableColumnMenu: true,
+    },
+    {
+      field: "address",
+      headerName: "ទីលំនៅបច្ចុប្បន្ន",
+      headerClassName: "font-siemreap",
+      width: 200,
+      editable: true,
+      sortable: false,
+      disableColumnMenu: true,
+    },
   ];
+
+  const [students, setStudents] = useState<StuInfoDetailResponseType>();
+  const [rows, setRows] = useState<StudentsInfo[]>([]);
+  const classroom = useAtomValue(classroomAtom);
+
+  const getStudentsInfo = async () => {
+    if (classroom) {
+      const result = await StudentService.getInfoList(classroom?.id);
+      if (result) {
+        setStudents(result);
+        setRows(result?.student);
+      }
+    }
+  };
+
+  useEffect(() => {
+    if (classroom) {
+      getStudentsInfo();
+    }
+  }, [classroom]);
+
+  const handleAddRow = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const sendData: StudentsRequestUpsertType = {
+      // id: 0,
+      classId: 18,
+      fullName: "sovita",
+      gender: "M",
+      dateOfBirth: "2002-10-17",
+      fatherName: "oooo",
+      fatherOccupation: "farmer",
+      montherName: "wwww",
+      montherOccupation: "farmer",
+      placeOfBirth: "kt, pp",
+      address: "kt, pp",
+    };
+
+    const result = await StudentService.upsertStudent(sendData);
+    if (result?.status == 200) {
+      getStudentsInfo();
+    }
+    // setRows([...rows, requestData]);
+  };
+
   return (
     <>
       <Box sx={{ width: "100%", maxWidth: { sm: "100%", md: "1700px" } }}>
-        <Typography component="h2" variant="h6" sx={{ mb: 2 }}>
-          Overview
-        </Typography>
+        <Box display={"flex"} justifyContent={"space-between"}>
+          <Typography component="h2" variant="h6" sx={{ mb: 2 }}>
+            Overview
+          </Typography>
+          <div className="flex gap-3">
+            <InsertOneStudentDialog handleSubmit={handleAddRow}/>
+            <Button onClick={() => {}} variant="contained" size="small">
+              បញ្ជូលសិស្សច្រើន
+            </Button>
+          </div>
+        </Box>
         <Box className="font-siemreap" sx={{ height: 400, width: "100%" }}>
           <DataGrid
             rows={rows}

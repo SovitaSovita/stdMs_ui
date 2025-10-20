@@ -1,6 +1,8 @@
 "use client";
+import { SessionProvider } from "next-auth/react";
 import React, { ReactNode } from "react";
-import { AuthProvider, useAuth } from "./libs/auth-context";
+import { fetcher } from "./libs/swr/fetcher";
+import { SWRConfig } from "swr";
 
 interface Props {
   children: ReactNode;
@@ -9,7 +11,17 @@ interface Props {
 function Provider(props: Props) {
   const { children } = props;
   return (
-    <AuthProvider>{children}</AuthProvider>
+    <SessionProvider>
+        <SWRConfig
+          value={{
+            fetcher,
+            revalidateOnFocus: false,
+            dedupingInterval: 10000,
+          }}
+        >
+          {children}
+        </SWRConfig>
+    </SessionProvider>
   );
 }
 

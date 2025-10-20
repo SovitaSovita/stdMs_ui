@@ -11,7 +11,7 @@ import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
 import MoreVertRoundedIcon from "@mui/icons-material/MoreVertRounded";
 import MenuButton from "./MenuButton";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/app/libs/auth-context";
+import { signOut } from "next-auth/react";
 
 const MenuItem = styled(MuiMenuItem)({
   margin: "2px 0",
@@ -20,16 +20,10 @@ const MenuItem = styled(MuiMenuItem)({
 export default function OptionsMenu() {
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
-  const { user, logout, isAdmin, loading } = useAuth();
 
-    const handleLogout = () => {
-    // Clear cookies
-    document.cookie = 'accessToken=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT';
-    document.cookie = 'userRole=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT';
-    document.cookie = 'isAdminMode=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT';
-    
-    logout();
-    router.push('/signin');
+  const handleLogout = async () => {
+    await signOut({ redirect: false }); // ✅ do not reload or redirect
+    router.push("/auth/signin");             // ✅ navigate manually
   };
 
   const router = useRouter();

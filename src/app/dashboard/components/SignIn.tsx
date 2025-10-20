@@ -18,9 +18,8 @@ import AppTheme from "../../shared-theme/AppTheme";
 import ColorModeSelect from "../../shared-theme/ColorModeSelect";
 import { GoogleIcon, FacebookIcon, SitemarkIcon } from "./CustomIcons";
 import ForgotPassword from "./ForgotPassword";
-import AuthService from "@/app/service/AuthService";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useLogin } from "@/app/libs/auth-context";
+import { signIn, useSession } from "next-auth/react";
 
 const Card = styled(MuiCard)(({ theme }) => ({
   display: "flex",
@@ -67,12 +66,13 @@ const SignInContainer = styled(Stack)(({ theme }) => ({
 export default function SignIn(props: { disableCustomTheme?: boolean }) {
   const [emailError, setEmailError] = React.useState(false);
   const [emailErrorMessage, setEmailErrorMessage] = React.useState("");
+  const [isLoading, setIsLoading] = React.useState(false); // Track loading state
+
   const [passwordError, setPasswordError] = React.useState(false);
   const [passwordErrorMessage, setPasswordErrorMessage] = React.useState("");
   const [open, setOpen] = React.useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { handleLoginSuccess } = useLogin();
 
   const handleClickOpen = () => {
     setOpen(true);
@@ -84,6 +84,7 @@ export default function SignIn(props: { disableCustomTheme?: boolean }) {
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    setIsLoading(true);
     if (emailError || passwordError) {
       event.preventDefault();
       return;
@@ -94,20 +95,24 @@ export default function SignIn(props: { disableCustomTheme?: boolean }) {
       password: data.get("password")?.toString() || "",
     };
 
-    const result = await AuthService.login(sentData);
-    const { accessToken, isAdminMode } = result;
+    try {
+      const result = await signIn("credentials", {
+        username: sentData.username,
+        password: sentData.password,
+        redirect: false,
+        callbackUrl: "/",
+      });
 
-    // Set cookies for middleware
-    document.cookie = `accessToken=${accessToken}; path=/; max-age=86400`;
-    document.cookie = `userRole=${
-      isAdminMode === "true" ? "ADMIN" : "USER"
-    }; path=/; max-age=86400`;
-    document.cookie = `isAdminMode=${isAdminMode}; path=/; max-age=86400`;
-
-    // Get redirect URL
-    const redirectTo = searchParams.get("redirect") || "/";
-
-    handleLoginSuccess(accessToken, isAdminMode, undefined, redirectTo);
+      if (result?.error) {
+        console.error("1 >> An unexpected error occurred");
+      } else {
+        router.push("/");
+      }
+    } catch (err) {
+      console.error("2 >> An unexpected error occurred");
+    } finally {
+      setIsLoading(false); // Stop loading
+    }
   };
 
   const validateInputs = () => {
@@ -206,8 +211,9 @@ export default function SignIn(props: { disableCustomTheme?: boolean }) {
             <Button
               type="submit"
               fullWidth
-              variant="contained"
+              variant="outlined"
               onClick={validateInputs}
+              loading={isLoading}
             >
               Sign in
             </Button>

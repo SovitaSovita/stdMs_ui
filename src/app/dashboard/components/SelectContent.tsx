@@ -14,6 +14,7 @@ import SmartphoneRoundedIcon from "@mui/icons-material/SmartphoneRounded";
 import ConstructionRoundedIcon from "@mui/icons-material/ConstructionRounded";
 import ClassroomService from "@/app/service/ClassroomService";
 import { ClassInfoResponseType, ClassResponseType } from "@/app/constants/type";
+import { useClassroomSWR } from "@/app/libs/swr/classroomSWR";
 
 const Avatar = styled(MuiAvatar)(({ theme }) => ({
   width: 28,
@@ -29,17 +30,25 @@ const ListItemAvatar = styled(MuiListItemAvatar)({
 });
 
 export default function SelectContent() {
-  const [classrooms, setClassrooms] = React.useState<ClassInfoResponseType[]>([]);
-  const [classroom, setClassroom] = React.useState("");
+  const [classrooms, setClassrooms] = React.useState<ClassInfoResponseType[]>(
+    []
+  );
+  const [classroomId, setClassroomId] = React.useState<string>("");
+  const { data, isLoading, mutate } = useClassroomSWR(classroomId);
 
   const handleChange = (event: SelectChangeEvent) => {
-    setClassroom(event.target.value as string);
+    setClassroomId(event.target.value as string);
   };
 
   const getCurrentClasses = async () => {
     const result = await ClassroomService.getInfoList();
-    setClassrooms(result);
-    setClassroom(result[0].id.toString())
+    if (result) {
+      setClassrooms(result);
+      setClassroomId(result[0]?.id.toString());
+
+      //get class detail
+      mutate();
+    }
   };
 
   React.useEffect(() => {
@@ -50,7 +59,7 @@ export default function SelectContent() {
     <Select
       labelId="classroom-select"
       id="classroom-simple-select"
-      value={classroom}
+      value={classroomId}
       onChange={handleChange}
       displayEmpty
       inputProps={{ "aria-label": "Select classroom" }}

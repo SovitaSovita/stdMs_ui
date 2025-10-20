@@ -406,7 +406,7 @@ export const inputsCustomizations: Components<Theme> = {
               size: 'small',
             },
             style: {
-              height: '2.25rem',
+              minHeight: '2.25rem',
             },
           },
           {
@@ -414,7 +414,7 @@ export const inputsCustomizations: Components<Theme> = {
               size: 'medium',
             },
             style: {
-              height: '2.5rem',
+              minHeight: '2.5rem',
             },
           },
         ],
