@@ -9,6 +9,9 @@ const StudentService = {
   upsertStudent: async (sentData: StudentsRequestUpsertType): Promise<any> => {
     return await RestService.post(Paths.student.upsert, sentData);
   },
+  deleteList: async (ids: number[]): Promise<any> => {
+    return await RestService.delete(Paths.student.deleteList, ids);
+  },
 };
 
 export default StudentService;

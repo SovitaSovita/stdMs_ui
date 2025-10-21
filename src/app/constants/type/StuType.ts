@@ -19,7 +19,7 @@ export type StudentsInfo = {
 
 export type StudentsRequestUpsertType = {
   id?: number,
-  classId: number,
+  classId?: number,
   fullName: string;
   gender: 'M' | 'F';
   dateOfBirth: string;

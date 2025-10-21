@@ -5,12 +5,20 @@ import {
   StudentsRequestUpsertType,
   StuInfoDetailResponseType,
 } from "@/app/constants/type";
+import { DeleteConfirmationDialog } from "@/app/dashboard/components/Dialog/DeleteConfirmationDialog";
 import { InsertOneStudentDialog } from "@/app/dashboard/components/Dialog/InsertOneStudentDialog";
+import { LanguageSwitcher } from "@/app/dashboard/components/LanguageSwitcher";
 import { classroomAtom } from "@/app/libs/jotai/classroomAtom";
 import StudentService from "@/app/service/StudentService";
 import { Box, Button, Typography } from "@mui/material";
-import { DataGrid, GridColDef } from "@mui/x-data-grid";
+import {
+  DataGrid,
+  GridColDef,
+  GridRowId,
+  GridRowSelectionModel,
+} from "@mui/x-data-grid";
 import { useAtomValue } from "jotai";
+import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useState } from "react";
 
 export default function Page() {
@@ -107,10 +115,18 @@ export default function Page() {
       disableColumnMenu: true,
     },
   ];
+  const t = useTranslations("Home");
 
   const [students, setStudents] = useState<StuInfoDetailResponseType>();
   const [rows, setRows] = useState<StudentsInfo[]>([]);
   const classroom = useAtomValue(classroomAtom);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+
+  const [rowSelectionModel, setRowSelectionModel] =
+    useState<GridRowSelectionModel>({
+      type: "include", // or 'exclude'
+      ids: new Set<GridRowId>([]),
+    });
 
   const getStudentsInfo = async () => {
     if (classroom) {
@@ -128,27 +144,14 @@ export default function Page() {
     }
   }, [classroom]);
 
-  const handleAddRow = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const sendData: StudentsRequestUpsertType = {
-      // id: 0,
-      classId: 18,
-      fullName: "sovita",
-      gender: "M",
-      dateOfBirth: "2002-10-17",
-      fatherName: "oooo",
-      fatherOccupation: "farmer",
-      montherName: "wwww",
-      montherOccupation: "farmer",
-      placeOfBirth: "kt, pp",
-      address: "kt, pp",
-    };
+  const handleDeleteStudents = async () => {
+    const ids = Array.from(rowSelectionModel.ids) as number[];
+    if (ids.length <= 0) return;
+    const result = await StudentService.deleteList(ids);
 
-    const result = await StudentService.upsertStudent(sendData);
     if (result?.status == 200) {
-      getStudentsInfo();
+      alert(result?.message);
     }
-    // setRows([...rows, requestData]);
   };
 
   return (
@@ -157,30 +160,67 @@ export default function Page() {
         <Box display={"flex"} justifyContent={"space-between"}>
           <Typography component="h2" variant="h6" sx={{ mb: 2 }}>
             Overview
+            <h1 className="text-2xl font-bold">{t("title")}</h1>
+            <p className="mt-2 text-gray-600">{t("description")}</p>
           </Typography>
+
+          <LanguageSwitcher />
+          
           <div className="flex gap-3">
-            <InsertOneStudentDialog handleSubmit={handleAddRow}/>
+            <InsertOneStudentDialog getStudentsInfo={getStudentsInfo} />
+
             <Button onClick={() => {}} variant="contained" size="small">
               បញ្ជូលសិស្សច្រើន
             </Button>
+
+            <Button
+              onClick={() => setDeleteDialogOpen(true)}
+              disabled={rowSelectionModel.ids.size === 0}
+              variant="contained"
+              color="error"
+              size="small"
+            >
+              លុបសិស្ស
+            </Button>
           </div>
         </Box>
-        <Box className="font-siemreap" sx={{ height: 400, width: "100%" }}>
+        <Box className="font-siemreap" sx={{ height: 600, width: "100%" }}>
           <DataGrid
             rows={rows}
             columns={columns}
             initialState={{
               pagination: {
                 paginationModel: {
-                  pageSize: 5,
+                  pageSize: 10,
                 },
               },
             }}
-            pageSizeOptions={[5]}
+            pageSizeOptions={[10]}
             checkboxSelection
+            onRowSelectionModelChange={(newRowSelectionModel) => {
+              setRowSelectionModel(newRowSelectionModel);
+            }}
+            rowSelectionModel={rowSelectionModel}
             disableRowSelectionOnClick
+            sx={{
+              "& .MuiDataGrid-columnHeaderCheckbox .MuiCheckbox-root": {
+                display: "none",
+              },
+            }}
           />
         </Box>
+
+        <DeleteConfirmationDialog
+          open={deleteDialogOpen}
+          onClose={() => setDeleteDialogOpen(false)}
+          onConfirm={handleDeleteStudents}
+          itemName="students"
+          itemCount={rowSelectionModel.ids.size}
+          title="បញ្ជាក់ការលុប"
+          message={`តើអ្នកពិតជាចង់លុបសិស្សចេញពីបញ្ចីមែនទេ? ពត័មានដែលទាក់ទងនឹងសិស្សដែលអ្នកលុបត្រូវបាត់ទាំងអស់`}
+          confirmText="លុប"
+          cancelText="ថយក្រោយ"
+        />
       </Box>
     </>
   );

@@ -1,0 +1,22 @@
+{
+  "Home": {
+    "title": "Welcome to our website!",
+    "description": "This is the English version."
+  },
+  "common": {
+    "yes": "Yes",
+    "no": "No",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "save": "Save",
+    "edit": "Edit"
+  },
+  "student": {
+    "title": "Students",
+    "name": "Name",
+    "email": "Email",
+    "deleteConfirmation": "Are you sure you want to delete this student?",
+    "deleteMultiple": "Are you sure you want to delete {count} students?",
+    "deleteSuccess": "Student deleted successfully"
+  }
+}

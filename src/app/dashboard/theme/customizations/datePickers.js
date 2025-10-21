@@ -30,7 +30,7 @@ export const datePickersCustomizations = {
   },
   MuiPickersArrowSwitcher: {
     styleOverrides: {
-      spacer: { width: 16 },
+      spacer: { minWidth: 16 },
       button: ({ theme }) => ({
         backgroundColor: 'transparent',
         color: (theme.vars || theme).palette.grey[500],

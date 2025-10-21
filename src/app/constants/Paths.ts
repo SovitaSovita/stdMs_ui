@@ -13,5 +13,6 @@ export const Paths = {
     student: {
         getInfoList: (stuId: number) => `/api/v1/students/${stuId}`,
         upsert: "/api/v1/student",
+        deleteList: "/api/v1/students/delete",
     }
 }
