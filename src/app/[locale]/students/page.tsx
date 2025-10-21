@@ -7,7 +7,7 @@ import {
 } from "@/app/constants/type";
 import { DeleteConfirmationDialog } from "@/app/dashboard/components/Dialog/DeleteConfirmationDialog";
 import { InsertOneStudentDialog } from "@/app/dashboard/components/Dialog/InsertOneStudentDialog";
-import { LanguageSwitcher } from "@/app/dashboard/components/LanguageSwitcher";
+import LanguageSwitcher from "@/app/dashboard/components/LanguageSwitcher";
 import { classroomAtom } from "@/app/libs/jotai/classroomAtom";
 import StudentService from "@/app/service/StudentService";
 import { Box, Button, Typography } from "@mui/material";
@@ -159,9 +159,7 @@ export default function Page() {
       <Box sx={{ width: "100%", maxWidth: { sm: "100%", md: "1700px" } }}>
         <Box display={"flex"} justifyContent={"space-between"}>
           <Typography component="h2" variant="h6" sx={{ mb: 2 }}>
-            Overview
-            <h1 className="text-2xl font-bold">{t("title")}</h1>
-            <p className="mt-2 text-gray-600">{t("description")}</p>
+            Overview {t("title")}
           </Typography>
 
           <LanguageSwitcher />

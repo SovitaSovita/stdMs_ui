@@ -1,33 +1,18 @@
-'use client';
+import {useLocale, useTranslations} from 'next-intl';
+import {routing} from '@/i18n/routing';
+import LanguageSwitcherSelect from './LanguageSwitcherSelect';
 
-import { useLocale } from 'next-intl';
-import { useRouter, usePathname } from '@/i18n/navigation';
-import { Button } from '@mui/material';
-import { routing } from '@/i18n/routing';
-
-export function LanguageSwitcher() {
+export default function LanguageSwitcher() {
+  const t = useTranslations('LocaleSwitcher');
   const locale = useLocale();
-  const router = useRouter();
-  const pathname = usePathname();
-
-  const handleLanguageChange = (newLocale: 'en' | 'km') => {
-    router.replace(pathname, { locale: newLocale });
-  };
 
   return (
-    <div>
-      <Button
-        variant={locale === 'en' ? 'contained' : 'outlined'}
-        onClick={() => handleLanguageChange('en')}
-      >
-        🇺🇸 English
-      </Button>
-      <Button
-        variant={locale === 'km' ? 'contained' : 'outlined'}
-        onClick={() => handleLanguageChange('km')}
-      >
-        🇰🇭 ខ្មែរ
-      </Button>
-    </div>
+    <LanguageSwitcherSelect defaultValue={locale} label={t('label')}>
+      {routing.locales.map((cur) => (
+        <option key={cur} value={cur}>
+          {t('locale', {locale: cur})}
+        </option>
+      ))}
+    </LanguageSwitcherSelect>
   );
 }

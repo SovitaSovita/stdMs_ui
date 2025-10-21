@@ -3,6 +3,10 @@
     "title": "Welcome to our website!",
     "description": "This is the English version."
   },
+    "LocaleSwitcher": {
+    "label": "Change language",
+    "locale": "{locale, select, km {ខ្មែរ} en {English} other {Unknown}}"
+  },
   "common": {
     "yes": "Yes",
     "no": "No",

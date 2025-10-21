@@ -3,6 +3,10 @@
     "title": "សូមស្វាគមន៍មកកាន់គេហទំព័ររបស់យើង!",
     "description": "នេះជាភាសាខ្មែរ។"
   },
+    "LocaleSwitcher": {
+    "label": "ប្ដូរ ភាសា",
+    "locale": "{locale, select, en {English} km {ខ្មែរ} other {Unknown}}"
+  },
   "common": {
     "yes": "បាទ/ចាស",
     "no": "ទេ",
