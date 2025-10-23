@@ -1,6 +1,6 @@
 import { hasLocale, Locale, NextIntlClientProvider } from "next-intl";
 import { notFound } from "next/navigation";
-import Dashboard from "../dashboard/Dashboard";
+import Dashboard from "../dashboard/DashboardLayout";
 import React, { ReactNode } from "react";
 import {
   getMessages,
@@ -9,10 +9,11 @@ import {
 } from "next-intl/server";
 import { routing } from "@/i18n/routing";
 import "../globals.css";
+import Provider from "../Provider";
 
 type Props = {
   children: React.ReactNode;
-  params: Promise<{ locale: string }>;
+  params: { locale: string };
 };
 
 export function generateStaticParams() {
@@ -47,9 +48,9 @@ export default async function LocaleLayout({ children, params }: Props) {
     <html lang={locale}>
       <body className={`antialiased`}>
         {/* ✅ Provide translation context */}
-        <NextIntlClientProvider>
-            <Dashboard>{children}</Dashboard>
-        </NextIntlClientProvider>
+        <Provider>
+          <NextIntlClientProvider>{children}</NextIntlClientProvider>
+        </Provider>
       </body>
     </html>
   );

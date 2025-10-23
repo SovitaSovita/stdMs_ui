@@ -8,6 +8,8 @@ import {
 import { DeleteConfirmationDialog } from "@/app/dashboard/components/Dialog/DeleteConfirmationDialog";
 import { InsertOneStudentDialog } from "@/app/dashboard/components/Dialog/InsertOneStudentDialog";
 import LanguageSwitcher from "@/app/dashboard/components/LanguageSwitcher";
+import DashboardLayout from "@/app/dashboard/DashboardLayout";
+// import LanguageSwitcher from "@/app/dashboard/components/LanguageSwitcher";
 import { classroomAtom } from "@/app/libs/jotai/classroomAtom";
 import StudentService from "@/app/service/StudentService";
 import { Box, Button, Typography } from "@mui/material";
@@ -115,7 +117,7 @@ export default function Page() {
       disableColumnMenu: true,
     },
   ];
-  const t = useTranslations("Home");
+  const t = useTranslations();
 
   const [students, setStudents] = useState<StuInfoDetailResponseType>();
   const [rows, setRows] = useState<StudentsInfo[]>([]);
@@ -155,11 +157,11 @@ export default function Page() {
   };
 
   return (
-    <>
+    <DashboardLayout>
       <Box sx={{ width: "100%", maxWidth: { sm: "100%", md: "1700px" } }}>
         <Box display={"flex"} justifyContent={"space-between"}>
           <Typography component="h2" variant="h6" sx={{ mb: 2 }}>
-            Overview {t("title")}
+            Overview
           </Typography>
 
           <LanguageSwitcher />
@@ -168,7 +170,7 @@ export default function Page() {
             <InsertOneStudentDialog getStudentsInfo={getStudentsInfo} />
 
             <Button onClick={() => {}} variant="contained" size="small">
-              បញ្ជូលសិស្សច្រើន
+              {t("student.btn.multiAdd")}
             </Button>
 
             <Button
@@ -178,7 +180,7 @@ export default function Page() {
               color="error"
               size="small"
             >
-              លុបសិស្ស
+              {t("student.btn.deleteStu")}
             </Button>
           </div>
         </Box>
@@ -214,12 +216,12 @@ export default function Page() {
           onConfirm={handleDeleteStudents}
           itemName="students"
           itemCount={rowSelectionModel.ids.size}
-          title="បញ្ជាក់ការលុប"
-          message={`តើអ្នកពិតជាចង់លុបសិស្សចេញពីបញ្ចីមែនទេ? ពត័មានដែលទាក់ទងនឹងសិស្សដែលអ្នកលុបត្រូវបាត់ទាំងអស់`}
-          confirmText="លុប"
-          cancelText="ថយក្រោយ"
+          title={t("common.titleDeleteConfirm")}
+          message={t("student.deleteConfirmation")}
+          confirmText={t("common.delete")}
+          cancelText={t("common.cancel")}
         />
       </Box>
-    </>
+    </DashboardLayout>
   );
 }

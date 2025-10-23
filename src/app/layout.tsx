@@ -1,5 +1,4 @@
 import { ReactNode } from "react";
-import Provider from './Provider';
 
 type Props = {
   children: ReactNode;
@@ -10,7 +9,7 @@ type Props = {
 export default function RootLayout({ children }: Props) {
   return (
     <>
-      <Provider>{children}</Provider>
+      {children}
     </>
   );
 }

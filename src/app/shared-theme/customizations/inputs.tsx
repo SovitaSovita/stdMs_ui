@@ -1,3 +1,5 @@
+"use client"
+
 import * as React from 'react';
 import { alpha, Theme, Components } from '@mui/material/styles';
 import { outlinedInputClasses } from '@mui/material/OutlinedInput';
@@ -313,11 +315,11 @@ export const inputsCustomizations: Components<Theme> = {
   MuiCheckbox: {
     defaultProps: {
       disableRipple: true,
-      icon: (
-        <CheckBoxOutlineBlankRoundedIcon sx={{ color: 'hsla(210, 0%, 0%, 0.0)' }} />
-      ),
-      checkedIcon: <CheckRoundedIcon sx={{ height: 14, width: 14 }} />,
-      indeterminateIcon: <RemoveRoundedIcon sx={{ height: 14, width: 14 }} />,
+      // icon: (
+      //   <CheckBoxOutlineBlankRoundedIcon sx={{ color: 'hsla(210, 0%, 0%, 0.0)' }} />
+      // ),
+      // checkedIcon: <CheckRoundedIcon sx={{ height: 14, width: 14 }} />,
+      // indeterminateIcon: <RemoveRoundedIcon sx={{ height: 14, width: 14 }} />,
     },
     styleOverrides: {
       root: ({ theme }) => ({

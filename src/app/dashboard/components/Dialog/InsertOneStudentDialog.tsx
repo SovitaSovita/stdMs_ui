@@ -15,12 +15,13 @@ import {
   Select,
 } from "@mui/material";
 import { useFormik } from "formik";
-import { insertOneStuSchema } from "@/app/libs/formik/ValidationSchema";
+import { useInsertOneStutSchema } from "@/app/libs/hooks/Validation";
 import CustomDatePicker from "../CustomDatePicker";
 import { StudentsRequestUpsertType } from "@/app/constants/type";
 import StudentService from "@/app/service/StudentService";
 import { classroomAtom } from "@/app/libs/jotai/classroomAtom";
 import { useAtomValue } from "jotai";
+import { useTranslations } from "next-intl";
 
 type InsertOneStudentDialogProps = {
   getStudentsInfo: () => Promise<void>;
@@ -30,6 +31,8 @@ export const InsertOneStudentDialog = (props: InsertOneStudentDialogProps) => {
   const { getStudentsInfo } = props;
   const [open, setOpen] = React.useState(false);
   const classroom = useAtomValue(classroomAtom);
+  const t = useTranslations();
+  const validationSchema = useInsertOneStutSchema();
 
   const handleClickOpen = () => {
     setOpen(true);
@@ -52,7 +55,7 @@ export const InsertOneStudentDialog = (props: InsertOneStudentDialogProps) => {
       placeOfBirth: "",
       address: "",
     },
-    validationSchema: insertOneStuSchema,
+    validationSchema: validationSchema,
     onSubmit: (values: StudentsRequestUpsertType) => {
       // handleSubmit(values)
       console.log(values);
@@ -65,7 +68,7 @@ export const InsertOneStudentDialog = (props: InsertOneStudentDialogProps) => {
       ...values,
     };
 
-    if(!sendData.classId) return;
+    if (!sendData.classId) return;
 
     const result = await StudentService.upsertStudent(sendData);
     if (result?.status == 200) {
@@ -77,10 +80,10 @@ export const InsertOneStudentDialog = (props: InsertOneStudentDialogProps) => {
   return (
     <>
       <Button onClick={handleClickOpen} variant="contained" size="small">
-        បញ្ជូលសិស្សម្នាក់
+        {t("student.btn.singleAdd")}
       </Button>
       <Dialog open={open} onClose={handleClose}>
-        <DialogTitle>សូមបញ្ជូលពត័មានរបស់សិស្ស</DialogTitle>
+        <DialogTitle>{t("student.DialogInsert.title")}</DialogTitle>
         <form onSubmit={formik.handleSubmit}>
           <DialogContent>
             <TextField
@@ -88,7 +91,7 @@ export const InsertOneStudentDialog = (props: InsertOneStudentDialogProps) => {
               required
               margin="dense"
               name="fullName"
-              placeholder="ឈ្មោះពេញ"
+              placeholder={t("CommonField.fullName")}
               type="text"
               fullWidth
               variant="outlined"
@@ -109,13 +112,13 @@ export const InsertOneStudentDialog = (props: InsertOneStudentDialogProps) => {
                   onBlur={formik.handleBlur}
                   variant="outlined"
                 >
-                  <MenuItem value="M">ប្រុស</MenuItem>
-                  <MenuItem value="F">ស្រី</MenuItem>
+                  <MenuItem value="M">{t("CommonField.gender", {gender: "M"})}</MenuItem>
+                  <MenuItem value="F">{t("CommonField.gender", {gender: "F"})}</MenuItem>
                 </Select>
               </FormControl>
               <CustomDatePicker
                 name="dateOfBirth"
-                label="ថ្ងៃខែឆ្នាំកំណើត"
+                label={t("CommonField.dateOfBirth")}
                 value={formik.values.dateOfBirth}
                 onChange={(val) => {
                   formik.setFieldValue("dateOfBirth", val);
@@ -131,7 +134,7 @@ export const InsertOneStudentDialog = (props: InsertOneStudentDialogProps) => {
                 required
                 margin="dense"
                 name="fatherName"
-                placeholder="ឈ្មោះឪពុក"
+                placeholder={t("CommonField.fatherName")}
                 type="text"
                 fullWidth
                 variant="outlined"
@@ -150,7 +153,7 @@ export const InsertOneStudentDialog = (props: InsertOneStudentDialogProps) => {
                 required
                 margin="dense"
                 name="fatherOccupation"
-                placeholder="មុខរបរ"
+                placeholder={t("CommonField.occupation")}
                 type="text"
                 fullWidth
                 variant="outlined"
@@ -174,7 +177,7 @@ export const InsertOneStudentDialog = (props: InsertOneStudentDialogProps) => {
                 required
                 margin="dense"
                 name="montherName"
-                placeholder="ឈ្មោះម្ដាយ"
+                placeholder={t("CommonField.montherName")}
                 type="text"
                 fullWidth
                 variant="outlined"
@@ -194,7 +197,7 @@ export const InsertOneStudentDialog = (props: InsertOneStudentDialogProps) => {
                 required
                 margin="dense"
                 name="montherOccupation"
-                placeholder="មុខរបរ"
+                placeholder={t("CommonField.occupation")}
                 type="text"
                 fullWidth
                 variant="outlined"
@@ -218,7 +221,7 @@ export const InsertOneStudentDialog = (props: InsertOneStudentDialogProps) => {
               required
               margin="dense"
               name="placeOfBirth"
-              placeholder="ទីកន្លែងកំណើត"
+              placeholder={t("CommonField.placeOfBirth")}
               type="placeOfBirth"
               fullWidth
               variant="outlined"
@@ -240,7 +243,7 @@ export const InsertOneStudentDialog = (props: InsertOneStudentDialogProps) => {
               required
               margin="dense"
               name="address"
-              placeholder="ទីលំនៅបច្ចុប្បន្ន"
+              placeholder={t("CommonField.address")}
               type="address"
               fullWidth
               variant="outlined"
@@ -253,8 +256,8 @@ export const InsertOneStudentDialog = (props: InsertOneStudentDialogProps) => {
           </DialogContent>
 
           <DialogActions>
-            <Button onClick={handleClose}>ថយក្រោយ</Button>
-            <Button type="submit">រួចរាល់</Button>
+            <Button onClick={handleClose}>{t("common.cancel")}</Button>
+            <Button type="submit">{t("common.done")}</Button>
           </DialogActions>
         </form>
       </Dialog>

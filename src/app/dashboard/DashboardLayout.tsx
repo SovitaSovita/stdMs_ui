@@ -22,7 +22,7 @@ const xThemeComponents = {
   ...treeViewCustomizations,
 };
 
-export default function Dashboard(props: { disableCustomTheme?: boolean, children: React.ReactNode }) {
+export default function DashboardLayout(props: { disableCustomTheme?: boolean, children: React.ReactNode }) {
   const {children, disableCustomTheme} = props;
   return (
     <AppTheme {...props} themeComponents={xThemeComponents}>
