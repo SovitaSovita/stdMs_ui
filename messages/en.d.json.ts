@@ -8,14 +8,16 @@ declare const messages: {
   },
   "LocaleSwitcher": {
     "label": "Change language",
-    "locale": "{locale, select, km {ខ្មែរ} en {English} other {Unknown}}"
+    "locale": "{locale, select, km {ភាសាខ្មែរ} en {English} other {Unknown}}"
   },
   "CommonValidate": {
     "require": "Required",
     "minText2": "must be at least 2 characters"
   },
   "CommonField": {
+    "id": "ID",
     "fullName": "Full name",
+    "sex": "Gender",
     "gender": "{gender, select, F {Female} M {Male} other {Unknown}}",
     "dateOfBirth": "Date Of Birth",
     "occupation": "occupation",
@@ -49,6 +51,16 @@ declare const messages: {
     "DialogInsert": {
       "title": "Please enter student information"
     }
+  },
+  "MenuList": {
+    "home": "Home",
+    "classroom": "Classroom",
+    "student": "Student",
+    "monthlyExam": "Monthly Exam",
+    "SemesterExam": "Semester Exam",
+    "setting": "Setting",
+    "about": "About",
+    "feedback": "Feedback"
   }
 };
 export default messages;

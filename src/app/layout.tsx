@@ -8,8 +8,8 @@ type Props = {
 // is required, even if it's just passing children through.
 export default function RootLayout({ children }: Props) {
   return (
-    <>
-      {children}
-    </>
+    <html lang="en">
+      <body className="antialiased">{children}</body>
+    </html>
   );
 }

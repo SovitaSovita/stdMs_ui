@@ -10,6 +10,9 @@ const ClassroomService = {
   getInfoList: async (): Promise<ClassInfoResponseType[]> => {
     return await RestService.get<ClassInfoResponseType[]>(Paths.class.getInfoClass);
   },
+  getById: async (id: string): Promise<ClassInfoResponseType> => {
+    return await RestService.get<ClassInfoResponseType>(Paths.class.getInfoClassById(id));
+  },
 };
 
 export default ClassroomService;

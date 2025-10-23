@@ -2,14 +2,11 @@
 
 import {
   StudentsInfo,
-  StudentsRequestUpsertType,
   StuInfoDetailResponseType,
 } from "@/app/constants/type";
 import { DeleteConfirmationDialog } from "@/app/dashboard/components/Dialog/DeleteConfirmationDialog";
 import { InsertOneStudentDialog } from "@/app/dashboard/components/Dialog/InsertOneStudentDialog";
-import LanguageSwitcher from "@/app/dashboard/components/LanguageSwitcher";
 import DashboardLayout from "@/app/dashboard/DashboardLayout";
-// import LanguageSwitcher from "@/app/dashboard/components/LanguageSwitcher";
 import { classroomAtom } from "@/app/libs/jotai/classroomAtom";
 import StudentService from "@/app/service/StudentService";
 import { Box, Button, Typography } from "@mui/material";
@@ -24,16 +21,17 @@ import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useState } from "react";
 
 export default function Page() {
+  const t = useTranslations();
   const columns: GridColDef<(typeof rows)[number]>[] = [
     {
       field: "id",
-      headerName: "ល​​រ",
+      headerName: t("CommonField.id"),
       headerClassName: "font-siemreap",
       width: 90,
     },
     {
       field: "fullName",
-      headerName: "គោត្តនាម និងនាម",
+      headerName: t("CommonField.fullName"),
       headerClassName: "font-siemreap",
       width: 150,
       editable: true,
@@ -42,7 +40,7 @@ export default function Page() {
     },
     {
       field: "gender",
-      headerName: "ភេទ",
+      headerName: t("CommonField.sex"),
       headerClassName: "font-siemreap",
       type: "singleSelect",
       width: 100,
@@ -55,7 +53,7 @@ export default function Page() {
     },
     {
       field: "dateOfBirth",
-      headerName: "ថ្ងៃខែឆ្នាំកំណើត",
+      headerName: t("CommonField.dateOfBirth"),
       headerClassName: "font-siemreap",
       width: 150,
       editable: true,
@@ -64,7 +62,7 @@ export default function Page() {
     },
     {
       field: "fatherName",
-      headerName: "ឈ្មោះឪពុក",
+      headerName: t("CommonField.fatherName"),
       headerClassName: "font-siemreap",
       width: 150,
       editable: true,
@@ -73,7 +71,7 @@ export default function Page() {
     },
     {
       field: "fatherOccupation",
-      headerName: "មុខរបរ",
+      headerName: t("CommonField.occupation"),
       headerClassName: "font-siemreap",
       width: 150,
       editable: true,
@@ -82,7 +80,7 @@ export default function Page() {
     },
     {
       field: "montherName",
-      headerName: "ឈ្មោះម្ដាយ",
+      headerName: t("CommonField.montherName"),
       headerClassName: "font-siemreap",
       width: 150,
       editable: true,
@@ -91,7 +89,7 @@ export default function Page() {
     },
     {
       field: "montherOccupation",
-      headerName: "មុខរបរ",
+      headerName: t("CommonField.occupation"),
       headerClassName: "font-siemreap",
       width: 150,
       editable: true,
@@ -100,7 +98,7 @@ export default function Page() {
     },
     {
       field: "placeOfBirth",
-      headerName: "ទីកន្លែងកំណើត",
+      headerName: t("CommonField.placeOfBirth"),
       headerClassName: "font-siemreap",
       width: 200,
       editable: true,
@@ -109,7 +107,7 @@ export default function Page() {
     },
     {
       field: "address",
-      headerName: "ទីលំនៅបច្ចុប្បន្ន",
+      headerName: t("CommonField.address"),
       headerClassName: "font-siemreap",
       width: 200,
       editable: true,
@@ -117,7 +115,6 @@ export default function Page() {
       disableColumnMenu: true,
     },
   ];
-  const t = useTranslations();
 
   const [students, setStudents] = useState<StuInfoDetailResponseType>();
   const [rows, setRows] = useState<StudentsInfo[]>([]);
@@ -157,15 +154,13 @@ export default function Page() {
   };
 
   return (
-    <DashboardLayout>
+    <>
       <Box sx={{ width: "100%", maxWidth: { sm: "100%", md: "1700px" } }}>
-        <Box display={"flex"} justifyContent={"space-between"}>
+        <Box display={"flex"} gap={1} justifyContent={"space-between"}>
           <Typography component="h2" variant="h6" sx={{ mb: 2 }}>
             Overview
           </Typography>
 
-          <LanguageSwitcher />
-          
           <div className="flex gap-3">
             <InsertOneStudentDialog getStudentsInfo={getStudentsInfo} />
 
@@ -222,6 +217,6 @@ export default function Page() {
           cancelText={t("common.cancel")}
         />
       </Box>
-    </DashboardLayout>
+    </>
   );
 }

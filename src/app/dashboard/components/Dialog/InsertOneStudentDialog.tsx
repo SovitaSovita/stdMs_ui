@@ -58,7 +58,7 @@ export const InsertOneStudentDialog = (props: InsertOneStudentDialogProps) => {
     validationSchema: validationSchema,
     onSubmit: (values: StudentsRequestUpsertType) => {
       // handleSubmit(values)
-      console.log(values);
+      // console.log(values);
       handleAddRow(values);
     },
   });

@@ -16,7 +16,8 @@ import SmartphoneRoundedIcon from "@mui/icons-material/SmartphoneRounded";
 import ConstructionRoundedIcon from "@mui/icons-material/ConstructionRounded";
 import ClassroomService from "@/app/service/ClassroomService";
 import { ClassInfoResponseType, ClassResponseType } from "@/app/constants/type";
-import { useClassroomSWR } from "@/app/libs/swr/classroomSWR";
+import { useSetAtom } from "jotai";
+import { classroomAtom } from "@/app/libs/jotai/classroomAtom";
 
 const Avatar = styled(MuiAvatar)(({ theme }) => ({
   width: 28,
@@ -31,26 +32,42 @@ const ListItemAvatar = styled(MuiListItemAvatar)({
   marginRight: 12,
 });
 
+
+const STORAGE_KEY = "selectedClassroomId";
+
 export default function SelectContent() {
-  const [classrooms, setClassrooms] = React.useState<ClassInfoResponseType[]>(
-    []
-  );
+  const [classrooms, setClassrooms] = React.useState<ClassInfoResponseType[]>([]);
   const [classroomId, setClassroomId] = React.useState<string>("");
-  const { data, isLoading, mutate } = useClassroomSWR(classroomId);
+  const setClassroomAtom = useSetAtom(classroomAtom);
 
-  const handleChange = (event: SelectChangeEvent) => {
-    setClassroomId(event.target.value as string);
-  };
-
+  // load classrooms
   const getCurrentClasses = async () => {
     const result = await ClassroomService.getInfoList();
     if (result) {
       setClassrooms(result);
-      setClassroomId(result[0]?.id.toString());
 
-      //get class detail
-      mutate();
+      // Restore previously selected classroom (if exists)
+      const savedId = localStorage.getItem(STORAGE_KEY);
+      const selectedId = savedId || result[0]?.id?.toString();
+      setClassroomId(selectedId);
+      getClassDetail(selectedId);
     }
+  };
+
+  // fetch class detail
+  const getClassDetail = async (classId: string) => {
+    if (!classId) return;
+    const result = await ClassroomService.getById(classId);
+    if (result) {
+      setClassroomAtom(result);
+    }
+  };
+
+  const handleChange = (event: SelectChangeEvent) => {
+    const id = event.target.value as string;
+    setClassroomId(id);
+    localStorage.setItem(STORAGE_KEY, id); // ✅ persist selected classroom
+    getClassDetail(id);
   };
 
   React.useEffect(() => {
@@ -64,14 +81,11 @@ export default function SelectContent() {
       value={classroomId}
       onChange={handleChange}
       displayEmpty
-      inputProps={{ "aria-label": "Select classroom" }}
       fullWidth
+      inputProps={{ "aria-label": "Select classroom" }}
       sx={{
         maxHeight: 56,
         width: 215,
-        "&.MuiList-root": {
-          p: "8px",
-        },
         [`& .${selectClasses.select}`]: {
           display: "flex",
           alignItems: "center",
@@ -80,9 +94,9 @@ export default function SelectContent() {
         },
       }}
     >
-      <ListSubheader sx={{ pt: 0 }}>Classroom</ListSubheader>
+      <ListSubheader>Classroom</ListSubheader>
       {classrooms.map((row) => (
-        <MenuItem value={row.id}>
+        <MenuItem key={row.id} value={row.id}>
           <ListItemAvatar>
             <Avatar alt={row.name}>
               <SmartphoneRoundedIcon sx={{ fontSize: "1rem" }} />
@@ -92,7 +106,7 @@ export default function SelectContent() {
         </MenuItem>
       ))}
       <Divider sx={{ mx: -1 }} />
-      <MenuItem value={40}>
+      <MenuItem value="add">
         <ListItemIcon>
           <AddRoundedIcon />
         </ListItemIcon>

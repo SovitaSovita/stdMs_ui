@@ -326,7 +326,6 @@ export default function Page() {
 
   return (
     <>
-    <DashboardLayout>
       <Box sx={{ width: "100%", maxWidth: { sm: "100%", md: "1700px" } }}>
         <Typography component="h2" variant="h6" sx={{ mb: 2 }}>
           Overview
@@ -348,7 +347,6 @@ export default function Page() {
           />
         </Box>
       </Box>
-    </DashboardLayout>
     </>
   );
 }

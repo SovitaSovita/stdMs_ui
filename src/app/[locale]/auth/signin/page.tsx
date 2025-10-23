@@ -1,9 +1,12 @@
-import SignIn from "../../../dashboard/components/SignIn";
+"use client"
 
-export default function CatchAllPage() {
+import SignIn from "@/app/dashboard/components/SignIn";
+import React from "react";
+
+export default function Page() {
   return (
     <>
       <SignIn />
     </>
   );
-}
+};

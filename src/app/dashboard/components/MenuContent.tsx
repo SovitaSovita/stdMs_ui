@@ -15,26 +15,56 @@ import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
 import InfoRoundedIcon from "@mui/icons-material/InfoRounded";
 import HelpRoundedIcon from "@mui/icons-material/HelpRounded";
 import { usePathname, useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 const mainListItems = [
-  { text: "Home", icon: <HomeRoundedIcon />, path: "/" },
-  { text: "ថ្នាក់រៀន", icon: <AnalyticsRoundedIcon />, path: "/classrooms" },
-  { text: "សិស្ស", icon: <PeopleRoundedIcon />, path: "/students" },
-  { text: "Tasks", icon: <AssignmentRoundedIcon />, path: "/tasks" },
+  { key: "home", text: "Home", icon: <HomeRoundedIcon />, path: "/" },
+  {
+    key: "classroom",
+    text: "Classroom",
+    icon: <AnalyticsRoundedIcon />,
+    path: "/classrooms",
+  },
+  {
+    key: "student",
+    text: "Student",
+    icon: <PeopleRoundedIcon />,
+    path: "/students",
+  },
+  {
+    key: "monthlyExam",
+    text: "Monthly Exam",
+    icon: <AssignmentRoundedIcon />,
+    path: "/monthly-exam",
+  },
 ];
 
 const secondaryListItems = [
-  { text: "Settings", icon: <SettingsRoundedIcon />, path: "/settings" },
-  { text: "About", icon: <InfoRoundedIcon />, path: "/about" },
-  { text: "Feedback", icon: <HelpRoundedIcon />, path: "/feedback" },
+  {
+    key: "setting",
+    text: "Settings",
+    icon: <SettingsRoundedIcon />,
+    path: "/settings",
+  },
+  { key: "about", text: "About", icon: <InfoRoundedIcon />, path: "/about" },
+  {
+    key: "feedback",
+    text: "Feedback",
+    icon: <HelpRoundedIcon />,
+    path: "/feedback",
+  },
 ];
 
 export default function MenuContent() {
   const router = useRouter();
   const pathname = usePathname();
+  const t = useTranslations("MenuList");
 
   return (
-    <Stack className="font-siemreap" sx={{ flexGrow: 1, p: 1, justifyContent: "space-between" }}>
+    <Stack
+      className="font-siemreap"
+      sx={{ flexGrow: 1, p: 1, justifyContent: "space-between" }}
+    >
       <List dense>
         {mainListItems.map((item, index) => (
           <ListItem key={index} disablePadding sx={{ display: "block" }}>
@@ -43,7 +73,7 @@ export default function MenuContent() {
               onClick={() => router.push(item.path)}
             >
               <ListItemIcon>{item.icon}</ListItemIcon>
-              <ListItemText primary={item.text} />
+              <ListItemText primary={t(item.key)} />
             </ListItemButton>
           </ListItem>
         ))}
@@ -56,7 +86,7 @@ export default function MenuContent() {
               onClick={() => router.push(item.path)}
             >
               <ListItemIcon>{item.icon}</ListItemIcon>
-              <ListItemText primary={item.text} />
+              <ListItemText primary={t(item.key)} />
             </ListItemButton>
           </ListItem>
         ))}

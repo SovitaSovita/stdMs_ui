@@ -10,6 +10,8 @@ import {
 import { routing } from "@/i18n/routing";
 import "../globals.css";
 import Provider from "../Provider";
+import DashboardLayout from "../dashboard/DashboardLayout";
+import ClientLayout from "./ClientLayout";
 
 type Props = {
   children: React.ReactNode;
@@ -45,13 +47,10 @@ export default async function LocaleLayout({ children, params }: Props) {
   setRequestLocale(locale);
 
   return (
-    <html lang={locale}>
-      <body className={`antialiased`}>
-        {/* ✅ Provide translation context */}
-        <Provider>
-          <NextIntlClientProvider>{children}</NextIntlClientProvider>
-        </Provider>
-      </body>
-    </html>
+    <Provider>
+      <NextIntlClientProvider>
+        <ClientLayout>{children}</ClientLayout>
+      </NextIntlClientProvider>
+    </Provider>
   );
 }
