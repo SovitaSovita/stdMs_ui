@@ -5,7 +5,7 @@ export type StuInfoDetailResponseType = {
   totalFemale: number;
 };
 export type StudentsInfo = {
-  id: number;
+  id: string;
   fullName: string;
   gender: 'M' | 'F';
   dateOfBirth: string;
@@ -18,8 +18,8 @@ export type StudentsInfo = {
 };
 
 export type StudentsRequestUpsertType = {
-  id?: number,
-  classId?: number,
+  id?: string,
+  classId?: string,
   fullName: string;
   gender: 'M' | 'F';
   dateOfBirth: string;

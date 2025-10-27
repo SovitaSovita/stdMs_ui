@@ -102,7 +102,7 @@ export default function SelectContent() {
               <SmartphoneRoundedIcon sx={{ fontSize: "1rem" }} />
             </Avatar>
           </ListItemAvatar>
-          <ListItemText primary={row.name} secondary={row.grade} />
+          <ListItemText primary={"Grade " + row.name} secondary={"Year " + row.year}/>
         </MenuItem>
       ))}
       <Divider sx={{ mx: -1 }} />

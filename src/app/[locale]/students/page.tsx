@@ -2,32 +2,72 @@
 
 import {
   StudentsInfo,
+  StudentsRequestUpsertType,
   StuInfoDetailResponseType,
 } from "@/app/constants/type";
 import { DeleteConfirmationDialog } from "@/app/dashboard/components/Dialog/DeleteConfirmationDialog";
 import { InsertOneStudentDialog } from "@/app/dashboard/components/Dialog/InsertOneStudentDialog";
-import DashboardLayout from "@/app/dashboard/DashboardLayout";
 import { classroomAtom } from "@/app/libs/jotai/classroomAtom";
 import StudentService from "@/app/service/StudentService";
-import { Box, Button, Typography } from "@mui/material";
+import {
+  Avatar,
+  Box,
+  Button,
+  List,
+  ListItem,
+  ListItemAvatar,
+  ListItemText,
+  styled,
+  Tooltip,
+  tooltipClasses,
+  TooltipProps,
+  Typography,
+} from "@mui/material";
 import {
   DataGrid,
   GridColDef,
+  GridEditInputCell,
+  GridPreProcessEditCellProps,
+  GridRenderCellParams,
+  GridRenderEditCellParams,
   GridRowId,
   GridRowSelectionModel,
+  GridSlotsComponentsProps,
 } from "@mui/x-data-grid";
-import { useAtomValue } from "jotai";
+import { useAtom, useAtomValue } from "jotai";
 import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useState } from "react";
+import { showAlertAtom } from "@/app/libs/jotai/alertAtom";
+import dayjs from "dayjs";
+import PersonAddAlt1Icon from "@mui/icons-material/PersonAddAlt1";
+import GroupAddIcon from "@mui/icons-material/GroupAdd";
+import DeleteSweepIcon from "@mui/icons-material/DeleteSweep";
+import GroupsIcon from "@mui/icons-material/Groups";
+import Groups2Icon from "@mui/icons-material/Groups2";
+import Groups3Icon from "@mui/icons-material/Groups3";
+import WomanIcon from "@mui/icons-material/Woman";
+import ManIcon from "@mui/icons-material/Man";
+import { CustomStuInfoFooterComponent } from "@/app/dashboard/components/Common/CustomStuInfoFooterComponent";
+
+declare module '@mui/x-data-grid' {
+  interface FooterPropsOverrides {
+    students: StuInfoDetailResponseType;
+  }
+}
+
 
 export default function Page() {
   const t = useTranslations();
+
   const columns: GridColDef<(typeof rows)[number]>[] = [
     {
       field: "id",
       headerName: t("CommonField.id"),
       headerClassName: "font-siemreap",
       width: 90,
+      editable: false,
+      renderCell: (params) =>
+        params.api.getRowIndexRelativeToVisibleRows(params.id) + 1,
     },
     {
       field: "fullName",
@@ -35,7 +75,7 @@ export default function Page() {
       headerClassName: "font-siemreap",
       width: 150,
       editable: true,
-      sortable: false,
+      sortable: true,
       disableColumnMenu: true,
     },
     {
@@ -49,16 +89,27 @@ export default function Page() {
       editable: true,
       sortable: false,
       disableColumnMenu: true,
-      valueOptions: ["M", "F"],
+      valueOptions: [
+        { value: "M", label: t("Common.male") },
+        { value: "F", label: t("Common.female") },
+      ],
     },
     {
       field: "dateOfBirth",
       headerName: t("CommonField.dateOfBirth"),
+      type: "date",
       headerClassName: "font-siemreap",
       width: 150,
       editable: true,
       sortable: false,
       disableColumnMenu: true,
+      valueGetter: (value) => {
+        return value ? new Date(value) : null;
+      },
+      valueFormatter: (value) => {
+        if (!value) return "";
+        return `${dayjs(value).format("DD-MM-YYYY")}`;
+      },
     },
     {
       field: "fatherName",
@@ -68,6 +119,9 @@ export default function Page() {
       editable: true,
       sortable: false,
       disableColumnMenu: true,
+      renderCell: (params: GridRenderCellParams) => {
+        return <span>{params.value}</span>;
+      },
     },
     {
       field: "fatherOccupation",
@@ -118,8 +172,10 @@ export default function Page() {
 
   const [students, setStudents] = useState<StuInfoDetailResponseType>();
   const [rows, setRows] = useState<StudentsInfo[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   const classroom = useAtomValue(classroomAtom);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [, showAlert] = useAtom(showAlertAtom);
 
   const [rowSelectionModel, setRowSelectionModel] =
     useState<GridRowSelectionModel>({
@@ -144,28 +200,155 @@ export default function Page() {
   }, [classroom]);
 
   const handleDeleteStudents = async () => {
-    const ids = Array.from(rowSelectionModel.ids) as number[];
-    if (ids.length <= 0) return;
-    const result = await StudentService.deleteList(ids);
+    const ids = Array.from(rowSelectionModel.ids) as string[];
+    if (ids.length === 0) return;
 
-    if (result?.status == 200) {
-      alert(result?.message);
+    const tempIds = ids.filter((id) => String(id).startsWith("temp-"));
+    const dbIds = ids.filter((id) => !String(id).startsWith("temp-"));
+
+    // Remove unsaved (temp) rows immediately
+    if (tempIds.length > 0) {
+      setRows((prev) => prev.filter((r) => !tempIds.includes(r.id)));
     }
+
+    // Delete saved rows via API
+    if (dbIds.length > 0) {
+      const result = await StudentService.deleteList(dbIds);
+      if (result?.status === 200) {
+        setRows((prev) => prev.filter((r) => !dbIds.includes(r.id)));
+        showAlert({
+          message: result?.message || "Deleted successfully.",
+          severity: "success",
+        });
+      } else {
+        showAlert({
+          message: "Failed to delete records.",
+          severity: "error",
+        });
+      }
+    }
+  };
+
+  const processRowUpdate = async (
+    newRow: StudentsInfo,
+    oldRow: StudentsInfo,
+    params: { rowId: GridRowId }
+  ): Promise<StudentsInfo> => {
+    setIsLoading(true);
+
+    try {
+      // ✅ Detect new rows using a special tempId prefix
+      const isTempRow = String(newRow.id).startsWith("temp-");
+
+      if (!newRow.fullName) {
+        showAlert({
+          message: t("CommonValidate.cannotEmpty"),
+          severity: "error",
+        });
+        return oldRow;
+      }
+
+      const sendData: StudentsRequestUpsertType = {
+        ...newRow,
+        classId: classroom?.id,
+        dateOfBirth: dayjs(newRow.dateOfBirth).format("YYYY-MM-DD"),
+      };
+
+      // Remove id if new (backend will auto-generate one)
+      if (isTempRow) delete (sendData as any).id;
+
+      if (!sendData.classId) {
+        setIsLoading(false);
+        return oldRow;
+      }
+
+      const result = await StudentService.upsertStudent(sendData);
+
+      if (result?.status === 200) {
+        console.log(result);
+        const updated = result?.payload;
+
+        //Insern new
+        if (isTempRow && updated?.id) {
+          // Replace temp ID with real DB ID
+          const newStudent = { ...newRow, id: updated.id };
+          setRows((prev) =>
+            prev.map((r) =>
+              r.id === newRow.id ? { ...newRow, id: newStudent.id } : r
+            )
+          );
+          showAlert({
+            message: "Student added successfully.",
+            severity: "success",
+          });
+          return newStudent;
+        } else {
+          //Update old
+          setRows((prev) => prev.map((r) => (r.id === newRow.id ? newRow : r)));
+          showAlert({
+            message: "Student updated successfully.",
+            severity: "success",
+          });
+          return newRow;
+        }
+      } else {
+        showAlert({
+          message: "Failed to save student.",
+          severity: "error",
+        });
+        return oldRow;
+      }
+    } catch (error) {
+      console.error("processRowUpdate error:", error);
+      return oldRow; // rollback
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleAddMulti = () => {
+    const tempId = `temp-${Date.now()}`;
+    setRows((prev) => [
+      ...prev,
+      {
+        id: tempId,
+        classId: classroom?.id,
+        fullName: "",
+        gender: "M",
+        dateOfBirth: "2000-01-01",
+        fatherName: "",
+        fatherOccupation: "",
+        montherName: "",
+        montherOccupation: "",
+        placeOfBirth: "",
+        address: "",
+      },
+    ]);
   };
 
   return (
     <>
       <Box sx={{ width: "100%", maxWidth: { sm: "100%", md: "1700px" } }}>
-        <Box display={"flex"} gap={1} justifyContent={"space-between"}>
-          <Typography component="h2" variant="h6" sx={{ mb: 2 }}>
+        <Box display={"flex"} mb={2} gap={1} justifyContent={"space-between"}>
+          <Typography
+            component="h2"
+            variant="h6"
+            sx={{ display: { xs: "none", sm: "block" } }}
+          >
             Overview
           </Typography>
 
           <div className="flex gap-3">
+            {/* Button insert one student */}
             <InsertOneStudentDialog getStudentsInfo={getStudentsInfo} />
 
-            <Button onClick={() => {}} variant="contained" size="small">
-              {t("student.btn.multiAdd")}
+            <Button
+              onClick={handleAddMulti}
+              variant="contained"
+              size="small"
+              startIcon={<GroupAddIcon />}
+            >
+              {t("Student.btn.multiAdd")}
             </Button>
 
             <Button
@@ -174,8 +357,9 @@ export default function Page() {
               variant="contained"
               color="error"
               size="small"
+              startIcon={<DeleteSweepIcon />}
             >
-              {t("student.btn.deleteStu")}
+              {t("Student.btn.deleteStu")}
             </Button>
           </div>
         </Box>
@@ -183,20 +367,29 @@ export default function Page() {
           <DataGrid
             rows={rows}
             columns={columns}
+            loading={isLoading}
             initialState={{
               pagination: {
                 paginationModel: {
-                  pageSize: 10,
+                  pageSize: 15,
                 },
               },
             }}
-            pageSizeOptions={[10]}
+            pageSizeOptions={[15]}
             checkboxSelection
             onRowSelectionModelChange={(newRowSelectionModel) => {
               setRowSelectionModel(newRowSelectionModel);
             }}
             rowSelectionModel={rowSelectionModel}
             disableRowSelectionOnClick
+            processRowUpdate={processRowUpdate}
+            // experimentalFeatures={{ newEditingApi: true }}
+            slots={{
+              footer: CustomStuInfoFooterComponent,
+            }}
+            slotProps={{
+              footer: { students },
+            }}
             sx={{
               "& .MuiDataGrid-columnHeaderCheckbox .MuiCheckbox-root": {
                 display: "none",
@@ -211,10 +404,10 @@ export default function Page() {
           onConfirm={handleDeleteStudents}
           itemName="students"
           itemCount={rowSelectionModel.ids.size}
-          title={t("common.titleDeleteConfirm")}
-          message={t("student.deleteConfirmation")}
-          confirmText={t("common.delete")}
-          cancelText={t("common.cancel")}
+          title={t("Common.titleDeleteConfirm")}
+          message={t("Student.deleteConfirmation")}
+          confirmText={t("Common.delete")}
+          cancelText={t("Common.cancel")}
         />
       </Box>
     </>

@@ -12,7 +12,8 @@ declare const messages: {
   },
   "CommonValidate": {
     "require": "Required",
-    "minText2": "must be at least 2 characters"
+    "minText2": "must be at least 2 characters",
+    "cannotEmpty": "Can not empty"
   },
   "CommonField": {
     "id": "ID",
@@ -20,13 +21,13 @@ declare const messages: {
     "sex": "Gender",
     "gender": "{gender, select, F {Female} M {Male} other {Unknown}}",
     "dateOfBirth": "Date Of Birth",
-    "occupation": "occupation",
+    "occupation": "Occupation",
     "fatherName": "Father Name",
     "montherName": "Mother Name",
     "placeOfBirth": "Place Of Birth",
     "address": "Address"
   },
-  "common": {
+  "Common": {
     "yes": "Yes",
     "no": "No",
     "cancel": "Cancel",
@@ -34,9 +35,12 @@ declare const messages: {
     "save": "Save",
     "edit": "Edit",
     "done": "Done",
-    "titleDeleteConfirm": "Confirm Deletion"
+    "titleDeleteConfirm": "Confirm Deletion",
+    "male": "Male",
+    "female": "Female",
+    "total": "Total"
   },
-  "student": {
+  "Student": {
     "title": "Students",
     "name": "Name",
     "email": "Email",
@@ -44,9 +48,9 @@ declare const messages: {
     "deleteMultiple": "Are you sure you want to delete {count} students?",
     "deleteSuccess": "Student deleted successfully",
     "btn": {
-      "multiAdd": "Add Multi Students",
-      "singleAdd": "Add a Student",
-      "deleteStu": "Delete Student"
+      "multiAdd": "Adds",
+      "singleAdd": "Add",
+      "deleteStu": "Delete"
     },
     "DialogInsert": {
       "title": "Please enter student information"

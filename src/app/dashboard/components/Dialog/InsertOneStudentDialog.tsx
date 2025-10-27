@@ -22,6 +22,7 @@ import StudentService from "@/app/service/StudentService";
 import { classroomAtom } from "@/app/libs/jotai/classroomAtom";
 import { useAtomValue } from "jotai";
 import { useTranslations } from "next-intl";
+import PersonAddAlt1Icon from '@mui/icons-material/PersonAddAlt1';
 
 type InsertOneStudentDialogProps = {
   getStudentsInfo: () => Promise<void>;
@@ -44,6 +45,7 @@ export const InsertOneStudentDialog = (props: InsertOneStudentDialogProps) => {
 
   const formik = useFormik({
     initialValues: {
+      // id: "",
       classId: classroom?.id,
       fullName: "",
       gender: "M",
@@ -58,7 +60,6 @@ export const InsertOneStudentDialog = (props: InsertOneStudentDialogProps) => {
     validationSchema: validationSchema,
     onSubmit: (values: StudentsRequestUpsertType) => {
       // handleSubmit(values)
-      // console.log(values);
       handleAddRow(values);
     },
   });
@@ -66,8 +67,10 @@ export const InsertOneStudentDialog = (props: InsertOneStudentDialogProps) => {
   const handleAddRow = async (values: StudentsRequestUpsertType) => {
     const sendData: StudentsRequestUpsertType = {
       ...values,
+      classId: classroom?.id
     };
 
+    console.log(sendData);
     if (!sendData.classId) return;
 
     const result = await StudentService.upsertStudent(sendData);
@@ -79,11 +82,12 @@ export const InsertOneStudentDialog = (props: InsertOneStudentDialogProps) => {
 
   return (
     <>
-      <Button onClick={handleClickOpen} variant="contained" size="small">
-        {t("student.btn.singleAdd")}
+      <Button onClick={handleClickOpen} variant="contained" size="small"   startIcon={<PersonAddAlt1Icon />}
+>
+        {t("Student.btn.singleAdd")}
       </Button>
       <Dialog open={open} onClose={handleClose}>
-        <DialogTitle>{t("student.DialogInsert.title")}</DialogTitle>
+        <DialogTitle>{t("Student.DialogInsert.title")}</DialogTitle>
         <form onSubmit={formik.handleSubmit}>
           <DialogContent>
             <TextField
@@ -256,8 +260,8 @@ export const InsertOneStudentDialog = (props: InsertOneStudentDialogProps) => {
           </DialogContent>
 
           <DialogActions>
-            <Button onClick={handleClose}>{t("common.cancel")}</Button>
-            <Button type="submit">{t("common.done")}</Button>
+            <Button onClick={handleClose}>{t("Common.cancel")}</Button>
+            <Button type="submit">{t("Common.done")}</Button>
           </DialogActions>
         </form>
       </Dialog>

@@ -3,13 +3,13 @@ import { StudentsRequestUpsertType, StuInfoDetailResponseType } from "../constan
 import RestService from "./RestService";
 
 const StudentService = {
-  getInfoList: async (id: number): Promise<StuInfoDetailResponseType> => {
+  getInfoList: async (id: string): Promise<StuInfoDetailResponseType> => {
     return await RestService.get<StuInfoDetailResponseType>(Paths.student.getInfoList(id));
   },
   upsertStudent: async (sentData: StudentsRequestUpsertType): Promise<any> => {
     return await RestService.post(Paths.student.upsert, sentData);
   },
-  deleteList: async (ids: number[]): Promise<any> => {
+  deleteList: async (ids: string[]): Promise<any> => {
     return await RestService.delete(Paths.student.deleteList, ids);
   },
 };

@@ -1,5 +1,5 @@
 export type ClassResponseType = {
-  id: number;
+  id: string;
   name: string;
   grade: string;
   year: string;
@@ -12,27 +12,27 @@ export type ClassResponseType = {
     role: "USER" | "ADMIN"; // adjust as needed
   };
   students: {
-    id: number;
+    id: string;
     fullName: string;
     gender: "M" | "F";
     dateOfBirth: string; // ISO date string
   }[];
   subjects: {
-    id: number;
+    id: string;
     name: string;
-    classId: number;
+    classId: string;
   }[];
   exams: {
-    id: number;
+    id: string;
     title: string;
     examType: "SEMESTER" | "MONTHLY"; // extend if more types exist
     examDate: string; // ISO date string
-    classId: number;
+    classId: string;
   }[];
 };
 
 export type ClassInfoResponseType = {
-  id: number;
+  id: string;
   name: string;
   grade: string;
   year: string;
