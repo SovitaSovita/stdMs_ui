@@ -70,7 +70,6 @@ export const InsertOneStudentDialog = (props: InsertOneStudentDialogProps) => {
       classId: classroom?.id
     };
 
-    console.log(sendData);
     if (!sendData.classId) return;
 
     const result = await StudentService.upsertStudent(sendData);

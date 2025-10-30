@@ -17,6 +17,7 @@
     "@mui/material": "^7.2.0",
     "@mui/x-charts": "^8.9.0",
     "@mui/x-data-grid": "^8.9.1",
+    "@mui/x-data-grid-generator": "^8.16.0",
     "@mui/x-date-pickers": "^8.9.0",
     "@mui/x-tree-view": "^8.9.0",
     "@react-spring/web": "^10.0.1",
@@ -30,6 +31,7 @@
     "next-intl": "^4.3.12",
     "react": "19.1.0",
     "react-dom": "19.1.0",
+    "react-router": "^7.9.4",
     "swr": "^2.3.6",
     "yup": "^1.7.1"
   },

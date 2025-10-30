@@ -1,6 +1,8 @@
 "use client";
 
 import {
+  Settings,
+  StudentCountType,
   StudentsInfo,
   StudentsRequestUpsertType,
   StuInfoDetailResponseType,
@@ -9,52 +11,33 @@ import { DeleteConfirmationDialog } from "@/app/dashboard/components/Dialog/Dele
 import { InsertOneStudentDialog } from "@/app/dashboard/components/Dialog/InsertOneStudentDialog";
 import { classroomAtom } from "@/app/libs/jotai/classroomAtom";
 import StudentService from "@/app/service/StudentService";
-import {
-  Avatar,
-  Box,
-  Button,
-  List,
-  ListItem,
-  ListItemAvatar,
-  ListItemText,
-  styled,
-  Tooltip,
-  tooltipClasses,
-  TooltipProps,
-  Typography,
-} from "@mui/material";
+import { Box, Button, Typography } from "@mui/material";
 import {
   DataGrid,
   GridColDef,
-  GridEditInputCell,
-  GridPreProcessEditCellProps,
   GridRenderCellParams,
-  GridRenderEditCellParams,
   GridRowId,
   GridRowSelectionModel,
-  GridSlotsComponentsProps,
 } from "@mui/x-data-grid";
 import { useAtom, useAtomValue } from "jotai";
 import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useState } from "react";
 import { showAlertAtom } from "@/app/libs/jotai/alertAtom";
 import dayjs from "dayjs";
-import PersonAddAlt1Icon from "@mui/icons-material/PersonAddAlt1";
 import GroupAddIcon from "@mui/icons-material/GroupAdd";
 import DeleteSweepIcon from "@mui/icons-material/DeleteSweep";
-import GroupsIcon from "@mui/icons-material/Groups";
-import Groups2Icon from "@mui/icons-material/Groups2";
-import Groups3Icon from "@mui/icons-material/Groups3";
-import WomanIcon from "@mui/icons-material/Woman";
-import ManIcon from "@mui/icons-material/Man";
 import { CustomStuInfoFooterComponent } from "@/app/dashboard/components/Common/CustomStuInfoFooterComponent";
+import {
+  getInitialSettings,
+  SETTINGS_STORAGE_KEY,
+} from "@/app/utils/axios/Common";
 
-declare module '@mui/x-data-grid' {
+declare module "@mui/x-data-grid" {
   interface FooterPropsOverrides {
-    students: StuInfoDetailResponseType;
+    studentInfoCount?: StudentCountType;
+    extraControls?: React.ReactNode;
   }
 }
-
 
 export default function Page() {
   const t = useTranslations();
@@ -199,6 +182,12 @@ export default function Page() {
     }
   }, [classroom]);
 
+  const [settings, setSettings] = useState<Settings>(getInitialSettings());
+
+  useEffect(() => {
+    localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settings));
+  }, [settings]);
+
   const handleDeleteStudents = async () => {
     const ids = Array.from(rowSelectionModel.ids) as string[];
     if (ids.length === 0) return;
@@ -265,7 +254,6 @@ export default function Page() {
       const result = await StudentService.upsertStudent(sendData);
 
       if (result?.status === 200) {
-        console.log(result);
         const updated = result?.payload;
 
         //Insern new
@@ -326,6 +314,45 @@ export default function Page() {
     ]);
   };
 
+  const studentInfoCount = useMemo<StudentCountType>(() => {
+    const tMale = rows.filter((row) => row.gender == "M");
+    const tFemale = rows.filter((row) => row.gender == "F");
+
+    return {
+      total: rows.length,
+      totalMale: tMale.length,
+      totalFemale: tFemale.length,
+    };
+  }, [rows]);
+
+  const renderButtonCrudAction = () => {
+    return (
+      <>
+        <InsertOneStudentDialog getStudentsInfo={getStudentsInfo} />
+
+        <Button
+          onClick={handleAddMulti}
+          variant="contained"
+          size="small"
+          startIcon={<GroupAddIcon />}
+        >
+          {t("Student.btn.multiAdd")}
+        </Button>
+
+        <Button
+          onClick={() => setDeleteDialogOpen(true)}
+          disabled={rowSelectionModel.ids.size === 0}
+          variant="contained"
+          color="error"
+          size="small"
+          startIcon={<DeleteSweepIcon />}
+        >
+          {t("Student.btn.deleteStu")}
+        </Button>
+      </>
+    );
+  };
+
   return (
     <>
       <Box sx={{ width: "100%", maxWidth: { sm: "100%", md: "1700px" } }}>
@@ -337,31 +364,6 @@ export default function Page() {
           >
             Overview
           </Typography>
-
-          <div className="flex gap-3">
-            {/* Button insert one student */}
-            <InsertOneStudentDialog getStudentsInfo={getStudentsInfo} />
-
-            <Button
-              onClick={handleAddMulti}
-              variant="contained"
-              size="small"
-              startIcon={<GroupAddIcon />}
-            >
-              {t("Student.btn.multiAdd")}
-            </Button>
-
-            <Button
-              onClick={() => setDeleteDialogOpen(true)}
-              disabled={rowSelectionModel.ids.size === 0}
-              variant="contained"
-              color="error"
-              size="small"
-              startIcon={<DeleteSweepIcon />}
-            >
-              {t("Student.btn.deleteStu")}
-            </Button>
-          </div>
         </Box>
         <Box className="font-siemreap" sx={{ height: 600, width: "100%" }}>
           <DataGrid
@@ -383,12 +385,17 @@ export default function Page() {
             rowSelectionModel={rowSelectionModel}
             disableRowSelectionOnClick
             processRowUpdate={processRowUpdate}
-            // experimentalFeatures={{ newEditingApi: true }}
+            density={settings.density}
+            showCellVerticalBorder={settings.showCellBorders}
+            showColumnVerticalBorder={settings.showColumnBorders}
             slots={{
               footer: CustomStuInfoFooterComponent,
             }}
             slotProps={{
-              footer: { students },
+              footer: {
+                studentInfoCount,
+                extraControls: renderButtonCrudAction(),
+              },
             }}
             sx={{
               "& .MuiDataGrid-columnHeaderCheckbox .MuiCheckbox-root": {

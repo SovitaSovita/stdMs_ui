@@ -1,5 +1,11 @@
 import { Paths } from "../constants/Paths";
-import { ClassInfoResponseType, ClassResponseType } from "../constants/type";
+import {
+  ClassExamDataResponseType,
+  ClassInfoResponseType,
+  ClassReqFilterDetailType,
+  ClassResponseType,
+  ScoreUpsertRequest,
+} from "../constants/type";
 import RestService from "./RestService";
 
 const ClassroomService = {
@@ -18,6 +24,25 @@ const ClassroomService = {
         params: { classroomId: id },
       }
     );
+  },
+  upsertStuScores: async (
+    classId: string,
+    examId: string,
+    sentData: ScoreUpsertRequest[]
+  ): Promise<any> => {
+    return await RestService.post(
+      Paths.class.upsertScore(classId, examId),
+      sentData
+    );
+  },
+  getDetail: async (
+    id: string,
+    sendData: ClassReqFilterDetailType
+  ): Promise<ClassExamDataResponseType> => {
+    return await RestService.post<
+      ClassReqFilterDetailType,
+      ClassExamDataResponseType
+    >(Paths.class.getDetail(id), sendData);
   },
 };
 

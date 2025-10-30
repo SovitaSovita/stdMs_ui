@@ -18,6 +18,8 @@ declare const messages: {
   "CommonField": {
     "id": "ID",
     "fullName": "Full name",
+    "firstName": "First name",
+    "lastName": "last name",
     "sex": "Gender",
     "gender": "{gender, select, F {Female} M {Male} other {Unknown}}",
     "dateOfBirth": "Date Of Birth",
@@ -38,7 +40,28 @@ declare const messages: {
     "titleDeleteConfirm": "Confirm Deletion",
     "male": "Male",
     "female": "Female",
-    "total": "Total"
+    "total": "Total",
+    "people": "People",
+    "studyYear": "Year",
+    "grade": "Grade",
+    "classroom": "Classroom",
+    "createClassroom": "Create new Classroom",
+    "monthly": "Monthly",
+    "semester": "Semester",
+    "months": {
+      "january": "January",
+      "february": "February",
+      "march": "March",
+      "april": "April",
+      "may": "May",
+      "june": "June",
+      "july": "July",
+      "august": "August",
+      "september": "September",
+      "october": "October",
+      "november": "November",
+      "december": "December"
+    }
   },
   "Student": {
     "title": "Students",

@@ -15,6 +15,8 @@
   "CommonField": {
     "id": "ល​​រ",
     "fullName": "ឈ្មោះពេញ",
+    "firstName": "គោត្តនាម",
+    "lastName": "នាម",
     "sex": "ភេទ",
     "gender": "{gender, select, F {ប្រុស} M {ស្រី} other {Unknown}}",
     "dateOfBirth": "ថ្ងៃខែឆ្នាំកំណើត",
@@ -36,7 +38,27 @@
     "female": "ស្រី",
     "male": "ប្រុស",
     "total": "សរុប",
-    "people": "នាក់"
+    "people": "នាក់",
+    "classroom": "ថ្នាក់រៀន",
+    "grade": "កំរិតថ្នាក់",
+    "studyYear": "ឆ្នាំសិក្សា",
+    "createClassroom": "បង្កើតថ្នាក់ថ្មី",
+    "monthly": "ប្រចាំខែ",
+    "semester": "ប្រចាំឆមាស",
+    "months": {
+      "january": "មករា",
+      "february": "កុម្ភៈ",
+      "march": "មីនា",
+      "april": "មេសា",
+      "may": "ឧសភា",
+      "june": "មិថុនា",
+      "july": "កក្កដា",
+      "august": "សីហា",
+      "september": "កញ្ញា",
+      "october": "តុលា",
+      "november": "វិច្ឆិកា",
+      "december": "ធ្នូ"
+    }
   },
   "Student": {
     "title": "សិស្ស",
@@ -56,7 +78,7 @@
   },
   "MenuList": {
     "home": "ទំព័រដើម",
-    "student": "សិស្ស",
+    "student": "បញ្ចីសិស្ស",
     "classroom": "ថ្នាក់រៀន",
     "monthlyExam": "ប្រលងប្រចាំខែ",
     "SemesterExam": "ប្រលងប្រចាំខែ",

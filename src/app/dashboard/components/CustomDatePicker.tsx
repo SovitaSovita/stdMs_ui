@@ -12,6 +12,7 @@ import {
   DatePickerFieldProps,
 } from "@mui/x-date-pickers/DatePicker";
 import {
+  DateView,
   useParsedFormat,
   usePickerContext,
   useSplitFieldProps,
@@ -25,10 +26,9 @@ function ButtonField(props: ButtonFieldProps) {
   const pickerContext = usePickerContext();
   const handleRef = useForkRef(pickerContext.triggerRef, pickerContext.rootRef);
   const parsedFormat = useParsedFormat();
-  const valueStr =
-    pickerContext.value == null
-      ? parsedFormat
-      : pickerContext.value.format(pickerContext.fieldFormat);
+  const valueStr = pickerContext.value
+    ? pickerContext.value.format(pickerContext.fieldFormat)
+    : pickerContext.label || "Select date"; // shows label before picking
 
   return (
     <Button
@@ -36,11 +36,16 @@ function ButtonField(props: ButtonFieldProps) {
       variant="outlined"
       ref={handleRef}
       size="medium"
-      startIcon={<CalendarTodayRoundedIcon fontSize="medium" />}
-      sx={{ minWidth: "fit-content" }}
+      disabled={pickerContext.disabled}
+      endIcon={
+        <CalendarTodayRoundedIcon
+          fontSize="small"
+          sx={{ opacity: pickerContext.disabled ? 0.5 : 0.8 }}
+        />
+      }
       onClick={() => pickerContext.setOpen((prev) => !prev)}
     >
-      {pickerContext.label ?? valueStr}
+      {valueStr}
     </Button>
   );
 }
@@ -50,8 +55,14 @@ interface CustomDatePickerProps {
   label?: string;
   value?: string | Dayjs | null;
   onChange?: (value: string | null) => void;
-  formik?: any; // optional formik instance
+  formik?: any;
   error?: string | boolean;
+  disabled?: boolean;
+  minDate?: Dayjs;
+  maxDate?: Dayjs;
+  views?: DateView[];
+  /** Date display format — e.g., 'MMM YYYY' for month picker */
+  format?: string;
 }
 
 export default function CustomDatePicker({
@@ -61,40 +72,57 @@ export default function CustomDatePicker({
   onChange,
   formik,
   error,
+  disabled = false,
+  minDate,
+  maxDate,
+  views = ["day", "month", "year"],
+  format,
 }: CustomDatePickerProps) {
-  // If Formik is provided, use its state management
+  // ✅ Get value from Formik if available
   const formikValue = formik && name ? formik.values[name] : value;
+
+  // ✅ Determine error message
   const formikError =
-    formik && name && error
-      ? formik.touched[name] && formik.errors[name]
-      : error;
+    formik && name ? formik.touched[name] && formik.errors[name] : error || "";
 
   const handleChange = (newValue: Dayjs | null) => {
     const formatted = newValue ? newValue.toISOString() : null;
 
-    if (formik && name) formik.setFieldValue(name, formatted);
+    if (formik && name) {
+      formik.setFieldValue(name, formatted);
+      formik.setFieldTouched(name, true);
+    }
+
     if (onChange) onChange(formatted);
   };
+
+  // ✅ Auto-adjust format based on `views`
+  const resolvedFormat =
+    format ||
+    (views.length === 1 && views[0] === "year"
+      ? "YYYY"
+      : views.length === 2 && views[0] === "month"
+      ? "MMMM YYYY"
+      : "MMMM DD, YYYY");
+
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
-      {/* <Box sx={{ display: "flex", flexDirection: "column" }}> */}
-        <DatePicker
-          label={
-            formikValue
-              ? dayjs(formikValue).format("MMM DD, YYYY")
-              : label || null
-          }
-          value={formikValue ? dayjs(formikValue) : null}
-          onChange={handleChange}
-          slots={{ field: ButtonField }}
-          views={["day", "month", "year"]}
-        />
-        {formikError && (
-          <Typography color="error" variant="caption">
-            {String(formikError)}
-          </Typography>
-        )}
-      {/* </Box> */}
+      <DatePicker
+        label={label}
+        disabled={disabled}
+        value={formikValue ? dayjs(formikValue) : null}
+        onChange={handleChange}
+        minDate={minDate}
+        maxDate={maxDate}
+        views={views}
+        format={resolvedFormat}
+        slots={{ field: ButtonField }}
+      />
+      {/* {formikError && (
+        <Typography variant="caption" color="error">
+          {String(formikError)}
+        </Typography>
+      )} */}
     </LocalizationProvider>
   );
 }

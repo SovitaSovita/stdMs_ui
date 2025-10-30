@@ -18,6 +18,7 @@ import ClassroomService from "@/app/service/ClassroomService";
 import { ClassInfoResponseType, ClassResponseType } from "@/app/constants/type";
 import { useSetAtom } from "jotai";
 import { classroomAtom } from "@/app/libs/jotai/classroomAtom";
+import { useTranslations } from "next-intl";
 
 const Avatar = styled(MuiAvatar)(({ theme }) => ({
   width: 28,
@@ -32,11 +33,13 @@ const ListItemAvatar = styled(MuiListItemAvatar)({
   marginRight: 12,
 });
 
-
 const STORAGE_KEY = "selectedClassroomId";
 
 export default function SelectContent() {
-  const [classrooms, setClassrooms] = React.useState<ClassInfoResponseType[]>([]);
+  const t = useTranslations("Common");
+  const [classrooms, setClassrooms] = React.useState<ClassInfoResponseType[]>(
+    []
+  );
   const [classroomId, setClassroomId] = React.useState<string>("");
   const setClassroomAtom = useSetAtom(classroomAtom);
 
@@ -94,7 +97,7 @@ export default function SelectContent() {
         },
       }}
     >
-      <ListSubheader>Classroom</ListSubheader>
+      <ListSubheader>{t("classroom")}</ListSubheader>
       {classrooms.map((row) => (
         <MenuItem key={row.id} value={row.id}>
           <ListItemAvatar>
@@ -102,7 +105,10 @@ export default function SelectContent() {
               <SmartphoneRoundedIcon sx={{ fontSize: "1rem" }} />
             </Avatar>
           </ListItemAvatar>
-          <ListItemText primary={"Grade " + row.name} secondary={"Year " + row.year}/>
+          <ListItemText
+            primary={t("classroom") + " " + row.name}
+            secondary={t("studyYear") + " " + row.year}
+          />
         </MenuItem>
       ))}
       <Divider sx={{ mx: -1 }} />
@@ -110,7 +116,10 @@ export default function SelectContent() {
         <ListItemIcon>
           <AddRoundedIcon />
         </ListItemIcon>
-        <ListItemText primary="Add Classroom" secondary="Create your class" />
+        <ListItemText
+          primary={t("createClassroom")}
+          // secondary="Create your class"
+        />
       </MenuItem>
     </Select>
   );

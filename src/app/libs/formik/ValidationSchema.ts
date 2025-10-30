@@ -14,3 +14,10 @@ export const insertOneStuSchema = (t: (key: string) => string) =>
     placeOfBirth: Yup.string().required(t("require")),
     address: Yup.string().required(t("require")),
   });
+
+export const upsertExamSchema = (t: (key: string) => string) =>
+  Yup.object({
+    title: Yup.string().required(t("require")).min(2, t("minText2")),
+    examType: Yup.string().required(t("require")),
+    examDate: Yup.string().required(t("require")),
+  });

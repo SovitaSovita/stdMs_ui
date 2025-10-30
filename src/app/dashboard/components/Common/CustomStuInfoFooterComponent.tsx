@@ -5,6 +5,8 @@ import {
   ListItem,
   ListItemAvatar,
   ListItemText,
+  useMediaQuery,
+  useTheme,
 } from "@mui/material";
 import React from "react";
 import GroupsIcon from "@mui/icons-material/Groups";
@@ -19,20 +21,49 @@ import { useTranslations } from "next-intl";
 export const CustomStuInfoFooterComponent = (
   props: NonNullable<GridSlotsComponentsProps["footer"]>
 ) => {
-  const { students } = props;
-  const t = useTranslations("Common")
+  const { studentInfoCount, extraControls } = props;
+  const t = useTranslations("Common");
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   return (
     <>
-      <Box sx={{ p: 2, display: "flex" }}>
+      <Box sx={{ p: 2, display: "" }}>
+        {extraControls && (
+          <Box
+            sx={{
+              my: 1,
+              display: "flex",
+              gap: 2,
+              justifyContent: "end",
+              flexDirection: isMobile ? "column" : "row",
+              alignItems: isMobile ? "end" : "center",
+              "& > *": { width: isMobile ? "auto" : "auto" },
+            }}
+          >
+            {extraControls}
+          </Box>
+        )}
         <List>
           <ListItem>
-            <ListItemText primary={`${t("total")} ${String(students?.total || 0).padStart(2, "0")} ${t("people")}`} />
+            <ListItemText
+              primary={`${t("total")} ${String(
+                studentInfoCount?.total || 0
+              ).padStart(2, "0")} ${t("people")}`}
+            />
           </ListItem>
           <ListItem>
-            <ListItemText primary={`${t("male")} ${String(students?.totalMale || 0).padStart(2, "0")} ${t("people")}`} />
+            <ListItemText
+              primary={`${t("male")} ${String(
+                studentInfoCount?.totalMale || 0
+              ).padStart(2, "0")} ${t("people")}`}
+            />
           </ListItem>
           <ListItem>
-            <ListItemText primary={`${t("female")} ${String(students?.totalFemale || 0).padStart(2, "0")} ${t("people")}`} />
+            <ListItemText
+              primary={`${t("female")} ${String(
+                studentInfoCount?.totalFemale || 0
+              ).padStart(2, "0")} ${t("people")}`}
+            />
           </ListItem>
         </List>
       </Box>
