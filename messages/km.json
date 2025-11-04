@@ -30,10 +30,15 @@
     "yes": "បាទ/ចាស",
     "no": "ទេ",
     "cancel": "បោះបង់",
+    "back": "ត្រលប់ក្រោយ",
     "delete": "លុប",
     "save": "រក្សាទុក",
     "edit": "កែសម្រួល",
     "done": "រួចរាល់",
+    "search": "ស្វែងរក",
+    "download": "ទាញយក",
+    "downloadExcel": "ទាញយក Excel",
+    "print": "ព្រីន",
     "titleDeleteConfirm": "បញ្ជាក់ការលុប",
     "female": "ស្រី",
     "male": "ប្រុស",
@@ -75,6 +80,17 @@
     "DialogInsert": {
       "title": "សូមបញ្ជូលពត័មានរបស់សិស្ស"
     }
+  },
+  "MonthlyExam": {
+    "viewRanking": "ចំណាត់ថ្នាក់ប្រចាំខែ",
+    "viewAll": "មើលទាំងមូល",
+    "monthlyScores": "ពិន្ទុប្រចាំខែ",
+    "enterAverage": "សូមបញ្ចូលមេគុណ"
+  },
+  "SemesterExam": {
+    "viewRanking": "ចំណាត់ថ្នាក់ឆមាស",
+    "semesterScores": "បញ្ជីស្រង់ពិន្ទុឆមាស",
+    "semesterlyAverageRanking": "មធ្យមភាគប្រចាំឆមាស"
   },
   "MenuList": {
     "home": "ទំព័រដើម",

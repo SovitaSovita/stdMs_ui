@@ -28,6 +28,7 @@ import { DENISTY_OPTIONS } from "@/app/utils/axios/Common";
 import { Settings, ToolbarProps } from "@/app/constants/type";
 import { Box, InputAdornment, styled, TextField, Tooltip } from "@mui/material";
 import FileDownloadIcon from "@mui/icons-material/FileDownload";
+import { useTranslations } from "next-intl";
 
 declare module "@mui/x-data-grid" {
   interface ToolbarPropsOverrides {
@@ -85,6 +86,8 @@ export function CustomDataGridToolbar(props: ToolbarProps) {
   const [exportMenuOpen, setExportMenuOpen] = React.useState(false);
   const exportMenuTriggerRef = React.useRef<HTMLButtonElement>(null);
 
+  const t = useTranslations("Common");
+
   return (
     <Toolbar className={`${toolbarButtons?.toolbarClass || ''}`}>
       {toolbarButtons?.extraControls && (
@@ -95,7 +98,7 @@ export function CustomDataGridToolbar(props: ToolbarProps) {
         <StyledQuickFilter>
           <QuickFilterTrigger
             render={(triggerProps, state) => (
-              <Tooltip title="Search" enterDelay={0}>
+              <Tooltip title={t("search")} enterDelay={0}>
                 <StyledToolbarButton
                   {...triggerProps}
                   ownerState={{ expanded: state.expanded }}
@@ -221,7 +224,7 @@ export function CustomDataGridToolbar(props: ToolbarProps) {
 
       {toolbarButtons?.export && (
         <>
-          <Tooltip title="Export">
+          <Tooltip title={t("download")}>
             <ToolbarButton
               ref={exportMenuTriggerRef}
               id="export-menu-trigger"
@@ -250,13 +253,13 @@ export function CustomDataGridToolbar(props: ToolbarProps) {
               render={<MenuItem />}
               onClick={() => setExportMenuOpen(false)}
             >
-              Print
+              {t("print")}
             </ExportPrint>
             <ExportCsv
               render={<MenuItem />}
               onClick={() => setExportMenuOpen(false)}
             >
-              Download as CSV
+              {t("downloadExcel")}
             </ExportCsv>
             {/* Available to MUI X Premium users */}
             {/* <ExportExcel render={<MenuItem />}>

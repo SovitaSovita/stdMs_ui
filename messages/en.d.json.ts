@@ -33,10 +33,15 @@ declare const messages: {
     "yes": "Yes",
     "no": "No",
     "cancel": "Cancel",
+    "back": "Back",
     "delete": "Delete",
     "save": "Save",
     "edit": "Edit",
     "done": "Done",
+    "search": "Search",
+    "download": "Download",
+    "downloadExcel": "Download Excel",
+    "print": "Print",
     "titleDeleteConfirm": "Confirm Deletion",
     "male": "Male",
     "female": "Female",
@@ -78,6 +83,17 @@ declare const messages: {
     "DialogInsert": {
       "title": "Please enter student information"
     }
+  },
+  "MonthlyExam": {
+    "viewRanking": "Montly ranking",
+    "viewAll": "View all",
+    "monthlyScores": "Monthly scores",
+    "enterAverage": "Enter average"
+  },
+  "SemesterExam": {
+    "viewRanking": "Semester ranking",
+    "semesterScores": "Semester scores",
+    "semesterlyAverageRanking": "Semesterly average"
   },
   "MenuList": {
     "home": "Home",
