@@ -23,17 +23,22 @@ export default function Page({ params }: { params: Promise<Params> }) {
   const theme = useTheme();
   const t = useTranslations();
 
+  //hide/show each scores cols of datagrid
+  const [showSubjects, setShowSubjects] = useState<boolean>(true);
   const [tabValue, setTabValue] = useState(0);
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+    setShowSubjects((prev) => !prev);
     setTabValue(newValue);
   };
+
+  console.log(tabValue);
 
   return (
     <>
       <Box sx={{ width: "100%", maxWidth: { sm: "100%", md: "1700px" } }}>
         <div className="flex justify-between">
-          <Typography component="h2" variant="h6" sx={{ mb: 2 }}>
-            Overview
+          <Typography component="h2" variant="h6" sx={{ mb: 2, textTransform: "capitalize" }}>
+            {examType === "monthly" ? t("Common.monthly") : t("Common.semester")}
           </Typography>
         </div>
 
@@ -64,11 +69,26 @@ export default function Page({ params }: { params: Promise<Params> }) {
             />
           </Tabs>
           <TabPanel value={tabValue} index={0} dir={theme.direction}>
-            {/* View for Monthly and Semester => [score List view & ranking list view ] */}
-            <MonthlyNsemesterGrid examDate={examDate} examType={examType} />
+            {tabValue == 0 && examType === "monthly" ? (
+              <MonthlyNsemesterGrid
+                examDate={examDate}
+                examType={examType}
+                showSubjects={showSubjects}
+              />
+            ) : (
+              <SemesterlyGrid examDate={examDate} examType={examType} />
+            )}
           </TabPanel>
           <TabPanel value={tabValue} index={1} dir={theme.direction}>
-            <SemesterlyGrid examDate={examDate} examType={examType} />
+            {tabValue == 1 && examType === "monthly" ? (
+              <MonthlyNsemesterGrid
+                examDate={examDate}
+                examType={examType}
+                showSubjects={showSubjects}
+              />
+            ) : (
+              <SemesterlyGrid examDate={examDate} examType={examType} />
+            )}
           </TabPanel>
         </Box>
       </Box>

@@ -19,5 +19,10 @@ export const Paths = {
         upsert: "/api/v1/exam",
         getById: "/api/v1/exams",
         delete: (id: string) => `/api/v1/exam/${id}`,
+    },
+    subject: {
+        upsert: "/api/v1/subject",
+        getById: "/api/v1/subject",
+        delete: (id: string) => `/api/v1/subject/${id}`,
     }
 }

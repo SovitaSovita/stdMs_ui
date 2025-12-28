@@ -24,7 +24,9 @@
     "fatherName": "ឈ្មោះឪពុក",
     "montherName": "ឈ្មោះម្ដាយ",
     "placeOfBirth": "ទីកន្លែងកំណើត",
-    "address": "ទីលំនៅបច្ចុប្បន្ន"
+    "address": "ទីលំនៅបច្ចុប្បន្ន",
+    "subject": "មុខវិជ្ជា",
+    "code": "កូដ"
   },
   "Common": {
     "yes": "បាទ/ចាស",
@@ -84,7 +86,7 @@
   "MonthlyExam": {
     "viewRanking": "ចំណាត់ថ្នាក់ប្រចាំខែ",
     "viewAll": "មើលទាំងមូល",
-    "monthlyScores": "ពិន្ទុប្រចាំខែ",
+    "monthlyScores": "បញ្ជីស្រង់ពិន្ទុប្រចាំខែ",
     "enterAverage": "សូមបញ្ចូលមេគុណ"
   },
   "SemesterExam": {
@@ -100,6 +102,7 @@
     "SemesterExam": "ប្រលងប្រចាំខែ",
     "about": "អំពីខ្ញុំ",
     "feedback": "មតិកែលម្អ",
-    "setting": "ការកំណត់"
+    "setting": "ការកំណត់",
+    "manageSubject": "គ្រប់គ្រងមុខវិជ្ចា"
   }
 }

@@ -27,7 +27,9 @@ declare const messages: {
     "fatherName": "Father Name",
     "montherName": "Mother Name",
     "placeOfBirth": "Place Of Birth",
-    "address": "Address"
+    "address": "Address",
+    "subject": "Subject",
+    "code": "Code"
   },
   "Common": {
     "yes": "Yes",
@@ -103,7 +105,8 @@ declare const messages: {
     "SemesterExam": "Semester Exam",
     "setting": "Setting",
     "about": "About",
-    "feedback": "Feedback"
+    "feedback": "Feedback",
+    "manageSubject": "Manage Subject"
   }
 };
 export default messages;

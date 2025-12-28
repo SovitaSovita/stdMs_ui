@@ -427,19 +427,6 @@ export const SemesterlyGrid = (props: SemesterlyGridProps) => {
               export: true,
               extraControls: (
                 <>
-                  <Button
-                    variant="outlined"
-                    onClick={() => setShowSubjects((prev) => !prev)}
-                    sx={{ mt: 1 }}
-                  >
-                    {showSubjects
-                      ? examType === "monthly"
-                        ? t("MonthlyExam.viewRanking")
-                        : t("SemesterExam.viewRanking")
-                      : examType === "monthly"
-                      ? t("MonthlyExam.monthlyScores")
-                      : t("SemesterExam.semesterScores")}
-                  </Button>
                   <TextField
                     label={t("MonthlyExam.enterAverage")}
                     variant="outlined"

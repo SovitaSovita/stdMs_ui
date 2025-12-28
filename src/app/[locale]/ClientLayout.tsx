@@ -2,8 +2,14 @@
 
 import { usePathname } from "next/navigation";
 import DashboardLayout from "../dashboard/DashboardLayout";
+import NotificationsProvider from "../libs/hooks/useNotifications/NotificationsProvider";
+import DialogsProvider from "../libs/hooks/useDialogs/DialogsProvider";
 
-export default function ClientLayout({ children }: { children: React.ReactNode }) {
+export default function ClientLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const pathname = usePathname();
 
   // ✅ Detect if route is under /auth
@@ -13,5 +19,11 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
     return <>{children}</>;
   }
 
-  return <DashboardLayout>{children}</DashboardLayout>;
+  return (
+    <DashboardLayout>
+      <NotificationsProvider>
+        <DialogsProvider>{children}</DialogsProvider>
+      </NotificationsProvider>
+    </DashboardLayout>
+  );
 }

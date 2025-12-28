@@ -36,12 +36,16 @@ import { ChangeEvent, use, useEffect, useMemo, useState } from "react";
 type MonthlyNsemesterGridProps = {
   examType: string;
   examDate: string;
+  showSubjects: boolean;
 };
 
 export const MonthlyNsemesterGrid = (props: MonthlyNsemesterGridProps) => {
-  const { examDate, examType } = props;
+  const { examDate, examType, showSubjects } = props;
   const [settings, setSettings] = useState<Settings>(getInitialSettings());
   const t = useTranslations();
+
+    // console.log(showSubjects);
+
 
   useEffect(() => {
     localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settings));
@@ -51,9 +55,6 @@ export const MonthlyNsemesterGrid = (props: MonthlyNsemesterGridProps) => {
   const [examData, setExamData] = useState<ClassExamDataResponseType>();
   const [rows, setRows] = useState<StudentInfoScore[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [showSubjects, setShowSubjects] = useState<boolean>(true);
-  const [semesterlyAverageShow, setSemesterlyAverageShow] =
-    useState<boolean>(true);
 
   const columns = useMemo(() => {
     const staticColumns: GridColDef<StudentInfoScore>[] = [
@@ -427,19 +428,7 @@ export const MonthlyNsemesterGrid = (props: MonthlyNsemesterGridProps) => {
               export: true,
               extraControls: (
                 <>
-                  <Button
-                    variant="outlined"
-                    onClick={() => setShowSubjects((prev) => !prev)}
-                    sx={{ mt: 1 }}
-                  >
-                    {showSubjects
-                      ? examType === "monthly"
-                        ? t("MonthlyExam.viewRanking")
-                        : t("SemesterExam.viewRanking")
-                      : examType === "monthly"
-                      ? t("MonthlyExam.monthlyScores")
-                      : t("SemesterExam.semesterScores")}
-                  </Button>
+                  
                   <TextField
                     label={t("MonthlyExam.enterAverage")}
                     variant="outlined"
