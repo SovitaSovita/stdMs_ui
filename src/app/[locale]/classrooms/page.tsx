@@ -1,351 +1,257 @@
 "use client";
 
+import { StudentsInfo, StuInfoDetailResponseType } from "@/app/constants/type";
+import CustomizedTreeView from "@/app/dashboard/components/CustomizedTreeView";
 import DashboardLayout from "@/app/dashboard/DashboardLayout";
-import { Box, Typography } from "@mui/material";
-import { DataGrid, GridColDef } from "@mui/x-data-grid";
+import { classroomAtom } from "@/app/libs/jotai/classroomAtom";
+import ClassroomService from "@/app/service/ClassroomService";
+import StudentService from "@/app/service/StudentService";
+import { Box, Card, Chip, Divider, Stack, Typography } from "@mui/material";
+import Grid from "@mui/material/Grid";
+import { DataGrid, GridColDef, GridRenderCellParams } from "@mui/x-data-grid";
+import dayjs from "dayjs";
+import { useAtom, useAtomValue } from "jotai";
+import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 import { useSession } from "next-auth/react";
-import { useMemo } from "react";
-
-const rows = [
-  {
-    id: 1,
-    lastName: "Snow",
-    firstName: "Jon",
-    gender: "F",
-    totalScore: "244",
-    average: "43.33",
-    mRanking: "3",
-    mGrade: "C",
-    score: {
-      m: 20,
-      p: 34,
-      c: 32,
-      b: 55,
-      es: 99,
-      h: 59,
-      g: 88,
-      i: 86,
-      he: 70,
-      en: 50,
-      ed: 40,
-      si: 80,
-      it: 80,
-    },
-  },
-  {
-    id: 2,
-    lastName: "Lannister",
-    firstName: "Cersei",
-    gender: "M",
-    totalScore: "244",
-    average: "43.33",
-    mRanking: "1",
-    mGrade: "A",
-    score: {
-      m: 20,
-      p: 34,
-      c: 32,
-      b: 55,
-      es: 99,
-      h: 59,
-      g: 88,
-      i: 86,
-      he: 70,
-      en: 50,
-      ed: 40,
-      si: 80,
-      it: 99,
-    },
-  },
-  {
-    id: 3,
-    lastName: "Lannister",
-    firstName: "Jaime",
-    gender: "M",
-    totalScore: "244",
-    average: "43.33",
-    mRanking: "2",
-    mGrade: "B",
-    score: {
-      m: 20,
-      p: 34,
-      c: 32,
-      b: 55,
-      es: 99,
-      h: 59,
-      g: 88,
-      i: 86,
-      he: 70,
-      en: 50,
-      ed: 40,
-      si: 80,
-      it: 70,
-    },
-  },
-  {
-    id: 4,
-    lastName: "Stark",
-    firstName: "Arya",
-    gender: "M",
-    score: {
-      m: 20,
-      p: 34,
-      c: 32,
-      b: 55,
-      es: 99,
-      h: 59,
-      g: 88,
-      i: 86,
-      he: 70,
-      en: 50,
-      ed: 40,
-      si: 80,
-      it: 100,
-    },
-  },
-  {
-    id: 5,
-    lastName: "Targaryen",
-    firstName: "Daenerys",
-    gender: "F",
-    score: {
-      m: 20,
-      p: 34,
-      c: 32,
-      b: 55,
-      es: 99,
-      h: 59,
-      g: 88,
-      i: 86,
-      he: 70,
-      en: 50,
-      ed: 40,
-      si: 80,
-      it: 90,
-    },
-  },
-  {
-    id: 6,
-    lastName: "Melisandre",
-    firstName: null,
-    gender: "M",
-    score: {
-      m: 20,
-      p: 34,
-      c: 32,
-      b: 55,
-      es: 99,
-      h: 59,
-      g: 88,
-      i: 86,
-      he: 70,
-      en: 50,
-      ed: 40,
-      si: 80,
-      it: 60,
-    },
-  },
-  {
-    id: 7,
-    lastName: "Clifford",
-    firstName: "Ferrara",
-    gender: "F",
-    score: {
-      m: 20,
-      p: 34,
-      c: 32,
-      b: 55,
-      es: 99,
-      h: 59,
-      g: 88,
-      i: 86,
-      he: 70,
-      en: 50,
-      ed: 40,
-      si: 80,
-      it: 60,
-    },
-  },
-  {
-    id: 8,
-    lastName: "Frances",
-    firstName: "Rossini",
-    gender: "F",
-    score: {
-      m: 20,
-      p: 34,
-      c: 32,
-      b: 55,
-      es: 99,
-      h: 59,
-      g: 88,
-      i: 86,
-      he: 70,
-      en: 50,
-      ed: 40,
-      si: 80,
-      it: 100,
-    },
-  },
-  {
-    id: 9,
-    lastName: "Roxie",
-    firstName: "Harvey",
-    gender: "M",
-    score: {
-      m: 20,
-      p: 34,
-      c: 32,
-      b: 55,
-      es: 99,
-      h: 59,
-      g: 88,
-      i: 86,
-      he: 70,
-      en: 50,
-      ed: 40,
-      si: 80,
-      it: 90,
-    },
-  },
-];
+import { useTranslations } from "next-intl";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import SubjectService from "@/app/service/SubjectService";
+import { SubjectResponse } from "@/app/constants/type/SubjectType";
 
 export default function Page() {
   const { data: session, status }: { data: any; status: any } = useSession();
+  const classroom = useAtomValue(classroomAtom);
+  const t = useTranslations();
 
-  const columns = useMemo(() => {
-    const staticColumns: GridColDef<(typeof rows)[number]>[] = [
-      {
-        field: "id",
-        headerName: "ល​​រ",
-        headerClassName: "font-siemreap",
-        width: 90,
-      },
-      {
-        field: "fullname",
-        headerName: "គោត្តនាម និងនាម",
-        headerClassName: "font-siemreap",
-        width: 150,
-        valueGetter: (value, row) =>
-          `${row.firstName || ""} ${row.lastName || ""}`,
-        editable: true,
-        sortable: false,
-        disableColumnMenu: true,
-      },
-      {
-        field: "gender",
-        headerName: "ភេទ",
-        headerClassName: "font-siemreap",
-        type: "singleSelect",
-        width: 100,
-        align: "center",
-        headerAlign: "center",
-        editable: true,
-        sortable: false,
-        disableColumnMenu: true,
-        valueOptions: ["M", "F"],
-      },
-    ];
-    const staticColumns2: GridColDef<(typeof rows)[number]>[] = [
-      {
-        field: "totalScore",
-        headerName: "ពិ.សរុប",
-        headerClassName: "font-siemreap",
-        align: "center",
-        headerAlign: "center",
-        width: 150,
-        editable: true,
-        sortable: false,
-        disableColumnMenu: true,
-      },
-      {
-        field: "average",
-        headerName: "ម.ភាគ",
-        headerClassName: "font-siemreap",
-        cellClassName: "font-semibold",
-        type: "string",
-        width: 100,
-        align: "center",
-        headerAlign: "center",
-        editable: true,
-        sortable: false,
-        disableColumnMenu: true,
-      },
-      {
-        field: "mRanking",
-        headerName: "ចំ.ថ្នាក់",
-        headerClassName: "font-siemreap",
-        cellClassName: "text-red-500 font-semibold",
-        type: "string",
-        width: 100,
-        align: "center",
-        headerAlign: "center",
-        editable: true,
-        sortable: false,
-        disableColumnMenu: true,
-      },
-      {
-        field: "mGrade",
-        headerName: "និទ្ទេស",
-        headerClassName: "font-siemreap",
-        cellClassName: "text-red-500 font-semibold",
-        type: "string",
-        width: 100,
-        align: "center",
-        headerAlign: "center",
-        editable: true,
-        sortable: false,
-        disableColumnMenu: true,
-      },
-    ];
-
-    // Safely extract score keys with null checks
-    const scoreKeys =
-      rows.length > 0 && rows[0].score ? Object.keys(rows[0].score) : [];
-
-    const dynamicScoreColumns: GridColDef[] = scoreKeys.map((key) => ({
-      field: key,
-      headerName: key.toUpperCase(),
-      type: "string",
-      width: 40,
+  const columns: GridColDef<(typeof rows)[number]>[] = [
+    {
+      field: "id",
+      headerName: t("CommonField.id"),
+      headerClassName: "font-siemreap",
+      width: 90,
+      editable: false,
+      renderCell: (params) =>
+        params.api.getRowIndexRelativeToVisibleRows(params.id) + 1,
+    },
+    {
+      field: "fullName",
+      headerName: t("CommonField.fullName"),
+      headerClassName: "font-siemreap",
+      width: 150,
+      editable: false,
+      sortable: true,
+      disableColumnMenu: true,
+    },
+    {
+      field: "gender",
+      headerName: t("CommonField.sex"),
+      headerClassName: "font-siemreap",
+      type: "singleSelect",
+      width: 100,
       align: "center",
       headerAlign: "center",
-      editable: true,
+      editable: false,
       sortable: false,
       disableColumnMenu: true,
-      valueGetter: (value, row, column) => {
-        const field = column.field;
-        const scoreArr = row.score;
-        if (!scoreArr) return "";
-        return scoreArr[field] || 0; // Return first score object's value
+      valueOptions: [
+        { value: "M", label: t("Common.male") },
+        { value: "F", label: t("Common.female") },
+      ],
+    },
+    {
+      field: "dateOfBirth",
+      headerName: t("CommonField.dateOfBirth"),
+      type: "date",
+      headerClassName: "font-siemreap",
+      width: 150,
+      editable: false,
+      sortable: false,
+      disableColumnMenu: true,
+      valueGetter: (value) => {
+        return value ? new Date(value) : null;
       },
-    }));
+      valueFormatter: (value) => {
+        if (!value) return "";
+        return `${dayjs(value).format("DD-MM-YYYY")}`;
+      },
+    },
+  ];
 
-    return [...staticColumns, ...dynamicScoreColumns, ...staticColumns2];
-  }, []);
+  const [students, setStudents] = useState<StuInfoDetailResponseType>();
+  const [subjects, setSubjects] = useState<SubjectResponse[]>([]);
+  const [rows, setRows] = useState<StudentsInfo[]>([]);
+
+  const getStudentsInfo = useCallback(async () => {
+    if (classroom) {
+      const result = await StudentService.getInfoList(classroom?.id);
+      if (result) {
+        setStudents(result);
+        setRows(result?.student);
+      }
+    }
+  }, [classroom?.id]);
+
+  const getSubjects = useCallback(async () => {
+    if (classroom) {
+      const result = await SubjectService.getByClassId(classroom.id);
+      if (result.length > 0) {
+        setSubjects(result);
+      } else setSubjects([]);
+    }
+  }, [classroom?.id]);
+
+  useEffect(() => {
+    getStudentsInfo();
+    getSubjects();
+  }, [getStudentsInfo, getSubjects]);
 
   return (
     <>
       <Box sx={{ width: "100%", maxWidth: { sm: "100%", md: "1700px" } }}>
+        <Card
+          sx={{
+            borderRadius: 3,
+            p: 2,
+            boxShadow: "none",
+          }}
+        >
+          <Grid container spacing={4} alignItems="center">
+            {/* Left Details */}
+            <Grid size={{ xs: 12, md: 7 }}>
+              <Grid container spacing={3}>
+                <Grid size={{ xs: 12, sm: 4 }}>
+                  <Typography
+                    fontSize={14}
+                    fontWeight={500}
+                    color="textSecondary"
+                  >
+                    {t("Classroom.className")}
+                  </Typography>
+                  <Typography fontSize={18} fontWeight={600}>
+                    {classroom?.name}
+                  </Typography>
+                </Grid>
+
+                <Grid size={{ xs: 12, sm: 4 }}>
+                  <Typography
+                    fontSize={14}
+                    fontWeight={500}
+                    color="textSecondary"
+                  >
+                    {t("Classroom.gradeName")}
+                  </Typography>
+                  <Typography fontSize={18} fontWeight={600}>
+                    {t("Common.grade")} {classroom?.grade}
+                  </Typography>
+                </Grid>
+
+                <Grid size={{ xs: 12, sm: 4 }}>
+                  <Typography
+                    fontSize={14}
+                    fontWeight={500}
+                    color="textSecondary"
+                  >
+                    {t("Classroom.yearOfStudying")}
+                  </Typography>
+                  <Typography fontSize={18} fontWeight={600}>
+                    {classroom?.year}
+                  </Typography>
+                </Grid>
+              </Grid>
+            </Grid>
+
+            {/* Divider */}
+            <Grid size={{ md: 0.3 }} display={{ xs: "none", md: "block" }}>
+              <Divider orientation="vertical" color="textSecondary" />
+            </Grid>
+
+            {/* Right Stats */}
+            <Grid size={{ xs: 12, md: 4.7 }}>
+              <Box display="flex" gap={6}>
+                {/* Total Students */}
+                <Box>
+                  <Typography
+                    fontSize={14}
+                    fontWeight={500}
+                    mb={0.5}
+                    color="textSecondary"
+                  >
+                    {t("Classroom.totalStu")}
+                  </Typography>
+
+                  <Typography fontSize={32} fontWeight={700}>
+                    {students?.total}{" "}
+                    <Typography
+                      fontSize={14}
+                      fontWeight={500}
+                      mb={0.5}
+                      component={"span"}
+                      color="textSecondary"
+                    >
+                      {t("Common.people")}
+                    </Typography>
+                  </Typography>
+                </Box>
+
+                {/* Total Subjects */}
+                <Box>
+                  <Typography
+                    fontSize={14}
+                    fontWeight={500}
+                    mb={0.5}
+                    color="textSecondary"
+                  >
+                    {t("Classroom.totalSub")}
+                  </Typography>
+
+                  <Typography fontSize={32} fontWeight={700}>
+                    {subjects?.length}{" "}
+                    <Typography
+                      fontSize={14}
+                      fontWeight={500}
+                      mb={0.5}
+                      component={"span"}
+                      color="textSecondary"
+                    >
+                      {t("Common.subject")}
+                    </Typography>
+                  </Typography>
+                </Box>
+              </Box>
+            </Grid>
+          </Grid>
+        </Card>
+
+        {/* ------------- */}
         <Typography component="h2" variant="h6" sx={{ mb: 2 }}>
-          Overview
+          {t("Student.title")}
         </Typography>
-        <Box className="font-siemreap" sx={{ height: 400, width: "100%" }}>
-          <DataGrid
-            rows={rows}
-            columns={columns}
-            initialState={{
-              pagination: {
-                paginationModel: {
-                  pageSize: 5,
+        <Grid container spacing={2} columns={12}>
+          <Grid size={{ xs: 12, lg: 3 }}>
+            <Stack
+              gap={2}
+              direction={{ xs: "column", sm: "row", lg: "column" }}
+            >
+              <CustomizedTreeView />
+            </Stack>
+          </Grid>
+          <Grid size={{ xs: 12, lg: 9 }}>
+            <DataGrid
+              rows={rows}
+              columns={columns}
+              initialState={{
+                pagination: {
+                  paginationModel: {
+                    pageSize: 5,
+                  },
                 },
-              },
-            }}
-            pageSizeOptions={[5]}
-            checkboxSelection
-            disableRowSelectionOnClick
-          />
-        </Box>
+              }}
+              pageSizeOptions={[5]}
+              checkboxSelection
+              disableRowSelectionOnClick
+            />
+          </Grid>
+        </Grid>
       </Box>
     </>
   );

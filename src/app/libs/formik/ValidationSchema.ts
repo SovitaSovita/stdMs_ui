@@ -21,3 +21,12 @@ export const upsertExamSchema = (t: (key: string) => string) =>
     examType: Yup.string().required(t("require")),
     examDate: Yup.string().required(t("require")),
   });
+
+export const upsertClassSchema = (t: (key: string) => string) =>
+  Yup.object({
+    name: Yup.string().required(t("require")).min(2, t("minText2")),
+    grade: Yup.string().required(t("require")),
+    year: Yup.string().required(t("require")),
+    startYear: Yup.string().required(t("require")),
+    endYear: Yup.string().required(t("require")),
+  });

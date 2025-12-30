@@ -21,7 +21,7 @@ import {
 } from "@mui/x-data-grid";
 import { useAtom, useAtomValue } from "jotai";
 import { useTranslations } from "next-intl";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { showAlertAtom } from "@/app/libs/jotai/alertAtom";
 import dayjs from "dayjs";
 import GroupAddIcon from "@mui/icons-material/GroupAdd";
@@ -166,7 +166,7 @@ export default function Page() {
       ids: new Set<GridRowId>([]),
     });
 
-  const getStudentsInfo = async () => {
+  const getStudentsInfo = useCallback(async () => {
     if (classroom) {
       const result = await StudentService.getInfoList(classroom?.id);
       if (result) {
@@ -174,13 +174,11 @@ export default function Page() {
         setRows(result?.student);
       }
     }
-  };
+  }, [classroom?.id]);
 
   useEffect(() => {
-    if (classroom) {
-      getStudentsInfo();
-    }
-  }, [classroom]);
+    getStudentsInfo();
+  }, [getStudentsInfo]);
 
   const [settings, setSettings] = useState<Settings>(getInitialSettings());
 

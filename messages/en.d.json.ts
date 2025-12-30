@@ -34,6 +34,8 @@ declare const messages: {
   "Common": {
     "yes": "Yes",
     "no": "No",
+    "create": "Create",
+    "update": "Update",
     "cancel": "Cancel",
     "back": "Back",
     "delete": "Delete",
@@ -49,6 +51,7 @@ declare const messages: {
     "female": "Female",
     "total": "Total",
     "people": "People",
+    "subject": "Subject",
     "studyYear": "Year",
     "grade": "Grade",
     "classroom": "Classroom",
@@ -68,6 +71,21 @@ declare const messages: {
       "october": "October",
       "november": "November",
       "december": "December"
+    }
+  },
+  "Classroom": {
+    "createNew" : "Create new class",
+    "gradeName" : "Grade level",
+    "className" : "Class name",
+    "yearOfStudying" : "Academic Year",
+    "startYear" : "Start Year",
+    "endYear" : "End Year",
+    "totalStu" : "Total Students",
+    "totalFemaleStu" : "Total Female Students",
+    "totalMaleStu" : "Total Male Students",
+    "totalSub" : "Total Subjects",
+    "DialogInsert" : {
+      "title" : "Please enter Class information"
     }
   },
   "Student": {
@@ -101,6 +119,7 @@ declare const messages: {
     "home": "Home",
     "classroom": "Classroom",
     "student": "Student",
+    "exam": "Examing",
     "monthlyExam": "Monthly Exam",
     "SemesterExam": "Semester Exam",
     "setting": "Setting",

@@ -4,6 +4,7 @@ export const Paths = {
         register: "/api/v1/auth/register",
     },
     class: {
+        upsert: "/api/v1/class",
         getClassList: "/api/v1/classes",
         getInfoClass: "/api/v1/info-classes",
         getInfoClassById: "/api/v1/info-class/detail",

@@ -49,6 +49,7 @@ export default function Page() {
     if (!id) return;
     const result = await ExamService.getByClassId(id);
     if (result.length > 0) setExams(result);
+    else setExams([])
   };
 
   useEffect(() => {

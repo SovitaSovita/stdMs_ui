@@ -15,10 +15,12 @@ import DevicesRoundedIcon from "@mui/icons-material/DevicesRounded";
 import SmartphoneRoundedIcon from "@mui/icons-material/SmartphoneRounded";
 import ConstructionRoundedIcon from "@mui/icons-material/ConstructionRounded";
 import ClassroomService from "@/app/service/ClassroomService";
-import { ClassInfoResponseType, ClassResponseType } from "@/app/constants/type";
+import { ClassInfoResponseType, ClassResponseType, DialogModeType } from "@/app/constants/type";
 import { useSetAtom } from "jotai";
 import { classroomAtom } from "@/app/libs/jotai/classroomAtom";
 import { useTranslations } from "next-intl";
+import { useRouter } from "next/navigation";
+import { UpsertClassDialog } from "./Dialog/UpsertClassDialog";
 
 const Avatar = styled(MuiAvatar)(({ theme }) => ({
   width: 28,
@@ -37,16 +39,19 @@ const STORAGE_KEY = "selectedClassroomId";
 
 export default function SelectContent() {
   const t = useTranslations("Common");
+  const router = useRouter();
   const [classrooms, setClassrooms] = React.useState<ClassInfoResponseType[]>(
     []
   );
+  const [dialogMode, setDialogMode] = React.useState<DialogModeType>("CREATE");
   const [classroomId, setClassroomId] = React.useState<string>("");
+  const [openClassDialog, setOpenClassDialog] = React.useState(false);
   const setClassroomAtom = useSetAtom(classroomAtom);
 
   // load classrooms
   const getCurrentClasses = async () => {
     const result = await ClassroomService.getInfoList();
-    if (result) {
+    if (result.length > 0) {
       setClassrooms(result);
 
       // Restore previously selected classroom (if exists)
@@ -54,6 +59,10 @@ export default function SelectContent() {
       const selectedId = savedId || result[0]?.id?.toString();
       setClassroomId(selectedId);
       getClassDetail(selectedId);
+    } else if (result.length == 0) {
+      localStorage.setItem(STORAGE_KEY, "");
+      setDialogMode("INIT");
+      setOpenClassDialog(true);
     }
   };
 
@@ -68,59 +77,67 @@ export default function SelectContent() {
 
   const handleChange = (event: SelectChangeEvent) => {
     const id = event.target.value as string;
-    setClassroomId(id);
-    localStorage.setItem(STORAGE_KEY, id); // ✅ persist selected classroom
-    getClassDetail(id);
+    if (id === "add") {
+      setDialogMode("CREATE");
+      setOpenClassDialog(true);
+    } else {
+      setClassroomId(id);
+      localStorage.setItem(STORAGE_KEY, id); // ✅ persist selected classroom
+      getClassDetail(id);
+    }
   };
 
   React.useEffect(() => {
     getCurrentClasses();
-  }, []);
+  }, [openClassDialog]);
 
   return (
-    <Select
-      labelId="classroom-select"
-      id="classroom-simple-select"
-      value={classroomId}
-      onChange={handleChange}
-      displayEmpty
-      fullWidth
-      inputProps={{ "aria-label": "Select classroom" }}
-      sx={{
-        maxHeight: 56,
-        width: 215,
-        [`& .${selectClasses.select}`]: {
-          display: "flex",
-          alignItems: "center",
-          gap: "2px",
-          pl: 1,
-        },
-      }}
-    >
-      <ListSubheader>{t("classroom")}</ListSubheader>
-      {classrooms.map((row) => (
-        <MenuItem key={row.id} value={row.id}>
-          <ListItemAvatar>
-            <Avatar alt={row.name}>
-              <SmartphoneRoundedIcon sx={{ fontSize: "1rem" }} />
-            </Avatar>
-          </ListItemAvatar>
+    <>
+      <Select
+        labelId="classroom-select"
+        id="classroom-simple-select"
+        value={classroomId}
+        onChange={handleChange}
+        displayEmpty
+        fullWidth
+        inputProps={{ "aria-label": "Select classroom" }}
+        sx={{
+          maxHeight: 56,
+          width: 215,
+          [`& .${selectClasses.select}`]: {
+            display: "flex",
+            alignItems: "center",
+            gap: "2px",
+            pl: 1,
+          },
+        }}
+      >
+        <ListSubheader>{t("classroom")}</ListSubheader>
+        {classrooms.map((row) => (
+          <MenuItem key={row.id} value={row.id}>
+            <ListItemAvatar>
+              <Avatar alt={row.name}>
+                <SmartphoneRoundedIcon sx={{ fontSize: "1rem" }} />
+              </Avatar>
+            </ListItemAvatar>
+            <ListItemText
+              primary={t("classroom") + " " + row.name}
+              secondary={t("studyYear") + " " + row.year}
+            />
+          </MenuItem>
+        ))}
+        <Divider sx={{ mx: -1 }} />
+        <MenuItem value="add">
+          <ListItemIcon>
+            <AddRoundedIcon />
+          </ListItemIcon>
           <ListItemText
-            primary={t("classroom") + " " + row.name}
-            secondary={t("studyYear") + " " + row.year}
+            primary={t("createClassroom")}
+            // secondary="Create your class"
           />
         </MenuItem>
-      ))}
-      <Divider sx={{ mx: -1 }} />
-      <MenuItem value="add">
-        <ListItemIcon>
-          <AddRoundedIcon />
-        </ListItemIcon>
-        <ListItemText
-          primary={t("createClassroom")}
-          // secondary="Create your class"
-        />
-      </MenuItem>
-    </Select>
+      </Select>
+      <UpsertClassDialog open={openClassDialog} setOpen={setOpenClassDialog} mode={dialogMode}/>
+    </>
   );
 }

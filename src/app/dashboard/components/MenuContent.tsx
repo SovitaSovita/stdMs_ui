@@ -32,10 +32,10 @@ const mainListItems = [
     path: "/students",
   },
   {
-    key: "monthlyExam",
+    key: "exam",
     text: "Monthly Exam",
     icon: <AssignmentRoundedIcon />,
-    path: "/monthly-exam",
+    path: "/exam",
   },
 ];
 

@@ -31,8 +31,10 @@
   "Common": {
     "yes": "បាទ/ចាស",
     "no": "ទេ",
+    "create": "បង្កើត",
+    "update": "កែប្រែ",
     "cancel": "បោះបង់",
-    "back": "ត្រលប់ក្រោយ",
+    "back": "ត្រលប់",
     "delete": "លុប",
     "save": "រក្សាទុក",
     "edit": "កែសម្រួល",
@@ -46,6 +48,7 @@
     "male": "ប្រុស",
     "total": "សរុប",
     "people": "នាក់",
+    "subject": "មុខវិជ្ជា",
     "classroom": "ថ្នាក់រៀន",
     "grade": "កំរិតថ្នាក់",
     "studyYear": "ឆ្នាំសិក្សា",
@@ -65,6 +68,21 @@
       "october": "តុលា",
       "november": "វិច្ឆិកា",
       "december": "ធ្នូ"
+    }
+  },
+  "Classroom": {
+    "createNew": "បង្កើតថ្នាក់ថ្មី",
+    "gradeName": "កម្រិតថ្នាក់រៀន",
+    "className": "ឈ្មោះថ្នាក់រៀន",
+    "yearOfStudying": "ឆ្នាំសិក្សា",
+    "startYear": "ចាប់ពីឆ្នាំ",
+    "endYear": "ដល់ឆ្នាំ",
+    "totalStu": "សិស្សសរុប",
+    "totalFemaleStu": "សិស្សស្រីសរុប",
+    "totalMaleStu": "សិស្សប្រុសសរុប",
+    "totalSub": "មុខវិជ្ជាសរុប",
+    "DialogInsert": {
+      "title": "សូមបញ្ជូលពត័មានថ្នាក់រៀន"
     }
   },
   "Student": {
@@ -98,8 +116,9 @@
     "home": "ទំព័រដើម",
     "student": "បញ្ចីសិស្ស",
     "classroom": "ថ្នាក់រៀន",
+    "exam": "ការប្រលង",
     "monthlyExam": "ប្រលងប្រចាំខែ",
-    "SemesterExam": "ប្រលងប្រចាំខែ",
+    "SemesterExam": "ប្រលងប្រចាំឆមាស",
     "about": "អំពីខ្ញុំ",
     "feedback": "មតិកែលម្អ",
     "setting": "ការកំណត់",

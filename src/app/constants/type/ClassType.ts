@@ -43,10 +43,9 @@ export type ClassReqFilterDetailType = {
   examDate: string;
 };
 
+
+
 ///////////////////
-interface StudentScores {
-  [key: string]: string;
-}
 
 export interface StudentInfoScore {
   id: string;
@@ -74,3 +73,18 @@ export interface ClassExamDataResponseType {
   exams: Exam;
   students: StudentInfoScore[];
 }
+
+export type ClassInitform = {
+  id?: string;
+  name: string;
+  grade: string;
+  year: string;
+  startYear: string;
+  endYear: string;
+};
+export type ClassUpsertRequest = {
+  id?: string;
+  name: string;
+  grade: string;
+  year: string;
+};

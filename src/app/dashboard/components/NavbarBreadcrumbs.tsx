@@ -36,7 +36,7 @@ export default function NavbarBreadcrumbs() {
   // Build cumulative URLs for each breadcrumb level
   const buildHref = (index: number) => {
     if (
-      (pathParts[index - 1] === "monthly-exam" &&
+      (pathParts[index - 1] === "exam" &&
         pathParts[index] === "monthly") ||
       pathParts[index] === "semester"
     ) {

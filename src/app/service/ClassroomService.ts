@@ -4,11 +4,15 @@ import {
   ClassInfoResponseType,
   ClassReqFilterDetailType,
   ClassResponseType,
+  ClassUpsertRequest,
   ScoreUpsertRequest,
 } from "../constants/type";
 import RestService from "./RestService";
 
 const ClassroomService = {
+  upsert: async (sentData: ClassUpsertRequest): Promise<any> => {
+    return await RestService.post(Paths.class.upsert, sentData);
+  },
   getDetailList: async (): Promise<ClassResponseType[]> => {
     return await RestService.get<ClassResponseType[]>(Paths.class.getClassList);
   },

@@ -19,7 +19,7 @@ axiosRetry(axiosBackInstance, {
   retries: 2,
   retryDelay: () => 1000,
   retryCondition: (error) => {
-    // 네트워크 오류나 5xx 서버 오류에 대해 재시도
+    // Retry on network errors or 5xx server errors
     return axiosRetry.isNetworkError(error);
   },
 });
