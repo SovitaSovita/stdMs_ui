@@ -10,7 +10,7 @@ import {
 } from "@/app/constants/type";
 import { CustomDataGridToolbar } from "@/app/dashboard/components/Common/CustomDataGridToolbar";
 import { showAlertAtom } from "@/app/libs/jotai/alertAtom";
-import { classroomAtom, mekunAtom } from "@/app/libs/jotai/classroomAtom";
+import { classroomAtom, mekunAtom, mekunSemesterAtom } from "@/app/libs/jotai/classroomAtom";
 import ClassroomService from "@/app/service/ClassroomService";
 import {
   getInitialSettings,
@@ -33,34 +33,33 @@ import { useTranslations } from "next-intl";
 import { notFound } from "next/navigation";
 import { ChangeEvent, use, useEffect, useMemo, useState } from "react";
 
-type MonthlyNsemesterGridProps = {
+type SemesterlyAverageGridProps = {
   examType: string;
   examDate: string;
-  showSubjects: boolean;
 };
 
-export const MonthlyNsemesterGrid = (props: MonthlyNsemesterGridProps) => {
-  const { examDate, examType, showSubjects } = props;
+export const SemesterlyAverageGrid = (props: SemesterlyAverageGridProps) => {
+  const { examDate, examType } = props;
   const [settings, setSettings] = useState<Settings>(getInitialSettings());
   const t = useTranslations();
-
-    // console.log(showSubjects);
-
 
   useEffect(() => {
     localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settings));
   }, [settings]);
 
-  const [meKunValue, setMekunValue] = useAtom(mekunAtom);
+  const [meKunValue, setMekunValue] = useAtom(mekunSemesterAtom);
   const [examData, setExamData] = useState<ClassExamDataResponseType>();
   const [rows, setRows] = useState<StudentInfoScore[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [showSubjects, setShowSubjects] = useState<boolean>(true);
+  const [semesterlyAverageShow, setSemesterlyAverageShow] =
+    useState<boolean>(true);
 
   const columns = useMemo(() => {
     const staticColumns: GridColDef<StudentInfoScore>[] = [
       {
         field: "id",
-        headerName: "ល​​រ",
+        headerName: t("CommonField.id"),
         headerClassName: "font-siemreap",
         width: 90,
         renderCell: (params) =>
@@ -68,7 +67,7 @@ export const MonthlyNsemesterGrid = (props: MonthlyNsemesterGridProps) => {
       },
       {
         field: "fullName",
-        headerName: "គោត្តនាម និងនាម",
+        headerName: t("CommonField.fullName"),
         headerClassName: "font-siemreap",
         width: showSubjects ? 150 : 170,
         // valueGetter: (value, row) =>
@@ -78,7 +77,7 @@ export const MonthlyNsemesterGrid = (props: MonthlyNsemesterGridProps) => {
       },
       {
         field: "gender",
-        headerName: "ភេទ",
+        headerName: t("CommonField.sex"),
         headerClassName: "font-siemreap",
         type: "singleSelect",
         width: 100,
@@ -90,19 +89,8 @@ export const MonthlyNsemesterGrid = (props: MonthlyNsemesterGridProps) => {
     ];
     const staticColumns2: GridColDef<StudentInfoScore>[] = [
       {
-        field: "totalScore",
-        headerName: "ពិ.សរុប",
-        headerClassName: "font-siemreap",
-        align: "center",
-        disableReorder: true,
-        headerAlign: "center",
-        width: showSubjects ? 70 : 90,
-        sortable: false,
-        disableColumnMenu: true,
-      },
-      {
         field: "average",
-        headerName: "ម.ភាគ",
+        headerName: t("CommonField.average"),
         headerClassName: "font-siemreap",
         cellClassName: "font-semibold",
         type: "string",
@@ -114,7 +102,7 @@ export const MonthlyNsemesterGrid = (props: MonthlyNsemesterGridProps) => {
       },
       {
         field: "mRanking",
-        headerName: "ចំ.ថ្នាក់",
+        headerName: t("CommonField.ranking"),
         headerClassName: "font-siemreap",
         cellClassName: "text-red-500 font-semibold",
         type: "string",
@@ -126,7 +114,7 @@ export const MonthlyNsemesterGrid = (props: MonthlyNsemesterGridProps) => {
       },
       {
         field: "mGrade",
-        headerName: "និទ្ទេស",
+        headerName: t("CommonField.grade"),
         headerClassName: "font-siemreap",
         cellClassName: "text-red-500 font-semibold",
         type: "string",
@@ -138,44 +126,8 @@ export const MonthlyNsemesterGrid = (props: MonthlyNsemesterGridProps) => {
       },
     ];
 
-    // Safely extract score keys with null checks
-    const scoreKeys =
-      rows.length > 0 && rows[0].scores ? Object.keys(rows[0].scores) : [];
-
-    const dynamicScoreColumns: GridColDef[] = scoreKeys.flatMap((key) => {
-      const baseCol: GridColDef = {
-        field: key,
-        headerName: key.toUpperCase().slice(0, 2),
-        type: "string",
-        width: showSubjects ? 70 : 90,
-        align: "center",
-        headerAlign: "center",
-        editable: true,
-        sortable: false,
-        disableColumnMenu: true,
-        valueGetter: (value, row, column) => {
-          const field = column?.field;
-          const scoreArr = row?.scores;
-          if (!scoreArr) return "";
-          return scoreArr[field] || 0;
-        },
-      };
-
-      //If examType = "semester", also create ranking column for this subject
-      if (examType === "semester") {
-        const rankCol: GridColDef = {
-          field: `${key}_Rank`,
-          headerName: `Rank`,
-          width: 80,
-          align: "center",
-          headerAlign: "center",
-          valueGetter: (value, row) => (row as any)[`${key}_rank`] || 0,
-          cellClassName: "text-red-500 font-semibold",
-        };
-        return [baseCol, rankCol];
-      }
-      return [baseCol];
-    });
+    //average score of each monthly exam
+    const dynamicScoreColumns: GridColDef[] = [];
 
     return showSubjects
       ? [...staticColumns, ...dynamicScoreColumns, ...staticColumns2]
@@ -228,78 +180,6 @@ export const MonthlyNsemesterGrid = (props: MonthlyNsemesterGridProps) => {
   // handle input Mekun
   const handleInputMekun = (event: ChangeEvent<HTMLInputElement>) => {
     setMekunValue(Number(event.target.value));
-  };
-
-  const processRowUpdate = async (
-    newRow: StudentInfoScore,
-    oldRow: StudentInfoScore,
-    params: { rowId: GridRowId }
-  ): Promise<StudentInfoScore> => {
-    setIsLoading(true);
-
-    try {
-      // Find which subject (field) changed
-      // Find which top-level field was edited
-      const changedField = Object.keys(newRow).find((key) => {
-        if (key === "scores") return false; // skip nested if subject name = scores
-        const newVal = newRow[key];
-        const oldVal = oldRow[key];
-        return newVal !== oldVal;
-      });
-
-      if (!changedField) {
-        console.warn("No changed field detected");
-        return oldRow;
-      }
-
-      // Merge this field into scores
-      const updatedScores = {
-        ...oldRow.scores,
-        [changedField]: Number(newRow[changedField]),
-      };
-
-      // Build the newRow correctly
-      const updatedRow = {
-        ...newRow,
-        scores: updatedScores,
-      };
-
-      // Prepare request payload
-      const sendData: ScoreUpsertRequest[] = [
-        {
-          studentId: updatedRow.id,
-          subjectName: changedField,
-          score: Number(updatedScores[changedField]),
-        },
-      ];
-
-      if (!classroom || !examData?.exams) return oldRow;
-
-      const result = await ClassroomService.upsertStuScores(
-        classroom.id,
-        examData.exams.id,
-        sendData
-      );
-
-      if (result) {
-        setRows((prev) =>
-          prev.map((r) => (r.id === updatedRow.id ? updatedRow : r))
-        );
-
-        showAlert({
-          message: "Student score updated.",
-          severity: "success",
-        });
-        return updatedRow;
-      }
-
-      return oldRow;
-    } catch (error) {
-      console.error("processRowUpdate error:", error);
-      return oldRow; // rollback
-    } finally {
-      setIsLoading(false);
-    }
   };
 
   // Compute scores, average, ranking, and grade
@@ -411,7 +291,6 @@ export const MonthlyNsemesterGrid = (props: MonthlyNsemesterGridProps) => {
             },
           },
         }}
-        processRowUpdate={processRowUpdate}
         pageSizeOptions={[15, 25, 50]}
         checkboxSelection
         disableRowSelectionOnClick
@@ -428,7 +307,6 @@ export const MonthlyNsemesterGrid = (props: MonthlyNsemesterGridProps) => {
               export: true,
               extraControls: (
                 <>
-                  
                   <TextField
                     label={t("MonthlyExam.enterAverage")}
                     variant="outlined"

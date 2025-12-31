@@ -7,6 +7,7 @@ export type StuInfoDetailResponseType = {
 export type StudentsInfo = {
   id: string;
   fullName: string;
+  idCard: string;
   gender: "M" | "F";
   dateOfBirth: string;
   fatherName: string;

@@ -10,7 +10,7 @@ import {
 } from "@/app/constants/type";
 import { CustomDataGridToolbar } from "@/app/dashboard/components/Common/CustomDataGridToolbar";
 import { showAlertAtom } from "@/app/libs/jotai/alertAtom";
-import { classroomAtom } from "@/app/libs/jotai/classroomAtom";
+import { classroomAtom, mekunAtom } from "@/app/libs/jotai/classroomAtom";
 import ClassroomService from "@/app/service/ClassroomService";
 import {
   getInitialSettings,
@@ -47,7 +47,7 @@ export const SemesterlyGrid = (props: SemesterlyGridProps) => {
     localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settings));
   }, [settings]);
 
-  const [meKunValue, setMekunValue] = useState<string>("16.5");
+  const [meKunValue, setMekunValue] = useAtom(mekunAtom);
   const [examData, setExamData] = useState<ClassExamDataResponseType>();
   const [rows, setRows] = useState<StudentInfoScore[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -59,7 +59,7 @@ export const SemesterlyGrid = (props: SemesterlyGridProps) => {
     const staticColumns: GridColDef<StudentInfoScore>[] = [
       {
         field: "id",
-        headerName: "ល​​រ",
+        headerName: t("CommonField.id"),
         headerClassName: "font-siemreap",
         width: 90,
         renderCell: (params) =>
@@ -67,7 +67,7 @@ export const SemesterlyGrid = (props: SemesterlyGridProps) => {
       },
       {
         field: "fullName",
-        headerName: "គោត្តនាម និងនាម",
+        headerName: t("CommonField.fullName"),
         headerClassName: "font-siemreap",
         width: showSubjects ? 150 : 170,
         // valueGetter: (value, row) =>
@@ -77,7 +77,7 @@ export const SemesterlyGrid = (props: SemesterlyGridProps) => {
       },
       {
         field: "gender",
-        headerName: "ភេទ",
+        headerName: t("CommonField.sex"),
         headerClassName: "font-siemreap",
         type: "singleSelect",
         width: 100,
@@ -90,7 +90,7 @@ export const SemesterlyGrid = (props: SemesterlyGridProps) => {
     const staticColumns2: GridColDef<StudentInfoScore>[] = [
       {
         field: "totalScore",
-        headerName: "ពិ.សរុប",
+        headerName: t("CommonField.totalScore"),
         headerClassName: "font-siemreap",
         align: "center",
         disableReorder: true,
@@ -101,7 +101,7 @@ export const SemesterlyGrid = (props: SemesterlyGridProps) => {
       },
       {
         field: "average",
-        headerName: "ម.ភាគ",
+        headerName: t("CommonField.average"),
         headerClassName: "font-siemreap",
         cellClassName: "font-semibold",
         type: "string",
@@ -113,7 +113,7 @@ export const SemesterlyGrid = (props: SemesterlyGridProps) => {
       },
       {
         field: "mRanking",
-        headerName: "ចំ.ថ្នាក់",
+        headerName: t("CommonField.ranking"),
         headerClassName: "font-siemreap",
         cellClassName: "text-red-500 font-semibold",
         type: "string",
@@ -125,7 +125,7 @@ export const SemesterlyGrid = (props: SemesterlyGridProps) => {
       },
       {
         field: "mGrade",
-        headerName: "និទ្ទេស",
+        headerName: t("CommonField.grade"),
         headerClassName: "font-siemreap",
         cellClassName: "text-red-500 font-semibold",
         type: "string",
@@ -164,7 +164,7 @@ export const SemesterlyGrid = (props: SemesterlyGridProps) => {
       if (examType === "semester") {
         const rankCol: GridColDef = {
           field: `${key}_Rank`,
-          headerName: `Rank`,
+          headerName: t("CommonField.ranking"),
           width: 80,
           align: "center",
           headerAlign: "center",
@@ -226,8 +226,9 @@ export const SemesterlyGrid = (props: SemesterlyGridProps) => {
 
   // handle input Mekun
   const handleInputMekun = (event: ChangeEvent<HTMLInputElement>) => {
-    setMekunValue(event.target.value);
+    setMekunValue(Number(event.target.value));
   };
+
 
   const processRowUpdate = async (
     newRow: StudentInfoScore,

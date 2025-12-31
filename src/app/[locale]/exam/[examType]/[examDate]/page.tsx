@@ -1,6 +1,7 @@
 "use client";
 
 import { MonthlyNsemesterGrid } from "@/app/dashboard/components/examType/MonthlyNsemesterGrid";
+import { SemesterlyAverageGrid } from "@/app/dashboard/components/examType/SemesterlyAverageGrid";
 import { SemesterlyGrid } from "@/app/dashboard/components/examType/SemesterlyGrid";
 import { Box, Tab, Tabs, Typography, useTheme } from "@mui/material";
 import { useTranslations } from "next-intl";
@@ -85,7 +86,7 @@ export default function Page({ params }: { params: Promise<Params> }) {
                 showSubjects={showSubjects}
               />
             ) : (
-              <SemesterlyGrid examDate={examDate} examType={examType} />
+              <SemesterlyAverageGrid examDate={examDate} examType={examType} />
             )}
           </TabPanel>
         </Box>

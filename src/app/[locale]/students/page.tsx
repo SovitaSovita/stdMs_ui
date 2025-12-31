@@ -53,6 +53,13 @@ export default function Page() {
         params.api.getRowIndexRelativeToVisibleRows(params.id) + 1,
     },
     {
+      field: "idCard",
+      headerName: t("CommonField.idCard"),
+      headerClassName: "font-siemreap",
+      width: 90,
+      editable: true,
+    },
+    {
       field: "fullName",
       headerName: t("CommonField.fullName"),
       headerClassName: "font-siemreap",
@@ -229,7 +236,13 @@ export default function Page() {
 
       if (!newRow.fullName) {
         showAlert({
-          message: t("CommonValidate.cannotEmpty"),
+          message:
+            t("CommonField.fullName") +
+            t("CommonValidate.cannotEmpty") +
+            " " +
+            t("CommonValidate.inputFirst", {
+              fullName: t("CommonField.fullName"),
+            }),
           severity: "error",
         });
         return oldRow;
@@ -300,6 +313,7 @@ export default function Page() {
         id: tempId,
         classId: classroom?.id,
         fullName: "",
+        idCard: "",
         gender: "M",
         dateOfBirth: "2000-01-01",
         fatherName: "",

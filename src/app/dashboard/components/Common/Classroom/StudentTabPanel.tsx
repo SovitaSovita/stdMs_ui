@@ -39,6 +39,13 @@ export const StudentTabPanel = () => {
         params.api.getRowIndexRelativeToVisibleRows(params.id) + 1,
     },
     {
+      field: "idCard",
+      headerName: t("CommonField.idCard"),
+      headerClassName: "font-siemreap",
+      width: 90,
+      editable: false,
+    },
+    {
       field: "fullName",
       headerName: t("CommonField.fullName"),
       headerClassName: "font-siemreap",

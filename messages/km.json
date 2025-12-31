@@ -11,11 +11,13 @@
     "require": "ត្រូវបានទាមទារ",
     "minText2": "ត្រូវមានយ៉ាងហោចណាស់ ២ តួអក្សរ",
     "cannotEmpty": "មិនអាចទទេរ",
-    "noChange": "មិនមានអ្វីបានប្ដូរ"
+    "noChange": "មិនមានអ្វីបានប្ដូរ",
+    "inputFirst": "សូមបញ្ចូល {fullName} ជាមុន!"
   },
   "CommonField": {
     "id": "ល​​រ",
-    "fullName": "ឈ្មោះពេញ",
+    "idCard": "អត្តលេខ",
+    "fullName": "គោត្តនាម និងនាម",
     "firstName": "គោត្តនាម",
     "teacherName": "ឈ្មោះគ្រូបង្រៀន",
     "credit": "មេគុណ",
@@ -31,7 +33,11 @@
     "placeOfBirth": "ទីកន្លែងកំណើត",
     "address": "ទីលំនៅបច្ចុប្បន្ន",
     "subject": "មុខវិជ្ជា",
-    "code": "កូដ"
+    "code": "កូដ",
+    "ranking": "ចំ.ថ្នាក់",
+    "totalScore": "ពិន្ទុសរុប",
+    "average": "ម.ភាគ",
+    "grade": "និទ្ទេស"
   },
   "Common": {
     "yes": "បាទ/ចាស",

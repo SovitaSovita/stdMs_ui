@@ -12,7 +12,7 @@ import Divider from "@mui/material/Divider";
 import { styled } from "@mui/material/styles";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import DevicesRoundedIcon from "@mui/icons-material/DevicesRounded";
-import SmartphoneRoundedIcon from "@mui/icons-material/SmartphoneRounded";
+import SchoolIcon from '@mui/icons-material/School';
 import ConstructionRoundedIcon from "@mui/icons-material/ConstructionRounded";
 import ClassroomService from "@/app/service/ClassroomService";
 import { ClassInfoResponseType, ClassResponseType, DialogModeType } from "@/app/constants/type";
@@ -117,7 +117,7 @@ export default function SelectContent() {
           <MenuItem key={row.id} value={row.id}>
             <ListItemAvatar>
               <Avatar alt={row.name}>
-                <SmartphoneRoundedIcon sx={{ fontSize: "1rem" }} />
+                <SchoolIcon sx={{ fontSize: "1rem" }} />
               </Avatar>
             </ListItemAvatar>
             <ListItemText

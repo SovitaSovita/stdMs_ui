@@ -18,6 +18,7 @@ declare const messages: {
   },
   "CommonField": {
     "id": "No",
+    "idCard": "ID",
     "fullName": "Full name",
     "firstName": "First name",
     "teacherName": "Teacher name",
@@ -34,7 +35,11 @@ declare const messages: {
     "placeOfBirth": "Place Of Birth",
     "address": "Address",
     "subject": "Subject",
-    "code": "Code"
+    "code": "Code",
+    "ranking": "Ranking",
+    "totalScore": "Total Score",
+    "average": "Average",
+    "grade": "Grade"
   },
   "Common": {
     "yes": "Yes",

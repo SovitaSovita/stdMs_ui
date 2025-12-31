@@ -86,7 +86,7 @@ export default function MenuContent() {
       </List>
       <List dense>
         {secondaryListItems.map((item, index) => (
-          <ListItem key={index} disablePadding sx={{ display: "block" }}>
+          <ListItem key={index} disablePadding sx={{ display: "none" }}>
             <ListItemButton
               selected={pathnameSplit === item.path}
               onClick={() => router.push(item.path)}
