@@ -26,16 +26,8 @@ export default function Page() {
           >
             {t("MenuList.manageSubject")}
           </Typography>
-          <Typography
-            component="address"
-            variant="caption"
-            color="error"
-          >
-            Lorem ipsum dolor sit amet consectetur adipisicing elit. Nisi impedit, repudiandae tempora velit nostrum blanditiis maxime veritatis temporibus consequatur cumque?
-          </Typography>
-
           <Box>
-            <SubjectSettings />
+          {/* Body here */}
           </Box>
         </Box>
       </Box>

@@ -31,8 +31,6 @@ export default function Page({ params }: { params: Promise<Params> }) {
     setTabValue(newValue);
   };
 
-  console.log(tabValue);
-
   return (
     <>
       <Box sx={{ width: "100%", maxWidth: { sm: "100%", md: "1700px" } }}>

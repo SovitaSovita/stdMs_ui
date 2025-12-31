@@ -3,7 +3,7 @@
 import { StudentsInfo, StuInfoDetailResponseType } from "@/app/constants/type";
 import CustomizedTreeView from "@/app/dashboard/components/CustomizedTreeView";
 import DashboardLayout from "@/app/dashboard/DashboardLayout";
-import { classroomAtom } from "@/app/libs/jotai/classroomAtom";
+import { classroomAtom, studentsAtom, subjectsAtom } from "@/app/libs/jotai/classroomAtom";
 import ClassroomService from "@/app/service/ClassroomService";
 import StudentService from "@/app/service/StudentService";
 import { Box, Card, Chip, Divider, Stack, Typography } from "@mui/material";
@@ -17,76 +17,21 @@ import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import SubjectService from "@/app/service/SubjectService";
 import { SubjectResponse } from "@/app/constants/type/SubjectType";
+import CustomClassTab from "@/app/dashboard/components/Common/Classroom/CustomClassTab";
 
 export default function Page() {
   const { data: session, status }: { data: any; status: any } = useSession();
   const classroom = useAtomValue(classroomAtom);
   const t = useTranslations();
 
-  const columns: GridColDef<(typeof rows)[number]>[] = [
-    {
-      field: "id",
-      headerName: t("CommonField.id"),
-      headerClassName: "font-siemreap",
-      width: 90,
-      editable: false,
-      renderCell: (params) =>
-        params.api.getRowIndexRelativeToVisibleRows(params.id) + 1,
-    },
-    {
-      field: "fullName",
-      headerName: t("CommonField.fullName"),
-      headerClassName: "font-siemreap",
-      width: 150,
-      editable: false,
-      sortable: true,
-      disableColumnMenu: true,
-    },
-    {
-      field: "gender",
-      headerName: t("CommonField.sex"),
-      headerClassName: "font-siemreap",
-      type: "singleSelect",
-      width: 100,
-      align: "center",
-      headerAlign: "center",
-      editable: false,
-      sortable: false,
-      disableColumnMenu: true,
-      valueOptions: [
-        { value: "M", label: t("Common.male") },
-        { value: "F", label: t("Common.female") },
-      ],
-    },
-    {
-      field: "dateOfBirth",
-      headerName: t("CommonField.dateOfBirth"),
-      type: "date",
-      headerClassName: "font-siemreap",
-      width: 150,
-      editable: false,
-      sortable: false,
-      disableColumnMenu: true,
-      valueGetter: (value) => {
-        return value ? new Date(value) : null;
-      },
-      valueFormatter: (value) => {
-        if (!value) return "";
-        return `${dayjs(value).format("DD-MM-YYYY")}`;
-      },
-    },
-  ];
-
-  const [students, setStudents] = useState<StuInfoDetailResponseType>();
-  const [subjects, setSubjects] = useState<SubjectResponse[]>([]);
-  const [rows, setRows] = useState<StudentsInfo[]>([]);
+  const [students, setStudents] = useAtom(studentsAtom);
+  const [subjects, setSubjects] = useAtom(subjectsAtom);
 
   const getStudentsInfo = useCallback(async () => {
     if (classroom) {
       const result = await StudentService.getInfoList(classroom?.id);
       if (result) {
         setStudents(result);
-        setRows(result?.student);
       }
     }
   }, [classroom?.id]);
@@ -222,36 +167,10 @@ export default function Page() {
           </Grid>
         </Card>
 
-        {/* ------------- */}
-        <Typography component="h2" variant="h6" sx={{ mb: 2 }}>
-          {t("Student.title")}
-        </Typography>
-        <Grid container spacing={2} columns={12}>
-          <Grid size={{ xs: 12, lg: 3 }}>
-            <Stack
-              gap={2}
-              direction={{ xs: "column", sm: "row", lg: "column" }}
-            >
-              <CustomizedTreeView />
-            </Stack>
-          </Grid>
-          <Grid size={{ xs: 12, lg: 9 }}>
-            <DataGrid
-              rows={rows}
-              columns={columns}
-              initialState={{
-                pagination: {
-                  paginationModel: {
-                    pageSize: 5,
-                  },
-                },
-              }}
-              pageSizeOptions={[5]}
-              checkboxSelection
-              disableRowSelectionOnClick
-            />
-          </Grid>
-        </Grid>
+        {/* ------Tabs------ */}
+        <Box mt={2.5}>
+          <CustomClassTab />
+        </Box>
       </Box>
     </>
   );

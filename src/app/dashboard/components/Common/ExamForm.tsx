@@ -46,7 +46,9 @@ export default function ExamForm(props: ExamFormProps) {
   const [activeView, setActiveView] = useAtom(ScreenExamAtom);
   const classroom = useAtomValue(classroomAtom);
   const validationSchema = useUpsertExamSchema();
-  const { min: minDate, max: maxDate } = getFullYearRangeBounds(classroom?.year);
+  const { min: minDate, max: maxDate } = getFullYearRangeBounds(
+    classroom?.year
+  );
 
   // Check if we're in edit mode
   const isEditMode = !!exam;
@@ -140,6 +142,23 @@ export default function ExamForm(props: ExamFormProps) {
     >
       <FormGroup>
         <Grid container spacing={2} sx={{ mb: 2, width: "100%" }}>
+          <Grid size={{ xs: 12, sm: 12 }} sx={{ display: "flex" }}>
+            <TextField
+              name="title"
+              placeholder="Exam Name"
+              fullWidth
+              sx={{"&. MuiInputBase-input": {
+                textAlign: "center",
+              }}}
+              variant="outlined"
+              disabled
+              value={formik.values.title}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+              error={formik.touched.title && Boolean(formik.errors.title)}
+              helperText={formik.touched.title && formik.errors.title}
+            />
+          </Grid>
           <Grid size={{ xs: 12, sm: 6 }} sx={{ display: "flex" }}>
             <FormControl error={!!formik?.values.examType} fullWidth>
               <Select
@@ -184,20 +203,6 @@ export default function ExamForm(props: ExamFormProps) {
               views={["month", "year"]}
               minDate={minDate} // <-- dynamic
               maxDate={maxDate} // <-- dynamic
-            />
-          </Grid>
-          <Grid size={{ xs: 12, sm: 6 }} sx={{ display: "flex" }}>
-            <TextField
-              name="title"
-              placeholder="Exam Name"
-              fullWidth
-              variant="outlined"
-              disabled
-              value={formik.values.title}
-              onChange={formik.handleChange}
-              onBlur={formik.handleBlur}
-              error={formik.touched.title && Boolean(formik.errors.title)}
-              helperText={formik.touched.title && formik.errors.title}
             />
           </Grid>
         </Grid>

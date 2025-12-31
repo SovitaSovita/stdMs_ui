@@ -18,8 +18,8 @@ import AppTheme from "../../shared-theme/AppTheme";
 import ColorModeSelect from "../../shared-theme/ColorModeSelect";
 import { GoogleIcon, FacebookIcon, SitemarkIcon } from "./CustomIcons";
 import ForgotPassword from "./ForgotPassword";
-import { useRouter, useSearchParams } from "next/navigation";
-import { signIn, useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import { signIn } from "next-auth/react";
 
 const Card = styled(MuiCard)(({ theme }) => ({
   display: "flex",
@@ -72,8 +72,6 @@ export default function SignIn(props: { disableCustomTheme?: boolean }) {
   const [passwordErrorMessage, setPasswordErrorMessage] = React.useState("");
   const [open, setOpen] = React.useState(false);
   const router = useRouter();
-  const searchParams = useSearchParams();
-
   const handleClickOpen = () => {
     setOpen(true);
   };

@@ -13,12 +13,17 @@ declare const messages: {
   "CommonValidate": {
     "require": "Required",
     "minText2": "must be at least 2 characters",
-    "cannotEmpty": "Can not empty"
+    "cannotEmpty": "Can not empty",
+    "noChange": "Nothing Changed"
   },
   "CommonField": {
-    "id": "ID",
+    "id": "No",
     "fullName": "Full name",
     "firstName": "First name",
+    "teacherName": "Teacher name",
+    "credit": "Credit",
+    "description": "Description",
+    "maxScore": "Max Scores",
     "lastName": "last name",
     "sex": "Gender",
     "gender": "{gender, select, F {Female} M {Male} other {Unknown}}",
@@ -34,6 +39,7 @@ declare const messages: {
   "Common": {
     "yes": "Yes",
     "no": "No",
+    "add": "Add",
     "create": "Create",
     "update": "Update",
     "cancel": "Cancel",
@@ -43,15 +49,19 @@ declare const messages: {
     "edit": "Edit",
     "done": "Done",
     "search": "Search",
+    "manage": "Manage",
     "download": "Download",
     "downloadExcel": "Download Excel",
     "print": "Print",
     "titleDeleteConfirm": "Confirm Deletion",
+    "deleteConfirmation": "Are you sure you want to delete this {subject}?",
     "male": "Male",
     "female": "Female",
     "total": "Total",
     "people": "People",
-    "subject": "Subject",
+    "student": "Students",
+    "subject": "Subjects",
+    "attendance": "Attendance",
     "studyYear": "Year",
     "grade": "Grade",
     "classroom": "Classroom",
@@ -74,18 +84,18 @@ declare const messages: {
     }
   },
   "Classroom": {
-    "createNew" : "Create new class",
-    "gradeName" : "Grade level",
-    "className" : "Class name",
-    "yearOfStudying" : "Academic Year",
-    "startYear" : "Start Year",
-    "endYear" : "End Year",
-    "totalStu" : "Total Students",
-    "totalFemaleStu" : "Total Female Students",
-    "totalMaleStu" : "Total Male Students",
-    "totalSub" : "Total Subjects",
-    "DialogInsert" : {
-      "title" : "Please enter Class information"
+    "createNew": "Create new class",
+    "gradeName": "Grade level",
+    "className": "Class name",
+    "yearOfStudying": "Academic Year",
+    "startYear": "Start Year",
+    "endYear": "End Year",
+    "totalStu": "Total Students",
+    "totalFemaleStu": "Total Female Students",
+    "totalMaleStu": "Total Male Students",
+    "totalSub": "Total Subjects",
+    "DialogInsert": {
+      "title": "Please enter Class information"
     }
   },
   "Student": {

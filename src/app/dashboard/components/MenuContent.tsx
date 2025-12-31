@@ -59,7 +59,13 @@ export default function MenuContent() {
   const router = useRouter();
   const pathname = usePathname();
   const t = useTranslations("MenuList");
+  const locales = ["km", "en"];
 
+  const pathnameSplit = React.useMemo(() => {
+    const regex = new RegExp(`^/(${locales.join("|")})(?=/|$)`);
+    return pathname.replace(regex, "") || "/";
+  }, [pathname]);
+  
   return (
     <Stack
       className="font-siemreap"
@@ -69,7 +75,7 @@ export default function MenuContent() {
         {mainListItems.map((item, index) => (
           <ListItem key={index} disablePadding sx={{ display: "block" }}>
             <ListItemButton
-              selected={pathname === item.path}
+              selected={pathnameSplit === item.path}
               onClick={() => router.push(item.path)}
             >
               <ListItemIcon>{item.icon}</ListItemIcon>
@@ -82,7 +88,7 @@ export default function MenuContent() {
         {secondaryListItems.map((item, index) => (
           <ListItem key={index} disablePadding sx={{ display: "block" }}>
             <ListItemButton
-              selected={pathname === item.path}
+              selected={pathnameSplit === item.path}
               onClick={() => router.push(item.path)}
             >
               <ListItemIcon>{item.icon}</ListItemIcon>

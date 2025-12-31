@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { styled } from "@mui/material/styles";
+import { styled, useTheme } from "@mui/material/styles";
 import Divider, { dividerClasses } from "@mui/material/Divider";
 import Menu from "@mui/material/Menu";
 import MuiMenuItem from "@mui/material/MenuItem";
@@ -22,6 +22,7 @@ const MenuItem = styled(MuiMenuItem)({
 export default function OptionsMenu() {
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
+  const theme = useTheme();
 
   const handleLogout = async () => {
     await signOut({ redirect: false }); // ✅ do not reload or redirect
@@ -64,10 +65,7 @@ export default function OptionsMenu() {
           },
         }}
       >
-        <MenuItem onClick={handleClose}>Profile</MenuItem>
         <MenuItem onClick={handleClose}>My account</MenuItem>
-        <Divider />
-        <MenuItem onClick={handleClose}>Add another account</MenuItem>
         <MenuItem onClick={handleClose}>Settings</MenuItem>
         <Divider />
         <MenuItem
@@ -77,11 +75,12 @@ export default function OptionsMenu() {
               ml: "auto",
               minWidth: 0,
             },
+            color: (theme.vars || theme).palette.error.main,
           }}
         >
           <ListItemText>Logout</ListItemText>
           <ListItemIcon>
-            <LogoutRoundedIcon fontSize="small" />
+            <LogoutRoundedIcon color="error" fontSize="small" />
           </ListItemIcon>
         </MenuItem>
       </Menu>

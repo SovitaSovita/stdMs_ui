@@ -26,6 +26,13 @@ export default function Page() {
   // Get screen from URL query
   const queryScreen = searchParams.get("screen") as ModeType | null;
 
+  useEffect(() => {
+    if (!queryScreen) {
+      setActiveView("default");
+      router.replace("?screen=default", { scroll: false });
+    }
+  }, []);
+
   // Sync URL to state on mount and query change
   useEffect(() => {
     if (queryScreen && queryScreen !== activeView) {
@@ -49,7 +56,7 @@ export default function Page() {
     if (!id) return;
     const result = await ExamService.getByClassId(id);
     if (result.length > 0) setExams(result);
-    else setExams([])
+    else setExams([]);
   };
 
   useEffect(() => {
@@ -74,7 +81,11 @@ export default function Page() {
 
             {exams.map((row) => (
               <Grid size={{ xs: 12, md: 3, sm: 6 }} key={row.id}>
-                <ExamListCard row={row} setExam={setExam} handleGetExams={handleGetExams} />
+                <ExamListCard
+                  row={row}
+                  setExam={setExam}
+                  handleGetExams={handleGetExams}
+                />
               </Grid>
             ))}
           </Grid>
