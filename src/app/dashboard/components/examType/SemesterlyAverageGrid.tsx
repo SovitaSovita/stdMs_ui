@@ -2,15 +2,20 @@
 
 import React from "react";
 import {
+  ClassAvgExamFilterResponseType,
   ClassExamDataResponseType,
   ClassReqFilterDetailType,
   ScoreUpsertRequest,
   Settings,
   StudentInfoScore,
+  StudentMonthlyExamsAvgResponse,
 } from "@/app/constants/type";
 import { CustomDataGridToolbar } from "@/app/dashboard/components/Common/CustomDataGridToolbar";
 import { showAlertAtom } from "@/app/libs/jotai/alertAtom";
-import { classroomAtom, mekunAtom, mekunSemesterAtom } from "@/app/libs/jotai/classroomAtom";
+import {
+  classroomAtom,
+  mekunSemesterAtom,
+} from "@/app/libs/jotai/classroomAtom";
 import ClassroomService from "@/app/service/ClassroomService";
 import {
   getInitialSettings,
@@ -32,14 +37,16 @@ import { useAtom, useAtomValue } from "jotai";
 import { useTranslations } from "next-intl";
 import { notFound } from "next/navigation";
 import { ChangeEvent, use, useEffect, useMemo, useState } from "react";
+import useNotifications from "@/app/libs/hooks/useNotifications/useNotifications";
 
 type SemesterlyAverageGridProps = {
   examType: string;
   examDate: string;
+  meKun: number;
 };
 
 export const SemesterlyAverageGrid = (props: SemesterlyAverageGridProps) => {
-  const { examDate, examType } = props;
+  const { examDate, examType, meKun } = props;
   const [settings, setSettings] = useState<Settings>(getInitialSettings());
   const t = useTranslations();
 
@@ -47,96 +54,14 @@ export const SemesterlyAverageGrid = (props: SemesterlyAverageGridProps) => {
     localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settings));
   }, [settings]);
 
-  const [meKunValue, setMekunValue] = useAtom(mekunSemesterAtom);
-  const [examData, setExamData] = useState<ClassExamDataResponseType>();
-  const [rows, setRows] = useState<StudentInfoScore[]>([]);
+  const [mekunSemester, setMekunSemester] = useAtom(mekunSemesterAtom);
+  const [examData, setExamData] = useState<ClassAvgExamFilterResponseType>();
+  const [rows, setRows] = useState<StudentMonthlyExamsAvgResponse[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [showSubjects, setShowSubjects] = useState<boolean>(true);
-  const [semesterlyAverageShow, setSemesterlyAverageShow] =
-    useState<boolean>(true);
-
-  const columns = useMemo(() => {
-    const staticColumns: GridColDef<StudentInfoScore>[] = [
-      {
-        field: "id",
-        headerName: t("CommonField.id"),
-        headerClassName: "font-siemreap",
-        width: 90,
-        renderCell: (params) =>
-          params.api.getRowIndexRelativeToVisibleRows(params.id) + 1,
-      },
-      {
-        field: "fullName",
-        headerName: t("CommonField.fullName"),
-        headerClassName: "font-siemreap",
-        width: showSubjects ? 150 : 170,
-        // valueGetter: (value, row) =>
-        //   `${row.firstName || ""} ${row.lastName || ""}`,
-        sortable: true,
-        disableColumnMenu: true,
-      },
-      {
-        field: "gender",
-        headerName: t("CommonField.sex"),
-        headerClassName: "font-siemreap",
-        type: "singleSelect",
-        width: 100,
-        align: "center",
-        headerAlign: "center",
-        disableColumnMenu: true,
-        valueOptions: ["M", "F"],
-      },
-    ];
-    const staticColumns2: GridColDef<StudentInfoScore>[] = [
-      {
-        field: "average",
-        headerName: t("CommonField.average"),
-        headerClassName: "font-siemreap",
-        cellClassName: "font-semibold",
-        type: "string",
-        width: showSubjects ? 70 : 90,
-        align: "center",
-        headerAlign: "center",
-        sortable: true,
-        disableColumnMenu: true,
-      },
-      {
-        field: "mRanking",
-        headerName: t("CommonField.ranking"),
-        headerClassName: "font-siemreap",
-        cellClassName: "text-red-500 font-semibold",
-        type: "string",
-        width: showSubjects ? 70 : 90,
-        align: "center",
-        headerAlign: "center",
-        sortable: true,
-        disableColumnMenu: true,
-      },
-      {
-        field: "mGrade",
-        headerName: t("CommonField.grade"),
-        headerClassName: "font-siemreap",
-        cellClassName: "text-red-500 font-semibold",
-        type: "string",
-        width: showSubjects ? 70 : 90,
-        align: "center",
-        headerAlign: "center",
-        sortable: true,
-        disableColumnMenu: true,
-      },
-    ];
-
-    //average score of each monthly exam
-    const dynamicScoreColumns: GridColDef[] = [];
-
-    return showSubjects
-      ? [...staticColumns, ...dynamicScoreColumns, ...staticColumns2]
-      : [...staticColumns, ...staticColumns2];
-  }, [rows, showSubjects]);
 
   const [loading, setLoading] = useState(true);
   const classroom = useAtomValue(classroomAtom);
-  const [, showAlert] = useAtom(showAlertAtom);
+  const notification = useNotifications();
 
   const validTypes = ["monthly", "semester"] as const;
   const isValidType = validTypes.includes(examType as any);
@@ -154,14 +79,10 @@ export const SemesterlyAverageGrid = (props: SemesterlyAverageGridProps) => {
       try {
         if (!classroom?.id) return;
 
-        const formatted = `${examDate.slice(2)}-${examDate.slice(0, 2)}-01`;
-        const sendData: ClassReqFilterDetailType = {
-          examType: examType.toUpperCase(),
-          examDate: formatted,
-        };
-        const result = await ClassroomService.getDetail(
+        const dateFormatted = `${examDate.slice(2)}-${examDate.slice(0, 2)}-01`;
+        const result = await ClassroomService.getSemesterAvgs(
           classroom?.id,
-          sendData
+          dateFormatted
         );
         if (result) {
           setExamData(result);
@@ -179,84 +100,61 @@ export const SemesterlyAverageGrid = (props: SemesterlyAverageGridProps) => {
 
   // handle input Mekun
   const handleInputMekun = (event: ChangeEvent<HTMLInputElement>) => {
-    setMekunValue(Number(event.target.value));
+    const val = Number(event.target.value);
+      setMekunSemester(val);
   };
 
   // Compute scores, average, ranking, and grade
   const processedRows = useMemo(() => {
     if (!rows.length) return [];
-    const subjectNames = Object.keys(rows[0].scores || {});
 
-    // Step 1: Calculate totalScore & average
+    // Step 1: Calculate average & Total average
     const withTotals = rows.map((row) => {
-      const scores = row.scores || {};
-      const values = Object.values(scores).map(Number);
-      const totalScore = values.reduce((sum, v) => sum + (v || 0), 0);
-      const average =
+      const totalAverages = row.monthlyAverage || {};
+      const values = Object.values(totalAverages).map(Number);
+      const divisorOfSemester = Number(mekunSemester) || 1;
+      
+      //average
+      // const divisorOfMonthly = Number(meKunValue) || 1;
+      // const average = Object.fromEntries(
+      //   Object.entries(totalScores).map(([date, score]) => [
+      //     date,
+      //     !isFinite(Number(score) / divisorOfMonthly)
+      //       ? 0
+      //       : (Number(score) / divisorOfMonthly)?.toFixed(2),
+      //   ])
+      // );
+
+      //Total average
+      const totalAverage =
         values.length > 0
-          ? (totalScore / Number(meKunValue)).toFixed(2)
-          : "0.00";
+          ? values.reduce((sum, v) => sum + (v || 0), 0) / divisorOfSemester
+          : 0.00;
 
       return {
         ...row,
-        totalScore,
-        average: !isFinite(Number(average)) ? 0 : Number(average),
+        totalAverage: !isFinite(Number(totalAverage))
+          ? 0
+          : Number(totalAverage?.toFixed(2)),
       };
     });
-
-    // Step 2: Per-subject ranking (only for semester)
-    if (examType === "semester") {
-      subjectNames.forEach((subject) => {
-        const sorted = [...withTotals].sort(
-          (a, b) => (b.scores?.[subject] || 0) - (a.scores?.[subject] || 0)
-        );
-
-        let prevScore: number | null = null;
-        let rank = 0;
-        let countAtRank = 0;
-
-        sorted.forEach((student, index) => {
-          const score = student.scores?.[subject] || 0;
-          if (score === 0) {
-            (withTotals.find((r) => r.id === student.id) as any)[
-              `${subject}_rank`
-            ] = 0;
-            return;
-          }
-
-          if (score !== prevScore) {
-            // Move rank by number of students already ranked
-            rank = index + 1;
-            prevScore = score;
-            countAtRank = 1;
-          } else {
-            // Same score = same rank
-            countAtRank++;
-          }
-
-          const target = withTotals.find((r) => r.id === student.id);
-          if (target) (target as any)[`${subject}_rank`] = rank;
-        });
-      });
-    }
-
     // Step 3: Total score ranking (overall)
     const sortedByTotal = [...withTotals].sort(
-      (a, b) => b.totalScore - a.totalScore
+      (a, b) => b.totalAverage - a.totalAverage
     );
 
     let prevTotal: number | null = null;
     let rank = 0;
 
     const withRank = sortedByTotal.map((row, index) => {
-      if (row.totalScore === 0) return { ...row, mRanking: 0 };
+      if (row.totalAverage === 0) return { ...row, mRanking: 0 };
 
-      if (row.totalScore !== prevTotal) {
+      if (row.totalAverage !== prevTotal) {
         rank = index + 1;
-        prevTotal = row.totalScore;
+        prevTotal = row.totalAverage;
       }
 
-      const average = row.average;
+      const average = row.totalAverage;
       const mGrade =
         average >= 45
           ? "A"
@@ -276,8 +174,109 @@ export const SemesterlyAverageGrid = (props: SemesterlyAverageGridProps) => {
     // Step 4: Reorder back to original
     return withTotals.map(
       (r) => withRank.find((w) => w.id === r.id) ?? r
-    ) as StudentInfoScore[];
-  }, [rows, meKunValue, examType]);
+    ) as StudentMonthlyExamsAvgResponse[];
+  }, [rows, mekunSemester, examDate]);
+
+  const columns = useMemo(() => {
+    const staticColumns: GridColDef<StudentMonthlyExamsAvgResponse>[] = [
+      {
+        field: "id",
+        headerName: t("CommonField.id"),
+        headerClassName: "font-siemreap",
+        width: 90,
+        renderCell: (params) =>
+          params.api.getRowIndexRelativeToVisibleRows(params.id) + 1,
+      },
+      {
+        field: "fullName",
+        headerName: t("CommonField.fullName"),
+        headerClassName: "font-siemreap",
+        width: 170,
+        // valueGetter: (value, row) =>
+        //   `${row.firstName || ""} ${row.lastName || ""}`,
+        sortable: true,
+        disableColumnMenu: true,
+      },
+      {
+        field: "gender",
+        headerName: t("CommonField.sex"),
+        headerClassName: "font-siemreap",
+        type: "singleSelect",
+        width: 100,
+        align: "center",
+        headerAlign: "center",
+        disableColumnMenu: true,
+        valueOptions: ["M", "F"],
+      },
+    ];
+    const staticColumns2: GridColDef<StudentMonthlyExamsAvgResponse>[] = [
+      {
+        field: "totalAverage",
+        headerName: t("Common.total"),
+        headerClassName: "font-siemreap",
+        cellClassName: "font-semibold",
+        type: "string",
+        width: 90,
+        align: "center",
+        headerAlign: "center",
+        sortable: true,
+        disableColumnMenu: true,
+      },
+      {
+        field: "mRanking",
+        headerName: t("CommonField.ranking"),
+        headerClassName: "font-siemreap",
+        cellClassName: "text-red-500 font-semibold",
+        type: "string",
+        width: 90,
+        align: "center",
+        headerAlign: "center",
+        sortable: true,
+        disableColumnMenu: true,
+      },
+      {
+        field: "mGrade",
+        headerName: t("CommonField.grade"),
+        headerClassName: "font-siemreap",
+        cellClassName: "text-red-500 font-semibold",
+        type: "string",
+        width: 90,
+        align: "center",
+        headerAlign: "center",
+        sortable: true,
+        disableColumnMenu: true,
+      },
+    ];
+
+    // Safely extract score keys with null checks
+    const ExamMonthKeys =
+      processedRows.length > 0 && processedRows[0]?.monthlyAverage
+        ? Object.keys(processedRows[0].monthlyAverage)
+        : [];
+        
+    const dynamicAvgColumns: GridColDef[] = ExamMonthKeys.flatMap((key) => {
+      const baseCol: GridColDef = {
+        field: key,
+        headerName: t("Common.months." + dayjs(key).format("MMM")),
+        type: "string",
+        width: 120,
+        align: "center",
+        headerAlign: "center",
+        editable: true,
+        sortable: false,
+        disableColumnMenu: true,
+        valueGetter: (value, row, column) => {
+          const field = column?.field;
+          const scoreArr = row?.monthlyAverage;
+          if (!scoreArr) return "";
+          return scoreArr[field]?.toFixed(2) || 0;
+        },
+      };
+      return [baseCol];
+    });
+
+    return [...staticColumns, ...dynamicAvgColumns, ...staticColumns2];
+  }, [rows]);
 
   return (
     <>
@@ -311,9 +310,15 @@ export const SemesterlyAverageGrid = (props: SemesterlyAverageGridProps) => {
                     label={t("MonthlyExam.enterAverage")}
                     variant="outlined"
                     size="small"
-                    name="meKun"
+                    name="mekunSemester"
                     type="number"
-                    value={meKunValue}
+                    value={mekunSemester}
+                    slotProps={{
+                      htmlInput: {
+                        min: 1,
+                        step: 1, // or 0.1 if you allow decimals
+                      },
+                    }}
                     // placeholder="Average"
                     onChange={handleInputMekun}
                     sx={{ mt: 1 }}

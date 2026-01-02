@@ -74,18 +74,18 @@ declare const messages: {
     "monthly": "Monthly",
     "semester": "Semester",
     "months": {
-      "january": "January",
-      "february": "February",
-      "march": "March",
-      "april": "April",
-      "may": "May",
-      "june": "June",
-      "july": "July",
-      "august": "August",
-      "september": "September",
-      "october": "October",
-      "november": "November",
-      "december": "December"
+      "Jan": "January",
+      "Feb": "February",
+      "Mar": "March",
+      "Apr": "April",
+      "May": "May",
+      "Jun": "June",
+      "Jul": "July",
+      "Aug": "August",
+      "Sep": "September",
+      "Oct": "October",
+      "Nov": "November",
+      "Dec": "December"
     }
   },
   "Classroom": {

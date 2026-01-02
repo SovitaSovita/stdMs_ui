@@ -43,13 +43,12 @@ export type ClassReqFilterDetailType = {
   examDate: string;
 };
 
-
-
 ///////////////////
 
 export interface StudentInfoScore {
   id: string;
   fullName: string;
+  idCard?: string;
   gender: "M" | "F";
   dateOfBirth: string;
   totalScore: number;
@@ -87,4 +86,24 @@ export type ClassUpsertRequest = {
   name: string;
   grade: string;
   year: string;
+};
+
+export type ClassAvgExamFilterResponseType = {
+  id: string;
+  name: string;
+  grade: string;
+  year: string;
+  exams: Exam;
+  students: StudentMonthlyExamsAvgResponse[];
+};
+
+export type StudentMonthlyExamsAvgResponse = {
+  id: string;
+  fullName: string;
+  idCard?: string;
+  gender: "M" | "F";
+  dateOfBirth: string;
+  totalScore: Record<string, number>;
+  totalAverage: number;
+  [key: string]: string | number | Record<string, number> | undefined;
 };

@@ -59,6 +59,7 @@ export default function ExamForm(props: ExamFormProps) {
       title: exam?.title || "",
       examType: exam?.examType || "MONTHLY",
       examDate: exam?.examDate || "",
+      meKun: exam?.meKun || 1.0,
       classId: classroom?.id || "",
     },
     validationSchema: validationSchema,
@@ -147,9 +148,11 @@ export default function ExamForm(props: ExamFormProps) {
               name="title"
               placeholder="Exam Name"
               fullWidth
-              sx={{"&. MuiInputBase-input": {
-                textAlign: "center",
-              }}}
+              sx={{
+                "&. MuiInputBase-input": {
+                  textAlign: "center",
+                },
+              }}
               variant="outlined"
               disabled
               value={formik.values.title}
@@ -185,7 +188,7 @@ export default function ExamForm(props: ExamFormProps) {
               <FormHelperText>{formik?.errors.examType ?? " "}</FormHelperText>
             </FormControl>
           </Grid>
-          <Grid size={{ xs: 12, sm: 6 }} sx={{ display: "flex" }}>
+          <Grid size={{ xs: 12, sm: 6 }} sx={{ display: "flex", justifyContent: "center", gap: 2 }}>
             <CustomDatePicker
               name="examDate"
               label={"Exam Month"}
@@ -203,6 +206,24 @@ export default function ExamForm(props: ExamFormProps) {
               views={["month", "year"]}
               minDate={minDate} // <-- dynamic
               maxDate={maxDate} // <-- dynamic
+            />
+            <TextField
+              variant="outlined"
+              size="medium"
+              name="meKun"
+              type="number"
+              value={formik.values.meKun}
+              slotProps={{
+                htmlInput: {
+                  min: 1,
+                  step: 1, // or 0.1 if you allow decimals
+                },
+              }}
+              placeholder="Enter mekun"
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+              error={formik.touched.meKun && Boolean(formik.errors.meKun)}
+              helperText={formik.touched.meKun && formik.errors.meKun}
             />
           </Grid>
         </Grid>

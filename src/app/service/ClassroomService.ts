@@ -1,5 +1,6 @@
 import { Paths } from "../constants/Paths";
 import {
+  ClassAvgExamFilterResponseType,
   ClassExamDataResponseType,
   ClassInfoResponseType,
   ClassReqFilterDetailType,
@@ -47,6 +48,15 @@ const ClassroomService = {
       ClassReqFilterDetailType,
       ClassExamDataResponseType
     >(Paths.class.getDetail(id), sendData);
+  },
+  getSemesterAvgs: async (
+    id: string,
+    examDate: string
+  ): Promise<ClassAvgExamFilterResponseType> => {
+    return await RestService.post<
+      string,
+      ClassAvgExamFilterResponseType
+    >(Paths.class.getSemesterAvgs(id , examDate));
   },
 };
 

@@ -10,7 +10,7 @@ import {
 } from "@/app/constants/type";
 import { CustomDataGridToolbar } from "@/app/dashboard/components/Common/CustomDataGridToolbar";
 import { showAlertAtom } from "@/app/libs/jotai/alertAtom";
-import { classroomAtom, mekunAtom } from "@/app/libs/jotai/classroomAtom";
+import { classroomAtom } from "@/app/libs/jotai/classroomAtom";
 import ClassroomService from "@/app/service/ClassroomService";
 import {
   getInitialSettings,
@@ -37,21 +37,18 @@ type MonthlyNsemesterGridProps = {
   examType: string;
   examDate: string;
   showSubjects: boolean;
+  meKun: number;
 };
 
 export const MonthlyNsemesterGrid = (props: MonthlyNsemesterGridProps) => {
-  const { examDate, examType, showSubjects } = props;
+  const { examDate, examType, meKun, showSubjects } = props;
   const [settings, setSettings] = useState<Settings>(getInitialSettings());
   const t = useTranslations();
-
-    // console.log(showSubjects);
-
 
   useEffect(() => {
     localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settings));
   }, [settings]);
 
-  const [meKunValue, setMekunValue] = useAtom(mekunAtom);
   const [examData, setExamData] = useState<ClassExamDataResponseType>();
   const [rows, setRows] = useState<StudentInfoScore[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -225,11 +222,6 @@ export const MonthlyNsemesterGrid = (props: MonthlyNsemesterGridProps) => {
     if (isValidType && isValidDate && classroom) fetchExam();
   }, [classroom, isValidType, isValidDate]);
 
-  // handle input Mekun
-  const handleInputMekun = (event: ChangeEvent<HTMLInputElement>) => {
-    setMekunValue(Number(event.target.value));
-  };
-
   const processRowUpdate = async (
     newRow: StudentInfoScore,
     oldRow: StudentInfoScore,
@@ -314,7 +306,7 @@ export const MonthlyNsemesterGrid = (props: MonthlyNsemesterGridProps) => {
       const totalScore = values.reduce((sum, v) => sum + (v || 0), 0);
       const average =
         values.length > 0
-          ? (totalScore / Number(meKunValue)).toFixed(2)
+          ? (totalScore / Number(meKun)).toFixed(2)
           : "0.00";
 
       return {
@@ -397,7 +389,7 @@ export const MonthlyNsemesterGrid = (props: MonthlyNsemesterGridProps) => {
     return withTotals.map(
       (r) => withRank.find((w) => w.id === r.id) ?? r
     ) as StudentInfoScore[];
-  }, [rows, meKunValue, examType]);
+  }, [rows, meKun, examType]);
 
   return (
     <>
@@ -434,10 +426,9 @@ export const MonthlyNsemesterGrid = (props: MonthlyNsemesterGridProps) => {
                     variant="outlined"
                     size="small"
                     name="meKun"
+                    disabled
                     type="number"
-                    value={meKunValue}
-                    // placeholder="Average"
-                    onChange={handleInputMekun}
+                    value={meKun}
                     sx={{ mt: 1 }}
                   />
                 </>

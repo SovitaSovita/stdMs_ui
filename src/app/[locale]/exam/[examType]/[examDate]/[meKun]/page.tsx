@@ -10,6 +10,7 @@ import { use, useState } from "react";
 type Params = {
   examType: string;
   examDate: string;
+  meKun: number;
 };
 
 interface TabPanelProps {
@@ -20,7 +21,7 @@ interface TabPanelProps {
 }
 
 export default function Page({ params }: { params: Promise<Params> }) {
-  const { examType, examDate } = use(params);
+  const { examType, examDate, meKun } = use(params);
   const theme = useTheme();
   const t = useTranslations();
 
@@ -72,10 +73,11 @@ export default function Page({ params }: { params: Promise<Params> }) {
               <MonthlyNsemesterGrid
                 examDate={examDate}
                 examType={examType}
+                meKun={meKun}
                 showSubjects={showSubjects}
               />
             ) : (
-              <SemesterlyGrid examDate={examDate} examType={examType} />
+              <SemesterlyGrid examDate={examDate} examType={examType} meKun={meKun}/>
             )}
           </TabPanel>
           <TabPanel value={tabValue} index={1} dir={theme.direction}>
@@ -83,10 +85,11 @@ export default function Page({ params }: { params: Promise<Params> }) {
               <MonthlyNsemesterGrid
                 examDate={examDate}
                 examType={examType}
+                meKun={meKun}
                 showSubjects={showSubjects}
               />
             ) : (
-              <SemesterlyAverageGrid examDate={examDate} examType={examType} />
+              <SemesterlyAverageGrid examDate={examDate} examType={examType} meKun={meKun}/>
             )}
           </TabPanel>
         </Box>

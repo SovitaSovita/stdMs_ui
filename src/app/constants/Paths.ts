@@ -9,6 +9,7 @@ export const Paths = {
         getInfoClass: "/api/v1/info-classes",
         getInfoClassById: "/api/v1/info-class/detail",
         getDetail: (id: string) => `/api/v1/class/${id}/filter`,
+        getSemesterAvgs: (id: string, examDate: string) => `/api/v1/class/${id}/semester/average/filter?examDate=${examDate}`,
         upsertScore: (classId: string, examId: string) => `/api/v1/scores/${classId}/${examId}`,
     },
     student: {

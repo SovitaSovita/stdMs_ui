@@ -43,7 +43,7 @@ export default function Page() {
         setSubjects(result);
       } else setSubjects([]);
     }
-  }, [classroom?.id]);
+  }, [classroom?.id, ]);
 
   useEffect(() => {
     getStudentsInfo();

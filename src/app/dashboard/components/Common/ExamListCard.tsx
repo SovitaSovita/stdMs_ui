@@ -106,7 +106,7 @@ export default function ExamListCard(props: ExamListCardProps) {
             color="primary"
             endIcon={<ChevronRightRoundedIcon />}
             fullWidth={isSmallScreen}
-            onClick={() => router.push(`exam/${row?.examType.toLowerCase()}/${dayjs(row?.examDate).format("MMYYYY")}`)}
+            onClick={() => router.push(`exam/${row?.examType.toLowerCase()}/${dayjs(row?.examDate).format("MMYYYY")}/${row?.meKun}`)}
           >
             View
           </Button>
