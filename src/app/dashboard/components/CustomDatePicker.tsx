@@ -116,7 +116,14 @@ export default function CustomDatePicker({
         maxDate={maxDate}
         views={views}
         format={resolvedFormat}
-        slots={{ field: ButtonField }}
+        // slots={{ field: ButtonField }}
+        slotProps={{
+          textField: {
+            fullWidth: true,
+            size: "small",
+            variant: "outlined",
+          },
+        }}
       />
       {/* {formikError && (
         <Typography variant="caption" color="error">

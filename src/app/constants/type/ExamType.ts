@@ -5,13 +5,15 @@ export type ExamUpsertRequest = {
   examDate: string;
   meKun: number;
   classId?: string;
+  time?: string;
+  description?: string;
 };
 export type ExamResponse = {
   id: string;
   title: string;
   examType: "MONTHLY" | "SEMESTER";
   examDate: string;
-  examTime?: string;
+  time?: string;
   meKun: number;
   description?: string;
 };
