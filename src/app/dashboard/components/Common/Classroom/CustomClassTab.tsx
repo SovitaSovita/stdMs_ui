@@ -5,6 +5,7 @@ import Box from "@mui/material/Box";
 import { useTranslations } from "next-intl";
 import { StudentTabPanel } from "./StudentTabPanel";
 import { SubjectTabPanel } from "./SubjectTabPanel";
+import { ExamTabPanel } from "./ExamTabPanel";
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -53,6 +54,7 @@ export default function CustomClassTab() {
         >
           <Tab label={t("Common.student")} {...a11yProps(0)} />
           <Tab label={t("Common.subject")} {...a11yProps(1)} />
+          <Tab label={t("Common.exam")} {...a11yProps(3)} />
           <Tab label={t("Common.attendance")} {...a11yProps(2)} />
         </Tabs>
       </Box>
@@ -63,7 +65,12 @@ export default function CustomClassTab() {
         <SubjectTabPanel />
       </CustomTabPanel>
       <CustomTabPanel value={value} index={2}>
-        <div className="w-full text-center">{t("Common.attendance")} Comming soon!!</div>
+        <ExamTabPanel />
+      </CustomTabPanel>
+      <CustomTabPanel value={value} index={3}>
+        <div className="w-full text-center">
+          {t("Common.attendance")} Comming soon!!
+        </div>
       </CustomTabPanel>
     </Box>
   );

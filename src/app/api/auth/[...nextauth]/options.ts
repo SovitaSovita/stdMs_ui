@@ -34,6 +34,7 @@ declare module "next-auth/jwt" {
         token?: string;
         role?: string;
         fullname?: string;
+        email?: string;
         profile?: string;
     }
 }
@@ -45,6 +46,7 @@ export const jwt = async ({ token, user }: { token: JWT; user: any }) => {
         token.token = user.token;
         token.role = user.role;
         token.fullname = user.fullname;
+        token.email = user.email;
         token.profile = user.profile;
     }
     return token;
@@ -61,6 +63,7 @@ export const session = ({ session, token }: {
         session.token = token.token;
         session.user.role = token.role;
         session.user.fullname = token.fullname;
+        session.user.email = token.email;
         session.user.profile = token.profile;
     }
     return Promise.resolve(session);

@@ -1,4 +1,4 @@
-import { ClassInfoResponseType, StudentsInfo, StuInfoDetailResponseType } from "@/app/constants/type";
+import { ClassInfoResponseType, ExamResponse, StudentsInfo, StuInfoDetailResponseType } from "@/app/constants/type";
 import { SubjectResponse } from "@/app/constants/type/SubjectType";
 import { atom } from "jotai";
 import { atomWithStorage } from "jotai/utils";
@@ -9,6 +9,9 @@ export const classroomAtom = atomWithStorage<ClassInfoResponseType | null>("clas
 export const mekunSemesterAtom = atomWithStorage<number | null>("mekunSemester", 3);
 
 export const studentsAtom = atom<StuInfoDetailResponseType | null>(null);
+export const examsAtom = atom<ExamResponse[]>([]);
+export const examAtom = atom<ExamResponse>({} as ExamResponse);
+
 export const subjectsAtom = atom<SubjectResponse[]>([]);
 export const attendanceAtom = atom<StudentsInfo[]>([]);
 export const classLoadingAtom = atom(false);

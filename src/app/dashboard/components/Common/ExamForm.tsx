@@ -22,7 +22,7 @@ import { useAtom, useAtomValue } from "jotai";
 import { ScreenExamAtom } from "@/app/libs/jotai/commonAtom";
 import { useFormik } from "formik";
 import { useUpsertExamSchema } from "@/app/libs/hooks/Validation";
-import { classroomAtom } from "@/app/libs/jotai/classroomAtom";
+import { classroomAtom, examAtom } from "@/app/libs/jotai/classroomAtom";
 import { ExamResponse, ExamUpsertRequest } from "@/app/constants/type";
 import CustomDatePicker from "../CustomDatePicker";
 import ExamService from "@/app/service/ExamService";
@@ -32,11 +32,8 @@ import { useLocale, useTranslations } from "next-intl";
 import { getFullYearRangeBounds } from "@/app/utils/axios/Common";
 
 export type FormFieldValue = string | string[] | number | boolean | File | null;
-type ExamFormProps = {
-  exam?: ExamResponse;
-};
-export default function ExamForm(props: ExamFormProps) {
-  const { exam } = props;
+
+export default function ExamForm() {
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const navigate = useRouter();
   const t = useTranslations("Common");
@@ -49,6 +46,7 @@ export default function ExamForm(props: ExamFormProps) {
   const { min: minDate, max: maxDate } = getFullYearRangeBounds(
     classroom?.year
   );
+  const [exam, setExam] = useAtom(examAtom);
 
   // Check if we're in edit mode
   const isEditMode = !!exam;

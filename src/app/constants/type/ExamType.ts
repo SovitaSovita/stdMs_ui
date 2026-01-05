@@ -11,5 +11,7 @@ export type ExamResponse = {
   title: string;
   examType: "MONTHLY" | "SEMESTER";
   examDate: string;
+  examTime?: string;
   meKun: number;
+  description?: string;
 };

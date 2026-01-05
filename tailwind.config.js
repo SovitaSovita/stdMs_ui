@@ -6,6 +6,7 @@ module.exports = {
   theme: {
     fontFamily: {
       siemreap: ["Siemreap", "sans-serif"],
+      lexend: ["Lexend", "sans-serif"],
     },
     extend: {},
   },
