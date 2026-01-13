@@ -2,9 +2,7 @@
 
 import { ExamResponse, ModeType } from "@/app/constants/type";
 import ExamForm from "@/app/dashboard/components/Common/ExamForm";
-import ExamFormModify from "@/app/dashboard/components/Common/ExamFormModify";
 import ExamListCard from "@/app/dashboard/components/Common/ExamListCard";
-import HighlightedCard from "@/app/dashboard/components/HighlightedCard";
 import { classroomAtom, examsAtom } from "@/app/libs/jotai/classroomAtom";
 import { ScreenExamAtom } from "@/app/libs/jotai/commonAtom";
 import ExamService from "@/app/service/ExamService";
@@ -14,7 +12,6 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import AddIcon from "@mui/icons-material/Add";
 import { useTranslations } from "next-intl";
-import ManageAccountsIcon from "@mui/icons-material/ManageAccounts";
 
 export default function Page() {
   const classroom = useAtomValue(classroomAtom);
