@@ -82,7 +82,7 @@ export default function SideMenu() {
             {session?.user.username}
           </Typography>
           <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-            {session?.user.email}
+            {session?.user?.fullname}
           </Typography>
         </Box>
         <OptionsMenu />
