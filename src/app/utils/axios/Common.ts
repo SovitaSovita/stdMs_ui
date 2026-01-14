@@ -124,8 +124,8 @@ export const SETTINGS_STORAGE_KEY = "mui-data-grid-settings";
 
 export const SETTINGS_DEFAULT: Settings = {
   density: "standard",
-  showCellBorders: false,
-  showColumnBorders: false,
+  showCellBorders: true,
+  showColumnBorders: true,
 };
 
 export const getInitialSettings = (): Settings => {

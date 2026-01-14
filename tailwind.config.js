@@ -5,7 +5,8 @@ module.exports = {
   ],
   theme: {
     fontFamily: {
-      siemreap: ["Siemreap", "sans-serif"],
+      sans: ["Siemreap", "Inter", "ui-sans-serif", "system-ui", "-apple-system", "Segoe UI", "Roboto", "Helvetica Neue", "Arial", "Noto Sans", "sans-serif"],
+      siemreap: ["Siemreap", "Noto Sans Khmer", "sans-serif"],
     },
     extend: {},
   },

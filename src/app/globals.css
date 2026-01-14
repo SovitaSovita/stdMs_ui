@@ -27,5 +27,13 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: 'Siemreap', 'Noto Sans Khmer', system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+} 
+
+.MuiDataGrid-columnHeader--filledGroup {
+  border: 1px solid rgba(224, 224, 224, 1) !important;
 }
+/* .MuiDataGrid-columnHeader--emptyGroup {
+} */

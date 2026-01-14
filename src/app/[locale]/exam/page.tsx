@@ -75,12 +75,12 @@ export default function Page() {
             columns={12}
             sx={{ mb: (theme) => theme.spacing(2) }}
           >
-            <Grid size={{ xs: 12, md: 3, sm: 6 }}>
+            <Grid size={{ xs: 12, md: 3, lg: 3, sm: 6 }}>
               <AddExamCard />
             </Grid>
 
             {exams.map((row) => (
-              <Grid size={{ xs: 12, md: 3, sm: 6 }} key={row.id}>
+              <Grid size={{ xs: 12, md: 3, lg: 3, sm: 6 }} key={row.id}>
                 <ExamListCard
                   row={row}
                   setExam={setExam}

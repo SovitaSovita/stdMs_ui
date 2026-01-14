@@ -392,7 +392,7 @@ export const MonthlyNsemesterGrid = (props: MonthlyNsemesterGridProps) => {
   }, [rows, meKun, examType]);
 
   return (
-    <>
+    <div style={{ display: "flex", flexDirection: "column" }}>
       <DataGrid
         rows={processedRows}
         columns={columns}
@@ -438,6 +438,6 @@ export const MonthlyNsemesterGrid = (props: MonthlyNsemesterGridProps) => {
         }}
         showToolbar
       />
-    </>
+    </div>
   );
 };

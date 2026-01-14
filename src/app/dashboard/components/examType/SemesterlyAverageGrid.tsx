@@ -31,12 +31,18 @@ import {
   Typography,
   useTheme,
 } from "@mui/material";
-import { DataGrid, GridColDef, GridDensity, GridRowId } from "@mui/x-data-grid";
+import {
+  DataGrid,
+  GridColDef,
+  GridColumnGroupingModel,
+  GridDensity,
+  GridRowId,
+} from "@mui/x-data-grid";
 import dayjs from "dayjs";
 import { useAtom, useAtomValue } from "jotai";
 import { useTranslations } from "next-intl";
 import { notFound } from "next/navigation";
-import { ChangeEvent, use, useEffect, useMemo, useState } from "react";
+import { ChangeEvent, useCallback, useEffect, useMemo, useState } from "react";
 import useNotifications from "@/app/libs/hooks/useNotifications/useNotifications";
 
 type SemesterlyAverageGridProps = {
@@ -74,34 +80,37 @@ export const SemesterlyAverageGrid = (props: SemesterlyAverageGridProps) => {
     }
   }, [isValidType, isValidDate]);
 
-  useEffect(() => {
-    async function fetchExam() {
-      try {
-        if (!classroom?.id) return;
+  const fetchExam = useCallback(async () => {
+    try {
+      if (!classroom?.id) return;
 
-        const dateFormatted = `${examDate.slice(2)}-${examDate.slice(0, 2)}-01`;
-        const result = await ClassroomService.getSemesterAvgs(
-          classroom?.id,
-          dateFormatted
-        );
-        if (result) {
-          setExamData(result);
-          setRows(result?.students);
-        }
-      } catch {
-        // swallow – we just show “no data”
-      } finally {
-        setLoading(false);
+      setLoading(true);
+      const dateFormatted = `${examDate.slice(2)}-${examDate.slice(0, 2)}-01`;
+      const result = await ClassroomService.getSemesterAvgs(
+        classroom?.id,
+        dateFormatted
+      );
+      if (result) {
+        setExamData(result);
+        setRows(result?.students);
       }
+    } catch {
+      // swallow – we just show “no data”
+    } finally {
+      setLoading(false);
     }
+  }, [classroom?.id, examDate]);
 
-    if (isValidType && isValidDate && classroom) fetchExam();
-  }, [classroom, isValidType, isValidDate]);
+  useEffect(() => {
+    if (isValidType && isValidDate && classroom) {
+      fetchExam();
+    }
+  }, [fetchExam, isValidType, isValidDate, classroom?.id]);
 
   // handle input Mekun
   const handleInputMekun = (event: ChangeEvent<HTMLInputElement>) => {
     const val = Number(event.target.value);
-      setMekunSemester(val);
+    setMekunSemester(val);
   };
 
   // Compute scores, average, ranking, and grade
@@ -113,7 +122,7 @@ export const SemesterlyAverageGrid = (props: SemesterlyAverageGridProps) => {
       const totalAverages = row.monthlyAverage || {};
       const values = Object.values(totalAverages).map(Number);
       const divisorOfSemester = Number(mekunSemester) || 1;
-      
+
       //average
       // const divisorOfMonthly = Number(meKunValue) || 1;
       // const average = Object.fromEntries(
@@ -129,7 +138,7 @@ export const SemesterlyAverageGrid = (props: SemesterlyAverageGridProps) => {
       const totalAverage =
         values.length > 0
           ? values.reduce((sum, v) => sum + (v || 0), 0) / divisorOfSemester
-          : 0.00;
+          : 0.0;
 
       return {
         ...row,
@@ -177,6 +186,14 @@ export const SemesterlyAverageGrid = (props: SemesterlyAverageGridProps) => {
     ) as StudentMonthlyExamsAvgResponse[];
   }, [rows, mekunSemester, examDate]);
 
+  // Extract exam month keys for column grouping
+  const ExamMonthKeys = useMemo(() => {
+    return processedRows.length > 0 && processedRows[0]?.monthlyAverage
+      ? Object.keys(processedRows[0].monthlyAverage)
+      : [];
+  }, [processedRows]);
+
+  // Define columns for DataGrid
   const columns = useMemo(() => {
     const staticColumns: GridColDef<StudentMonthlyExamsAvgResponse>[] = [
       {
@@ -248,12 +265,6 @@ export const SemesterlyAverageGrid = (props: SemesterlyAverageGridProps) => {
       },
     ];
 
-    // Safely extract score keys with null checks
-    const ExamMonthKeys =
-      processedRows.length > 0 && processedRows[0]?.monthlyAverage
-        ? Object.keys(processedRows[0].monthlyAverage)
-        : [];
-        
     const dynamicAvgColumns: GridColDef[] = ExamMonthKeys.flatMap((key) => {
       const baseCol: GridColDef = {
         field: key,
@@ -278,6 +289,24 @@ export const SemesterlyAverageGrid = (props: SemesterlyAverageGridProps) => {
     return [...staticColumns, ...dynamicAvgColumns, ...staticColumns2];
   }, [rows]);
 
+  const columnGroupingModel: GridColumnGroupingModel = useMemo(
+    () => [
+      {
+        groupId: "monthlyAvg",
+        headerName: "មធ្យមភាគប្រចាំឆមាស",
+        align: "center",
+        headerAlign: "center",
+        headerClassName: "font-siemreap",
+        children: [
+          ...ExamMonthKeys.map((key) => ({ field: key })),
+          { field: "totalAverage" },
+          { field: "mRanking" },
+        ],
+      },
+    ],
+    [ExamMonthKeys, t]
+  );
+
   return (
     <>
       <DataGrid
@@ -290,6 +319,7 @@ export const SemesterlyAverageGrid = (props: SemesterlyAverageGridProps) => {
             },
           },
         }}
+        columnGroupingModel={columnGroupingModel}
         pageSizeOptions={[15, 25, 50]}
         checkboxSelection
         disableRowSelectionOnClick
