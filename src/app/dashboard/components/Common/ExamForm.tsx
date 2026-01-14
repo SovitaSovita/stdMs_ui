@@ -22,7 +22,7 @@ import { useAtom, useAtomValue } from "jotai";
 import { ScreenExamAtom } from "@/app/libs/jotai/commonAtom";
 import { useFormik } from "formik";
 import { useUpsertExamSchema } from "@/app/libs/hooks/Validation";
-import { classroomAtom } from "@/app/libs/jotai/classroomAtom";
+import { classroomAtom, examAtom } from "@/app/libs/jotai/classroomAtom";
 import { ExamResponse, ExamUpsertRequest } from "@/app/constants/type";
 import CustomDatePicker from "../CustomDatePicker";
 import ExamService from "@/app/service/ExamService";
@@ -30,13 +30,11 @@ import { showAlertAtom } from "@/app/libs/jotai/alertAtom";
 import { FormLabel } from "@mui/material";
 import { useLocale, useTranslations } from "next-intl";
 import { getFullYearRangeBounds } from "@/app/utils/axios/Common";
+import { TimePicker } from "@mui/x-date-pickers";
 
 export type FormFieldValue = string | string[] | number | boolean | File | null;
-type ExamFormProps = {
-  exam?: ExamResponse;
-};
-export default function ExamForm(props: ExamFormProps) {
-  const { exam } = props;
+
+export default function ExamForm() {
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const navigate = useRouter();
   const t = useTranslations("Common");
@@ -49,6 +47,7 @@ export default function ExamForm(props: ExamFormProps) {
   const { min: minDate, max: maxDate } = getFullYearRangeBounds(
     classroom?.year
   );
+  const [exam, setExam] = useAtom(examAtom);
 
   // Check if we're in edit mode
   const isEditMode = !!exam;
@@ -61,9 +60,11 @@ export default function ExamForm(props: ExamFormProps) {
       examDate: exam?.examDate || "",
       meKun: exam?.meKun || 1.0,
       classId: classroom?.id || "",
+      time: exam?.time || dayjs().toString(),
+      description: exam?.description || "",
     },
     validationSchema: validationSchema,
-    enableReinitialize: true,
+    enableReinitialize: false,
     onSubmit: (values: ExamUpsertRequest) => {
       handleSubmit(values);
     },
@@ -73,6 +74,7 @@ export default function ExamForm(props: ExamFormProps) {
     const sendData: ExamUpsertRequest = {
       ...values,
       classId: classroom?.id,
+      time: dayjs(values.time).format("HH:mm").toString(),
     };
     // Include id if we're updating
     if (exam?.id) {
@@ -139,20 +141,18 @@ export default function ExamForm(props: ExamFormProps) {
       noValidate
       autoComplete="off"
       onReset={handleReset}
-      sx={{ width: "100%" }}
+      sx={{ width: "80%" }}
     >
       <FormGroup>
-        <Grid container spacing={2} sx={{ mb: 2, width: "100%" }}>
-          <Grid size={{ xs: 12, sm: 12 }} sx={{ display: "flex" }}>
+        <Box mb={4} display="flex" flexDirection="column" gap={2}>
+          <Grid
+            size={{ xs: 12, sm: 12 }}
+            sx={{ display: "flex", flexDirection: "column" }}
+          >
+            <FormLabel sx={{ mb: 0.5, fontWeight: 400 }}>Exam Title</FormLabel>
             <TextField
               name="title"
-              placeholder="Exam Name"
               fullWidth
-              sx={{
-                "&. MuiInputBase-input": {
-                  textAlign: "center",
-                },
-              }}
               variant="outlined"
               disabled
               value={formik.values.title}
@@ -162,75 +162,147 @@ export default function ExamForm(props: ExamFormProps) {
               helperText={formik.touched.title && formik.errors.title}
             />
           </Grid>
-          <Grid size={{ xs: 12, sm: 6 }} sx={{ display: "flex" }}>
-            <FormControl error={!!formik?.values.examType} fullWidth>
-              <Select
-                value={formik?.values.examType ?? ""}
-                onChange={(e) => {
-                  const val = e.target.value;
-                  formik.setFieldValue("examType", val);
-                  formik.setFieldTouched("examType", true);
-                  const newTitle = generateTitle(
-                    val,
-                    dayjs(formik.values.examDate)
-                  );
-                  formik.setFieldValue("title", newTitle);
-                }}
-                onBlur={formik.handleBlur}
-                name="examType"
-                defaultValue=""
+
+          <Grid container spacing={2}>
+            <Grid size={{ xs: 12, sm: 6, lg: 6 }}>
+              <FormControl fullWidth>
+                <FormLabel sx={{ mb: 0.5, fontWeight: 400 }}>
+                  Exam Type
+                </FormLabel>
+                <Select
+                  value={formik?.values.examType ?? ""}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    formik.setFieldValue("examType", val);
+                    formik.setFieldTouched("examType", true);
+                    const newTitle = generateTitle(
+                      val,
+                      dayjs(formik.values.examDate)
+                    );
+                    formik.setFieldValue("title", newTitle);
+                  }}
+                  onBlur={formik.handleBlur}
+                  name="examType"
+                  defaultValue=""
+                  fullWidth
+                  variant="outlined"
+                >
+                  <MenuItem value="MONTHLY">{t("monthly")}</MenuItem>
+                  <MenuItem value="SEMESTER">{t("semester")}</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+
+            <Grid size={{ xs: 12, sm: 6, lg: 6 }}>
+              <FormControl fullWidth>
+                <FormLabel sx={{ mb: 0.5, fontWeight: 400 }}>
+                  Exam Month
+                </FormLabel>
+                <CustomDatePicker
+                  name="examDate"
+                  // label={"Exam Month"}
+                  value={formik.values.examDate}
+                  onChange={(val) => {
+                    formik.setFieldValue("examDate", val);
+                    formik.setFieldTouched("examDate", true);
+                    const newTitle = generateTitle(
+                      formik.values.examType,
+                      dayjs(val)
+                    );
+                    formik.setFieldValue("title", newTitle);
+                  }}
+                  error={formik.errors.examDate}
+                  views={["month", "year"]}
+                  minDate={minDate} // <-- dynamic
+                  maxDate={maxDate} // <-- dynamic
+                />
+              </FormControl>
+            </Grid>
+          </Grid>
+
+          <Grid container spacing={2}>
+            <Grid size={{ xs: 12, sm: 6, lg: 6 }}>
+              <FormControl fullWidth>
+                <FormLabel sx={{ mb: 1, fontWeight: 400 }}>Exam Time</FormLabel>
+                <LocalizationProvider dateAdapter={AdapterDayjs}>
+                  <TimePicker
+                    value={dayjs(formik.values.time)}
+                    onChange={(newValue) =>
+                      formik.setFieldValue("time", newValue)
+                    }
+                    slotProps={{
+                      textField: {
+                        fullWidth: true,
+                        size: "small",
+                        name: "time",
+                        variant: "outlined",
+                        onBlur: formik.handleBlur,
+                        error: Boolean(
+                          formik.touched.time && formik.errors.time
+                        ),
+                        helperText:
+                          formik.touched.time && formik.errors.time,
+                      },
+                    }}
+                  />
+                </LocalizationProvider>
+              </FormControl>
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6, lg: 6 }}>
+              <FormControl fullWidth>
+                <FormLabel sx={{ mb: 1, fontWeight: 400 }}>Mekun</FormLabel>
+                <TextField
+                  variant="outlined"
+                  size="small"
+                  name="meKun"
+                  type="number"
+                  value={formik.values.meKun}
+                  slotProps={{
+                    htmlInput: {
+                      min: 1,
+                      step: 1, // or 0.1 if you allow decimals
+                    },
+                  }}
+                  placeholder="Enter mekun"
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  error={formik.touched.meKun && Boolean(formik.errors.meKun)}
+                  helperText={formik.touched.meKun && formik.errors.meKun}
+                />
+              </FormControl>
+            </Grid>
+          </Grid>
+
+          <Grid size={{ xs: 12, sm: 12 }}>
+            <FormControl fullWidth>
+              <FormLabel sx={{ mb: 1, fontWeight: 400 }}>Description</FormLabel>
+              <TextField
                 fullWidth
+                multiline
+                minRows={3}
                 variant="outlined"
-              >
-                <MenuItem value="MONTHLY">{t("monthly")}</MenuItem>
-                <MenuItem value="SEMESTER">{t("semester")}</MenuItem>
-              </Select>
-              <FormHelperText>{formik?.errors.examType ?? " "}</FormHelperText>
+                size="medium"
+                name="description"
+                type="text"
+                value={formik.values.description}
+                placeholder="Enter description"
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                error={
+                  formik.touched.description &&
+                  Boolean(formik.errors.description)
+                }
+                helperText={
+                  formik.touched.description && formik.errors.description
+                }
+              />
             </FormControl>
           </Grid>
-          <Grid size={{ xs: 12, sm: 6 }} sx={{ display: "flex", justifyContent: "center", gap: 2 }}>
-            <CustomDatePicker
-              name="examDate"
-              label={"Exam Month"}
-              value={formik.values.examDate}
-              onChange={(val) => {
-                formik.setFieldValue("examDate", val);
-                formik.setFieldTouched("examDate", true);
-                const newTitle = generateTitle(
-                  formik.values.examType,
-                  dayjs(val)
-                );
-                formik.setFieldValue("title", newTitle);
-              }}
-              error={formik.errors.examDate}
-              views={["month", "year"]}
-              minDate={minDate} // <-- dynamic
-              maxDate={maxDate} // <-- dynamic
-            />
-            <TextField
-              variant="outlined"
-              size="medium"
-              name="meKun"
-              type="number"
-              value={formik.values.meKun}
-              slotProps={{
-                htmlInput: {
-                  min: 1,
-                  step: 1, // or 0.1 if you allow decimals
-                },
-              }}
-              placeholder="Enter mekun"
-              onChange={formik.handleChange}
-              onBlur={formik.handleBlur}
-              error={formik.touched.meKun && Boolean(formik.errors.meKun)}
-              helperText={formik.touched.meKun && formik.errors.meKun}
-            />
-          </Grid>
-        </Grid>
+        </Box>
       </FormGroup>
       <Stack direction="row" spacing={2} justifyContent="space-between">
         <Button
-          variant="contained"
+          variant="outlined"
           startIcon={<ArrowBackIcon />}
           onClick={handleBack}
         >
@@ -240,9 +312,9 @@ export default function ExamForm(props: ExamFormProps) {
           type="submit"
           variant="contained"
           size="medium"
-          loading={isSubmitting}
+          disabled={isSubmitting}
         >
-          {isEditMode ? "Update" : "Create"}
+          {isEditMode ? "Update Exam" : "Create Exam"}
         </Button>
       </Stack>
     </Box>

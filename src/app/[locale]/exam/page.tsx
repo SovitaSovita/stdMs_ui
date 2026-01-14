@@ -1,27 +1,26 @@
 "use client";
 
 import { ExamResponse, ModeType } from "@/app/constants/type";
-import AddExamCard from "@/app/dashboard/components/AddExamCard";
 import ExamForm from "@/app/dashboard/components/Common/ExamForm";
-import ExamFormModify from "@/app/dashboard/components/Common/ExamFormModify";
 import ExamListCard from "@/app/dashboard/components/Common/ExamListCard";
-import HighlightedCard from "@/app/dashboard/components/HighlightedCard";
-import { classroomAtom } from "@/app/libs/jotai/classroomAtom";
+import { classroomAtom, examsAtom } from "@/app/libs/jotai/classroomAtom";
 import { ScreenExamAtom } from "@/app/libs/jotai/commonAtom";
 import ExamService from "@/app/service/ExamService";
-import { Box, Grid, Typography } from "@mui/material";
+import { Box, Button, Grid, Typography } from "@mui/material";
 import { useAtom, useAtomValue } from "jotai";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
+import AddIcon from "@mui/icons-material/Add";
+import { useTranslations } from "next-intl";
 
 export default function Page() {
   const classroom = useAtomValue(classroomAtom);
   const router = useRouter();
+  const t = useTranslations();
   const searchParams = useSearchParams();
 
   const [activeView, setActiveView] = useAtom(ScreenExamAtom);
-  const [exams, setExams] = useState<ExamResponse[]>([]);
-  const [exam, setExam] = useState<ExamResponse>();
+  const [exams, setExams] = useAtom(examsAtom);
 
   // Get screen from URL query
   const queryScreen = searchParams.get("screen") as ModeType | null;
@@ -69,31 +68,88 @@ export default function Page() {
     switch (activeView) {
       case "default":
         return (
-          <Grid
-            container
-            spacing={2}
-            columns={12}
-            sx={{ mb: (theme) => theme.spacing(2) }}
-          >
-            <Grid size={{ xs: 12, md: 3, lg: 3, sm: 6 }}>
-              <AddExamCard />
-            </Grid>
+          <>
+            <Box
+              display={"flex"}
+              mb={2}
+              gap={1}
+              justifyContent={"space-between"}
+              alignItems={"center"}
+            >
+              <Typography
+                component="h2"
+                variant="h6"
+                sx={{ display: { xs: "none", sm: "block" } }}
+              >
+                Exam Overview
+              </Typography>
+              <Button
+                variant="contained"
+                size="small"
+                startIcon={<AddIcon />}
+                sx={{ mt: 1 }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setActiveView("create");
+                  router.push("?screen=create");
+                }}
+              >
+                Create Exam
+              </Button>
+            </Box>
 
-            {exams.map((row) => (
-              <Grid size={{ xs: 12, md: 3, lg: 3, sm: 6 }} key={row.id}>
-                <ExamListCard
-                  row={row}
-                  setExam={setExam}
-                  handleGetExams={handleGetExams}
-                />
-              </Grid>
-            ))}
-          </Grid>
+            <Grid
+              container
+              spacing={2}
+              columns={12}
+              sx={{ mb: (theme) => theme.spacing(2) }}
+            >
+              <ExamListCard />
+            </Grid>
+          </>
         );
       case "create":
-        return <ExamForm />;
+        return (
+          <>
+            <Box
+              display={"flex"}
+              mb={2}
+              gap={1}
+              justifyContent={"space-between"}
+              alignItems={"center"}
+            >
+              <Typography
+                component="h2"
+                variant="h6"
+                sx={{ display: { xs: "none", sm: "block" } }}
+              >
+                {t("Exam.createExam")}
+              </Typography>
+            </Box>
+            <ExamForm />
+          </>
+        );
       case "modify":
-        return <ExamForm exam={exam} />;
+        return (
+          <>
+            <Box
+              display={"flex"}
+              mb={2}
+              gap={1}
+              justifyContent={"space-between"}
+              alignItems={"center"}
+            >
+              <Typography
+                component="h2"
+                variant="h6"
+                sx={{ display: { xs: "none", sm: "block" } }}
+              >
+                {t("Exam.editExam")}
+              </Typography>
+            </Box>
+            <ExamForm />
+          </>
+        );
       default:
         return null;
     }
@@ -102,14 +158,6 @@ export default function Page() {
   return (
     <>
       <Box sx={{ width: "100%", maxWidth: { sm: "100%", md: "1700px" } }}>
-        <Typography
-          component="h2"
-          variant="h6"
-          sx={{ mb: 2, display: { xs: "none", sm: "block" } }}
-        >
-          Overview
-        </Typography>
-
         {renderComponent()}
       </Box>
     </>

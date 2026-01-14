@@ -6,6 +6,14 @@ declare const messages: {
     "title": "Welcome to our website!",
     "description": "This is the English version."
   },
+  "Dashboard": {
+    "title": "Dashboard",
+    "welcome": "Welcome back, {name}!",
+    "totalStudents": "Total Students",
+    "totalSubjects": "Total Subjects",
+    "totalExams": "Total Exams",
+    "avgClassScore": "Avg Class Score"
+  },
   "LocaleSwitcher": {
     "label": "Change language",
     "locale": "{locale, select, km {ភាសាខ្មែរ} en {English} other {Unknown}}"
@@ -14,7 +22,8 @@ declare const messages: {
     "require": "Required",
     "minText2": "must be at least 2 characters",
     "cannotEmpty": "Can not empty",
-    "noChange": "Nothing Changed"
+    "noChange": "Nothing Changed",
+    "inputFirst": "Please input {fullName} first!"
   },
   "CommonField": {
     "id": "No",
@@ -67,6 +76,7 @@ declare const messages: {
     "student": "Students",
     "subject": "Subjects",
     "attendance": "Attendance",
+    "exam": "Exam",
     "studyYear": "Year",
     "grade": "Grade",
     "classroom": "Classroom",
@@ -118,6 +128,15 @@ declare const messages: {
     "DialogInsert": {
       "title": "Please enter student information"
     }
+  },
+  "Exam": {
+    "title": "Exams",
+    "createExam": "Create Exam",
+    "editExam": "Edit Exam",
+    "examName": "Exam Name",
+    "examDate": "Exam Date",
+    "noExams": "No exams found. Please create a new exam.",
+    "viewDetails": "View Details"
   },
   "MonthlyExam": {
     "viewRanking": "Montly ranking",

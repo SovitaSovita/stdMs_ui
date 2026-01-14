@@ -7,50 +7,48 @@ import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
 import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
+import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { useTheme } from "@mui/material/styles";
 import { ExamResponse } from "@/app/constants/type";
 import { useTranslations } from "next-intl";
-import { Chip, IconButton, Menu, MenuItem } from "@mui/material";
+import { Box, Chip, Grid, IconButton, Menu, MenuItem } from "@mui/material";
 import ExamService from "@/app/service/ExamService";
-import { useAtom } from "jotai";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { showAlertAtom } from "@/app/libs/jotai/alertAtom";
 import { ScreenExamAtom } from "@/app/libs/jotai/commonAtom";
 import dayjs from "dayjs";
 import { useRouter } from "next/navigation";
+import useClassroomData from "@/app/libs/hooks/useClassroomData";
+import { classroomAtom, examAtom } from "@/app/libs/jotai/classroomAtom";
+import useNotifications from "@/app/libs/hooks/useNotifications/useNotifications";
+import { DeleteConfirmationDialog } from "../Dialog/DeleteConfirmationDialog";
+import AddIcon from "@mui/icons-material/Add";
+import EmptyStateCard from "./EmptyStateCard";
 
 type ExamListCardProps = {
-  row: ExamResponse;
-  setExam: React.Dispatch<React.SetStateAction<ExamResponse | undefined>>;
-  handleGetExams: () => void;
+  enableEdit?: "visible" | "hidden";
 };
 
 export default function ExamListCard(props: ExamListCardProps) {
-  const { row, setExam, handleGetExams } = props;
-  const theme = useTheme();
+  const { enableEdit = "visible" } = props;
   const router = useRouter();
-  const t = useTranslations("Common");
-  const [activeView, setActiveView] = useAtom(ScreenExamAtom);
-  const [, showAlert] = useAtom(showAlertAtom);
+  const t = useTranslations();
+  const setActiveView = useSetAtom(ScreenExamAtom);
+  const classroom = useAtomValue(classroomAtom);
+  const { exams, refetch } = useClassroomData(classroom);
+  const [exam, setExam] = useAtom(examAtom);
+  const notification = useNotifications();
+  const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
 
-  const isSmallScreen = useMediaQuery(theme.breakpoints.down("sm"));
-
-  const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
-  const handleMenu = (event: React.MouseEvent<HTMLElement>) => {
-    setAnchorEl(event.currentTarget);
-  };
-  const handleClose = () => {
-    setAnchorEl(null);
-  };
-
-  const handleDeleteExam = async (id: string) => {
+  const handleDeleteExam = async () => {
     try {
-      if (!id) return;
-      const result = await ExamService.delete(id);
+      if (!exam?.id) return;
+      const result = await ExamService.delete(exam?.id);
       if (result?.status == 200) {
-        showAlert({
-          message: result?.message || "Deleted successfully.",
+        notification.show("Exam deleted successfully.", {
           severity: "success",
+          autoHideDuration: 3000,
         });
       }
     } catch (error: any) {
@@ -59,104 +57,169 @@ export default function ExamListCard(props: ExamListCardProps) {
         error?.message ||
         "An error occurred while creating the exam";
 
-      showAlert({
-        message: errorMessage,
+      notification.show(errorMessage, {
         severity: "error",
+        autoHideDuration: 3000,
       });
     } finally {
-      handleClose();
-      handleGetExams();
+      refetch.fetchExams();
     }
   };
 
+  const renderEmptyState = () => {
+    return (
+      <EmptyStateCard
+        title={t("Exam.noExams")}
+        buttonLabel={t("Exam.createExam")}
+        onButtonClick={() => {
+          setActiveView("create");
+          router.push("/exam?screen=create");
+        }}
+      />
+    );
+  };
+
+  if (exams.length == 0) {
+    return renderEmptyState();
+  }
+
   return (
-    <Card sx={{ height: "100%", grid: 6 }} className="w-full">
-      <CardContent>
-        <Typography
-          height={50}
-          component="h2"
-          variant="subtitle2"
-          gutterBottom
-          sx={{ fontWeight: "600" }}
-          className="line-clamp-2"
-        >
-          {row?.title}
-        </Typography>
-        <Typography
-          component="h2"
-          variant="subtitle2"
-          gutterBottom
-          sx={{ fontWeight: "600" }}
-        >
-          <Chip
-            label={t(row?.examType.toLowerCase())}
-            color={row?.examType === "SEMESTER" ? "warning" : "primary"}
-            variant="outlined"
-          />
-        </Typography>
-
-        <Typography sx={{ color: "text.secondary", mb: "8px" }}>
-          {dayjs(row?.examDate).format("MM-YYYY")}
-        </Typography>
-
-        <div className="flex justify-between items-center">
-          <Button
-            variant="contained"
-            size="small"
-            color="primary"
-            endIcon={<ChevronRightRoundedIcon />}
-            fullWidth={isSmallScreen}
-            onClick={() => router.push(`exam/${row?.examType.toLowerCase()}/${dayjs(row?.examDate).format("MMYYYY")}/${row?.meKun}`)}
+    <Grid container spacing={3}>
+      {exams.map((exam) => (
+        <Grid size={{ xs: 12, sm: 6, lg: 4 }} key={exam.id}>
+          <Card
+            sx={{
+              height: "100%",
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "space-between",
+              border: "1px solid",
+              borderColor: "divider",
+              transition: "all 0.3s ease",
+              "&:hover": {
+                borderColor: "primary.main",
+                transform: "translateY(-4px)",
+                boxShadow: 2,
+              },
+              "&:hover .action-buttons": {
+                opacity: 1,
+              },
+            }}
           >
-            View
-          </Button>
-
-          {/* Edit || Delete tab */}
-          <div>
-            <IconButton
-              aria-label="option-menu"
-              aria-controls="menu-appbar"
-              aria-haspopup="true"
-              size="small"
-              onClick={handleMenu}
-              color="inherit"
-            >
-              <MoreVertIcon fontSize="small" />
-            </IconButton>
-            <Menu
-              id="menu-appbar"
-              anchorEl={anchorEl}
-              anchorOrigin={{
-                vertical: "top",
-                horizontal: "right",
-              }}
-              keepMounted
-              transformOrigin={{
-                vertical: "top",
-                horizontal: "right",
-              }}
-              open={Boolean(anchorEl)}
-              onClose={handleClose}
-            >
-              <MenuItem
-                onClick={() => {
-                  setActiveView("modify");
-                  setExam(row);
-                }}
+            <CardContent>
+              <Box
+                display="flex"
+                justifyContent="space-between"
+                alignItems="flex-start"
+                mb={2}
               >
-                Edit
-              </MenuItem>
-              <MenuItem sx={{color: "red", fontWeight: 600}} onClick={() => {
-                if(confirm("Do you still want to Delete this Exam?")){
-                  handleDeleteExam(row?.id);
+                <Chip
+                  label={exam.examType}
+                  color={exam?.examType === "SEMESTER" ? "warning" : "primary"}
+                  size="small"
+                  variant="outlined"
+                />
+                <Box
+                  visibility={enableEdit}
+                  className="action-buttons"
+                  display="flex"
+                  gap={1}
+                  sx={{
+                    opacity: 0,
+                    transition: "opacity 0.3s ease",
+                  }}
+                >
+                  <button
+                    onClick={() => {
+                      setActiveView("modify");
+                      setExam(exam);
+                      router.push(`/exam?screen=modify&examId=${exam?.id}`);
+                    }}
+                    className="p-1 text-[#9dabb9] hover:text-white hover:bg-[#283039] rounded"
+                  >
+                    <span className="material-symbols-outlined text-sm">
+                      {t("Common.edit")}
+                    </span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      setDeleteDialogOpen(true);
+                    }}
+                    className="p-1 text-[#9dabb9] hover:text-red-400 hover:bg-[#283039] rounded"
+                  >
+                    <span className="material-symbols-outlined text-sm">
+                      {t("Common.delete")}
+                    </span>
+                  </button>
+                </Box>
+              </Box>
+
+              <Typography variant="h6" component="h4" fontWeight={600} mb={1}>
+                {exam?.title}
+              </Typography>
+
+              <Typography
+                variant="body2"
+                color="textSecondary"
+                mb={3}
+                sx={{ lineHeight: 1.4 }}
+              >
+                {exam?.description}
+              </Typography>
+
+              <Box
+                display="flex"
+                alignItems="center"
+                gap={1}
+                color="textSecondary"
+              >
+                <CalendarMonthIcon fontSize="small" />
+                <Typography variant="caption">
+                  {dayjs(exam?.examDate).format("DD-MM-YYYY")} •{" "}
+                  {exam?.time && dayjs(exam?.time, "HH:mm").format("hh:mm A")}
+                </Typography>
+              </Box>
+            </CardContent>
+
+            <Box
+              sx={{
+                p: 2,
+                pb: 0,
+                borderTop: "1px solid",
+                borderColor: "divider",
+              }}
+            >
+              <Button
+                fullWidth
+                variant="outlined"
+                size="small"
+                onClick={() =>
+                  router.push(
+                    `exam/${exam?.examType.toLowerCase()}/${dayjs(
+                      exam?.examDate
+                    ).format("MMYYYY")}/${exam?.meKun}`
+                  )
                 }
-              }}>
-                Delete
-              </MenuItem>
-            </Menu>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
+              >
+                View Details
+              </Button>
+            </Box>
+          </Card>
+        </Grid>
+      ))}
+
+      <DeleteConfirmationDialog
+        open={deleteDialogOpen}
+        onClose={() => setDeleteDialogOpen(false)}
+        onConfirm={handleDeleteExam}
+        itemName="exams"
+        title={t("Common.titleDeleteConfirm")}
+        message={t("Common.deleteConfirmation", {
+          subject: t("Common.exam"),
+        })}
+        confirmText={t("Common.delete")}
+        cancelText={t("Common.cancel")}
+      />
+    </Grid>
   );
 }

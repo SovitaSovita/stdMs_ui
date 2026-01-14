@@ -18,37 +18,14 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import SubjectService from "@/app/service/SubjectService";
 import { SubjectResponse } from "@/app/constants/type/SubjectType";
 import CustomClassTab from "@/app/dashboard/components/Common/Classroom/CustomClassTab";
+import useClassroomData from "@/app/libs/hooks/useClassroomData";
 
 export default function Page() {
   const { data: session, status }: { data: any; status: any } = useSession();
   const classroom = useAtomValue(classroomAtom);
   const t = useTranslations();
+  const { students, subjects, refetch } = useClassroomData(classroom);
 
-  const [students, setStudents] = useAtom(studentsAtom);
-  const [subjects, setSubjects] = useAtom(subjectsAtom);
-
-  const getStudentsInfo = useCallback(async () => {
-    if (classroom) {
-      const result = await StudentService.getInfoList(classroom?.id);
-      if (result) {
-        setStudents(result);
-      }
-    }
-  }, [classroom?.id]);
-
-  const getSubjects = useCallback(async () => {
-    if (classroom) {
-      const result = await SubjectService.getByClassId(classroom.id);
-      if (result.length > 0) {
-        setSubjects(result);
-      } else setSubjects([]);
-    }
-  }, [classroom?.id, ]);
-
-  useEffect(() => {
-    getStudentsInfo();
-    getSubjects();
-  }, [getStudentsInfo, getSubjects]);
 
   return (
     <>

@@ -11,6 +11,7 @@
     "sync-translations": "tsx scripts/sync-translations.ts"
   },
   "dependencies": {
+    "@base-ui/react": "^1.0.0",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
     "@mui/icons-material": "^7.2.0",
@@ -26,7 +27,7 @@
     "dayjs": "^1.11.13",
     "formik": "^2.4.6",
     "jotai": "^2.15.0",
-    "next": "15.4.2",
+    "next": "15.4.10",
     "next-auth": "^4.24.11",
     "next-intl": "^4.3.12",
     "react": "19.1.0",
