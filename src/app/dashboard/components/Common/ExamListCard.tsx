@@ -180,6 +180,15 @@ export default function ExamListCard(props: ExamListCardProps) {
                   {exam?.time && dayjs(exam?.time, "HH:mm").format("hh:mm A")}
                 </Typography>
               </Box>
+
+              <Box display={"flex"} gap={2} mt={2}>
+                <Typography variant="subtitle2" component="h5" fontWeight={600}>
+                  {t("Common.mekun")}:
+                </Typography>
+                <Typography variant="subtitle2" component="h5" fontWeight={600}>
+                  {exam?.meKun}
+                </Typography>
+              </Box>
             </CardContent>
 
             <Box

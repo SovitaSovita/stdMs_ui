@@ -32,7 +32,7 @@ import {
   SETTINGS_STORAGE_KEY,
 } from "@/app/utils/axios/Common";
 import { ImportStudentsDialog } from "@/app/dashboard/components/Dialog/ImportStudentsDialog";
-import DriveFolderUploadIcon from '@mui/icons-material/DriveFolderUpload';
+import DriveFolderUploadIcon from "@mui/icons-material/DriveFolderUpload";
 
 declare module "@mui/x-data-grid" {
   interface FooterPropsOverrides {
@@ -233,7 +233,7 @@ export default function Page() {
     setIsLoading(true);
 
     try {
-      if(rows.length >= 60){
+      if (rows.length >= 60) {
         showAlert({
           message: "Cannot add more than 60 students.",
           severity: "error",
@@ -346,39 +346,6 @@ export default function Page() {
     };
   }, [rows]);
 
-  const renderButtonCrudAction = () => {
-    return (
-      <>
-      {/* This button is for inserting a single student */}
-        <InsertOneStudentDialog getStudentsInfo={getStudentsInfo} />
-
-        {/* this button is another option for Insert in table row */}
-        <Button
-          onClick={handleAddMulti}
-          variant="contained"
-          size="small"
-          startIcon={<GroupAddIcon />}
-        >
-          {t("Student.btn.multiAdd")}
-        </Button>
-
-        {/* This button is for importing students from Excel */}
-        {/* <ImportStudentsDialog /> */}
-        
-        <Button
-          onClick={() => setDeleteDialogOpen(true)}
-          disabled={rowSelectionModel.ids.size === 0}
-          variant="contained"
-          color="error"
-          size="small"
-          startIcon={<DeleteSweepIcon />}
-        >
-          {t("Student.btn.deleteStu")}
-        </Button>
-      </>
-    );
-  };
-
   return (
     <>
       <Box sx={{ width: "100%", maxWidth: { sm: "100%", md: "1700px" } }}>
@@ -390,6 +357,34 @@ export default function Page() {
           >
             Overview
           </Typography>
+          <Box display={"flex"} gap={1}>
+            {/* This button is for inserting a single student */}
+            <InsertOneStudentDialog getStudentsInfo={getStudentsInfo} />
+
+            {/* this button is another option for Insert in table row */}
+            <Button
+              onClick={handleAddMulti}
+              variant="contained"
+              size="small"
+              startIcon={<GroupAddIcon />}
+            >
+              {t("Student.btn.multiAdd")}
+            </Button>
+
+            {/* This button is for importing students from Excel */}
+            {/* <ImportStudentsDialog /> */}
+
+            <Button
+              onClick={() => setDeleteDialogOpen(true)}
+              disabled={rowSelectionModel.ids.size === 0}
+              variant="contained"
+              color="error"
+              size="small"
+              startIcon={<DeleteSweepIcon />}
+            >
+              {t("Student.btn.deleteStu")}
+            </Button>
+          </Box>
         </Box>
         <Box className="font-siemreap" sx={{ height: 600, width: "100%" }}>
           <DataGrid
@@ -420,7 +415,7 @@ export default function Page() {
             slotProps={{
               footer: {
                 studentInfoCount,
-                extraControls: renderButtonCrudAction(),
+                extraControls: null, // You can pass extra controls here if needed
               },
             }}
             sx={{

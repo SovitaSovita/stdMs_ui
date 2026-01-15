@@ -3,11 +3,11 @@
 import { ExamResponse, ModeType } from "@/app/constants/type";
 import ExamForm from "@/app/dashboard/components/Common/ExamForm";
 import ExamListCard from "@/app/dashboard/components/Common/ExamListCard";
-import { classroomAtom, examsAtom } from "@/app/libs/jotai/classroomAtom";
+import { classroomAtom, examAtom, examsAtom } from "@/app/libs/jotai/classroomAtom";
 import { ScreenExamAtom } from "@/app/libs/jotai/commonAtom";
 import ExamService from "@/app/service/ExamService";
 import { Box, Button, Grid, Typography } from "@mui/material";
-import { useAtom, useAtomValue } from "jotai";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import AddIcon from "@mui/icons-material/Add";
@@ -21,7 +21,8 @@ export default function Page() {
 
   const [activeView, setActiveView] = useAtom(ScreenExamAtom);
   const [exams, setExams] = useAtom(examsAtom);
-
+  const setExam = useSetAtom(examAtom);
+  
   // Get screen from URL query
   const queryScreen = searchParams.get("screen") as ModeType | null;
 
@@ -91,10 +92,11 @@ export default function Page() {
                 onClick={(e) => {
                   e.stopPropagation();
                   setActiveView("create");
+                  setExam({} as ExamResponse);
                   router.push("?screen=create");
                 }}
               >
-                Create Exam
+                {t("Exam.createExam")}
               </Button>
             </Box>
 

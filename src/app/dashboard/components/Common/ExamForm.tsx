@@ -60,7 +60,7 @@ export default function ExamForm() {
       examDate: exam?.examDate || "",
       meKun: exam?.meKun || 1.0,
       classId: classroom?.id || "",
-      time: exam?.time || dayjs().toString(),
+      time: exam?.time || "",
       description: exam?.description || "",
     },
     validationSchema: validationSchema,
@@ -74,7 +74,6 @@ export default function ExamForm() {
     const sendData: ExamUpsertRequest = {
       ...values,
       classId: classroom?.id,
-      time: dayjs(values.time).format("HH:mm").toString(),
     };
     // Include id if we're updating
     if (exam?.id) {
@@ -226,10 +225,13 @@ export default function ExamForm() {
                 <FormLabel sx={{ mb: 1, fontWeight: 400 }}>Exam Time</FormLabel>
                 <LocalizationProvider dateAdapter={AdapterDayjs}>
                   <TimePicker
-                    value={dayjs(formik.values.time)}
-                    onChange={(newValue) =>
-                      formik.setFieldValue("time", newValue)
-                    }
+                    value={dayjs(formik.values.time, "HH:mm")}
+                    onChange={(newValue) => {
+                      formik.setFieldValue(
+                        "time",
+                        dayjs(newValue).format("HH:mm").toString()
+                      );
+                    }}
                     slotProps={{
                       textField: {
                         fullWidth: true,
@@ -240,8 +242,7 @@ export default function ExamForm() {
                         error: Boolean(
                           formik.touched.time && formik.errors.time
                         ),
-                        helperText:
-                          formik.touched.time && formik.errors.time,
+                        helperText: formik.touched.time && formik.errors.time,
                       },
                     }}
                   />

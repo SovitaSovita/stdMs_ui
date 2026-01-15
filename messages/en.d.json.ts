@@ -84,6 +84,7 @@ declare const messages: {
     "createClassroom": "Create new Classroom",
     "monthly": "Monthly",
     "semester": "Semester",
+    "mekun": "Credit",
     "months": {
       "Jan": "January",
       "Feb": "February",

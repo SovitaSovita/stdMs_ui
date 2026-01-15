@@ -84,6 +84,7 @@ export default function SelectContent() {
       setClassroomId(id);
       localStorage.setItem(STORAGE_KEY, id); // ✅ persist selected classroom
       getClassDetail(id);
+      router.push("/");
     }
   };
 
