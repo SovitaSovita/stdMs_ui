@@ -64,6 +64,7 @@
     "download": "ទាញយក",
     "downloadExcel": "ទាញយក Excel",
     "print": "ព្រីន",
+    "import": "នាំចូល Excel",
     "titleDeleteConfirm": "បញ្ជាក់ការលុប",
     "deleteConfirmation": "តើអ្នកប្រាកដថាចង់លុប {subject} នេះទេ?",
     "female": "ស្រី",
@@ -93,7 +94,8 @@
       "Oct": "តុលា",
       "Nov": "វិច្ឆិកា",
       "Dec": "ធ្នូ"
-    }
+    },
+    "errorOccurred": "មានកំហុសមួយបានកើតឡើង។ សូមព្យាយាមម្តងទៀត។"
   },
   "Classroom": {
     "createNew": "បង្កើតថ្នាក់ថ្មី",
@@ -120,6 +122,7 @@
     "btn": {
       "multiAdd": "បញ្ជូលសិស្សច្រើន",
       "singleAdd": "បញ្ជូលសិស្ស",
+      "ExcelImport": "នាំចូលពី Excel",
       "deleteStu": "លុប"
     },
     "DialogInsert": {

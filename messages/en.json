@@ -64,6 +64,7 @@
     "download": "Download",
     "downloadExcel": "Download Excel",
     "print": "Print",
+    "import": "Import Excel",
     "titleDeleteConfirm": "Confirm Deletion",
     "deleteConfirmation": "Are you sure you want to delete this {subject}?",
     "male": "Male",
@@ -120,6 +121,7 @@
     "btn": {
       "multiAdd": "Adds",
       "singleAdd": "Add",
+      "ExcelImport": "Import from Excel",
       "deleteStu": "Delete"
     },
     "DialogInsert": {

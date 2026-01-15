@@ -31,6 +31,8 @@ import {
   getInitialSettings,
   SETTINGS_STORAGE_KEY,
 } from "@/app/utils/axios/Common";
+import { ImportStudentsDialog } from "@/app/dashboard/components/Dialog/ImportStudentsDialog";
+import DriveFolderUploadIcon from '@mui/icons-material/DriveFolderUpload';
 
 declare module "@mui/x-data-grid" {
   interface FooterPropsOverrides {
@@ -231,6 +233,13 @@ export default function Page() {
     setIsLoading(true);
 
     try {
+      if(rows.length >= 60){
+        showAlert({
+          message: "Cannot add more than 60 students.",
+          severity: "error",
+        });
+        return oldRow;
+      }
       // ✅ Detect new rows using a special tempId prefix
       const isTempRow = String(newRow.id).startsWith("temp-");
 
@@ -340,8 +349,10 @@ export default function Page() {
   const renderButtonCrudAction = () => {
     return (
       <>
+      {/* This button is for inserting a single student */}
         <InsertOneStudentDialog getStudentsInfo={getStudentsInfo} />
 
+        {/* this button is another option for Insert in table row */}
         <Button
           onClick={handleAddMulti}
           variant="contained"
@@ -351,6 +362,9 @@ export default function Page() {
           {t("Student.btn.multiAdd")}
         </Button>
 
+        {/* This button is for importing students from Excel */}
+        {/* <ImportStudentsDialog /> */}
+        
         <Button
           onClick={() => setDeleteDialogOpen(true)}
           disabled={rowSelectionModel.ids.size === 0}
@@ -385,11 +399,11 @@ export default function Page() {
             initialState={{
               pagination: {
                 paginationModel: {
-                  pageSize: 15,
+                  pageSize: 40,
                 },
               },
             }}
-            pageSizeOptions={[15]}
+            pageSizeOptions={[10, 15, 40, 60]}
             checkboxSelection
             onRowSelectionModelChange={(newRowSelectionModel) => {
               setRowSelectionModel(newRowSelectionModel);

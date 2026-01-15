@@ -144,6 +144,7 @@ export default function ExamListCard(props: ExamListCardProps) {
                   <button
                     onClick={() => {
                       setDeleteDialogOpen(true);
+                      setExam(exam);
                     }}
                     className="p-1 text-[#9dabb9] hover:text-red-400 hover:bg-[#283039] rounded"
                   >

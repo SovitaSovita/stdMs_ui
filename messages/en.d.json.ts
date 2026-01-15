@@ -67,6 +67,7 @@ declare const messages: {
     "download": "Download",
     "downloadExcel": "Download Excel",
     "print": "Print",
+    "import": "Import Excel",
     "titleDeleteConfirm": "Confirm Deletion",
     "deleteConfirmation": "Are you sure you want to delete this {subject}?",
     "male": "Male",
@@ -123,6 +124,7 @@ declare const messages: {
     "btn": {
       "multiAdd": "Adds",
       "singleAdd": "Add",
+      "ExcelImport": "Import from Excel",
       "deleteStu": "Delete"
     },
     "DialogInsert": {
