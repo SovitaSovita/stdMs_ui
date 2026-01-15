@@ -97,7 +97,8 @@ declare const messages: {
       "Oct": "October",
       "Nov": "November",
       "Dec": "December"
-    }
+    },
+    "errorOccurred": "An error occurred. Please try again."
   },
   "Classroom": {
     "createNew": "Create new class",
