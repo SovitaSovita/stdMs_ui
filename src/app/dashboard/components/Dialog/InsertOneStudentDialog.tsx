@@ -23,15 +23,15 @@ import { classroomAtom } from "@/app/libs/jotai/classroomAtom";
 import { useAtomValue } from "jotai";
 import { useTranslations } from "next-intl";
 import PersonAddAlt1Icon from '@mui/icons-material/PersonAddAlt1';
+import useClassroomData from "@/app/libs/hooks/useClassroomData";
 
-type InsertOneStudentDialogProps = {
-  getStudentsInfo: () => Promise<void>;
-};
+type InsertOneStudentDialogProps = {};
 
 export const InsertOneStudentDialog = (props: InsertOneStudentDialogProps) => {
-  const { getStudentsInfo } = props;
+  const {} = props;
   const [open, setOpen] = React.useState(false);
   const classroom = useAtomValue(classroomAtom);
+  const { refetch } = useClassroomData(classroom);
   const t = useTranslations();
   const validationSchema = useInsertOneStutSchema();
 
@@ -74,7 +74,7 @@ export const InsertOneStudentDialog = (props: InsertOneStudentDialogProps) => {
 
     const result = await StudentService.upsertStudent(sendData);
     if (result?.status == 200) {
-      getStudentsInfo();
+      refetch.fetchStudents();
       handleClose();
     }
   };

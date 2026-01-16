@@ -53,6 +53,7 @@ declare const messages: {
   "Common": {
     "yes": "Yes",
     "no": "No",
+    "clear": "Clear",
     "add": "Add",
     "create": "Create",
     "update": "Update",
@@ -131,6 +132,25 @@ declare const messages: {
     },
     "DialogInsert": {
       "title": "Please enter student information"
+    },
+    "ImportDialog": {
+      "title": "Import Students from Excel",
+      "uploadZone": "students_enrolment_2024.xlsx",
+      "fileSize": "File size: {size} • {rows} rows detected",
+      "replaceFile": "Replace File",
+      "columnMapping": "Column Mapping",
+      "connectHeaders": "Connect Excel headers to Student fields",
+      "systemStudentID": "System: Student ID",
+      "systemFullName": "System: Full Name",
+      "systemGender": "System: Gender",
+      "systemBirthDate": "System: Birth Date",
+      "required": "Required",
+      "optional": "Optional",
+      "autoDetect": "Auto-detect Headers",
+      "proTip": "Pro Tip",
+      "proTipText": "Please ensure the mapping column matches with the system header precisely to avoid encoding errors.",
+      "noFileSelected": "No file selected. Please choose an Excel file to import.",
+      "noteInfoBeforeImport": "Important Notes:\n• Duplicate students within the file will not be inserted\n• Students that already exist in the system will be skipped"
     }
   },
   "Exam": {

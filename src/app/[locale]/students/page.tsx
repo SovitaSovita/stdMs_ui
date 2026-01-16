@@ -9,7 +9,7 @@ import {
 } from "@/app/constants/type";
 import { DeleteConfirmationDialog } from "@/app/dashboard/components/Dialog/DeleteConfirmationDialog";
 import { InsertOneStudentDialog } from "@/app/dashboard/components/Dialog/InsertOneStudentDialog";
-import { classroomAtom } from "@/app/libs/jotai/classroomAtom";
+import { classroomAtom, examsAtom, studentsAtom } from "@/app/libs/jotai/classroomAtom";
 import StudentService from "@/app/service/StudentService";
 import { Box, Button, Typography } from "@mui/material";
 import {
@@ -33,6 +33,7 @@ import {
 } from "@/app/utils/axios/Common";
 import { ImportStudentsDialog } from "@/app/dashboard/components/Dialog/ImportStudentsDialog";
 import DriveFolderUploadIcon from "@mui/icons-material/DriveFolderUpload";
+import useClassroomData from "@/app/libs/hooks/useClassroomData";
 
 declare module "@mui/x-data-grid" {
   interface FooterPropsOverrides {
@@ -162,12 +163,15 @@ export default function Page() {
     },
   ];
 
-  const [students, setStudents] = useState<StuInfoDetailResponseType>();
+  // const [students, setStudents] = useState<StuInfoDetailResponseType>();
   const [rows, setRows] = useState<StudentsInfo[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const classroom = useAtomValue(classroomAtom);
+  const exams = useAtomValue(examsAtom);
+  const [students, setStudents] = useAtom(studentsAtom);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [, showAlert] = useAtom(showAlertAtom);
+  const { refetch } = useClassroomData(classroom);
 
   const [rowSelectionModel, setRowSelectionModel] =
     useState<GridRowSelectionModel>({
@@ -175,19 +179,11 @@ export default function Page() {
       ids: new Set<GridRowId>([]),
     });
 
-  const getStudentsInfo = useCallback(async () => {
-    if (classroom) {
-      const result = await StudentService.getInfoList(classroom?.id);
-      if (result) {
-        setStudents(result);
-        setRows(result?.student);
-      }
-    }
-  }, [classroom?.id]);
-
   useEffect(() => {
-    getStudentsInfo();
-  }, [getStudentsInfo]);
+    if (students?.student) {
+      setRows(students.student);
+    }
+  }, [students?.student]);
 
   const [settings, setSettings] = useState<Settings>(getInitialSettings());
 
@@ -260,7 +256,7 @@ export default function Page() {
       const sendData: StudentsRequestUpsertType = {
         ...newRow,
         classId: classroom?.id,
-        dateOfBirth: dayjs(newRow.dateOfBirth).format("YYYY-MM-DD"),
+        dateOfBirth: newRow.dateOfBirth ? dayjs(newRow.dateOfBirth).format("YYYY-MM-DD") : "",
       };
 
       // Remove id if new (backend will auto-generate one)
@@ -359,7 +355,7 @@ export default function Page() {
           </Typography>
           <Box display={"flex"} gap={1}>
             {/* This button is for inserting a single student */}
-            <InsertOneStudentDialog getStudentsInfo={getStudentsInfo} />
+            <InsertOneStudentDialog />
 
             {/* this button is another option for Insert in table row */}
             <Button
@@ -372,7 +368,7 @@ export default function Page() {
             </Button>
 
             {/* This button is for importing students from Excel */}
-            {/* <ImportStudentsDialog /> */}
+            {exams.length >= 2 || Number(students?.total) === 0 && <ImportStudentsDialog />}
 
             <Button
               onClick={() => setDeleteDialogOpen(true)}
