@@ -17,6 +17,49 @@ const StudentService = {
   deleteList: async (ids: string[]): Promise<any> => {
     return await RestService.delete(Paths.student.deleteList, ids);
   },
+  aiImport: async (file: File, options?: { signal?: AbortSignal }): Promise<any> => {
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      // Validate file
+      if (!file || file.size === 0) {
+        return {
+          success: false,
+          message: "File is empty or invalid",
+          payload: null,
+        };
+      }
+      const response = await RestService.post(
+        Paths.student.aiImport,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+          // signal: options?.signal,
+        }
+      );
+      return response;
+    } catch (error: any) {
+      if (error.name === "AbortError") {
+        return {
+          success: false,
+          message: "Request cancelled",
+          payload: null,
+        };
+      }
+      const errorMessage =
+        error?.response?.data?.message ||
+        error?.message ||
+        "Failed to import scores via AI";
+      console.error("aiImport error:", error);
+      return {
+        success: false,
+        message: errorMessage,
+        payload: null,
+      };
+    }
+  },
   excelPreview: async (file: File): Promise<any> => {
     try {
       const formData = new FormData();

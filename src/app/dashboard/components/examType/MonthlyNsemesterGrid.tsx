@@ -51,7 +51,11 @@ export const MonthlyNsemesterGrid = (props: MonthlyNsemesterGridProps) => {
 
   const [examData, setExamData] = useState<ClassExamDataResponseType>();
   const [rows, setRows] = useState<StudentInfoScore[]>([]);
+  const [originalRows, setOriginalRows] = useState<StudentInfoScore[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [modifiedRows, setModifiedRows] = useState<
+    Map<GridRowId, StudentInfoScore>
+  >(new Map());
 
   const columns = useMemo(() => {
     const staticColumns: GridColDef<StudentInfoScore>[] = [
@@ -211,6 +215,7 @@ export const MonthlyNsemesterGrid = (props: MonthlyNsemesterGridProps) => {
         if (result) {
           setExamData(result);
           setRows(result?.students);
+          setOriginalRows(JSON.parse(JSON.stringify(result?.students))); // Deep copy
         }
       } catch {
         // swallow – we just show “no data”
@@ -227,20 +232,16 @@ export const MonthlyNsemesterGrid = (props: MonthlyNsemesterGridProps) => {
     oldRow: StudentInfoScore,
     params: { rowId: GridRowId }
   ): Promise<StudentInfoScore> => {
-    setIsLoading(true);
-
     try {
-      // Find which subject (field) changed
       // Find which top-level field was edited
       const changedField = Object.keys(newRow).find((key) => {
-        if (key === "scores") return false; // skip nested if subject name = scores
+        if (key === "scores") return false;
         const newVal = newRow[key];
         const oldVal = oldRow[key];
         return newVal !== oldVal;
       });
 
       if (!changedField) {
-        console.warn("No changed field detected");
         return oldRow;
       }
 
@@ -250,22 +251,73 @@ export const MonthlyNsemesterGrid = (props: MonthlyNsemesterGridProps) => {
         [changedField]: Number(newRow[changedField]),
       };
 
-      // Build the newRow correctly
+      // Build the updated row
       const updatedRow = {
         ...newRow,
         scores: updatedScores,
       };
 
-      // Prepare request payload
-      const sendData: ScoreUpsertRequest[] = [
-        {
-          studentId: updatedRow.id,
-          subjectName: changedField,
-          score: Number(updatedScores[changedField]),
-        },
-      ];
+      // Update the row locally
+      setRows((prev) =>
+        prev.map((r) => (r.id === updatedRow.id ? updatedRow : r))
+      );
 
-      if (!classroom || !examData?.exams) return oldRow;
+      // Track this row as modified (don't save yet)
+      setModifiedRows((prev) => new Map(prev).set(params.rowId, updatedRow));
+
+      return updatedRow;
+    } catch (error) {
+      console.error("processRowUpdate error:", error);
+      return oldRow;
+    }
+  };
+
+  const handleSaveChanges = async () => {
+    if (modifiedRows.size === 0) {
+      showAlert({
+        message: "No changes to save.",
+        severity: "info",
+      });
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      if (!classroom || !examData?.exams) {
+        showAlert({
+          message: "Missing classroom or exam data.",
+          severity: "error",
+        });
+        return;
+      }
+
+      // Build request payload from all modified rows
+      const sendData: ScoreUpsertRequest[] = [];
+      modifiedRows.forEach((modifiedRow) => {
+        Object.keys(modifiedRow.scores || {}).forEach((subjectName) => {
+          const score = modifiedRow.scores?.[subjectName];
+          // Check if this subject score was actually modified by comparing with originalRows
+          const originalRow = originalRows.find((r) => r.id === modifiedRow.id);
+          const originalScore = originalRow?.scores?.[subjectName];
+          
+          if (score !== originalScore) {
+            sendData.push({
+              studentId: modifiedRow.id,
+              subjectName: subjectName,
+              score: Number(score),
+            });
+          }
+        });
+      });
+
+      if (sendData.length === 0) {
+        showAlert({
+          message: "No score changes detected.",
+          severity: "info",
+        });
+        return;
+      }
 
       const result = await ClassroomService.upsertStuScores(
         classroom.id,
@@ -274,27 +326,27 @@ export const MonthlyNsemesterGrid = (props: MonthlyNsemesterGridProps) => {
       );
 
       if (result) {
-        setRows((prev) =>
-          prev.map((r) => (r.id === updatedRow.id ? updatedRow : r))
-        );
-
+        const updatedRows = JSON.parse(JSON.stringify(rows)); // Deep copy current state
+        setModifiedRows(new Map()); // Clear modified rows
+        setRows(updatedRows); // Force recompute with current data
+        setOriginalRows(updatedRows); // Update original rows with current state
         showAlert({
-          message: "Student score updated.",
+          message: `${sendData.length} score(s) updated successfully.`,
           severity: "success",
         });
-        return updatedRow;
       }
-
-      return oldRow;
     } catch (error) {
-      console.error("processRowUpdate error:", error);
-      return oldRow; // rollback
+      console.error("handleSaveChanges error:", error);
+      showAlert({
+        message: "Failed to save scores.",
+        severity: "error",
+      });
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Compute scores, average, ranking, and grade
+  // Compute scores, average, ranking, and grade - updates in real-time as scores change
   const processedRows = useMemo(() => {
     if (!rows.length) return [];
     const subjectNames = Object.keys(rows[0].scores || {});
@@ -305,9 +357,7 @@ export const MonthlyNsemesterGrid = (props: MonthlyNsemesterGridProps) => {
       const values = Object.values(scores).map(Number);
       const totalScore = values.reduce((sum, v) => sum + (v || 0), 0);
       const average =
-        values.length > 0
-          ? (totalScore / Number(meKun)).toFixed(2)
-          : "0.00";
+        values.length > 0 ? (totalScore / Number(meKun)).toFixed(2) : "0.00";
 
       return {
         ...row,
@@ -373,14 +423,14 @@ export const MonthlyNsemesterGrid = (props: MonthlyNsemesterGridProps) => {
         average >= 45
           ? "A"
           : average >= 40
-          ? "B"
-          : average >= 35
-          ? "C"
-          : average >= 30
-          ? "D"
-          : average >= 25
-          ? "E"
-          : "F";
+            ? "B"
+            : average >= 35
+              ? "C"
+              : average >= 30
+                ? "D"
+                : average >= 25
+                  ? "E"
+                  : "F";
 
       return { ...row, mRanking: rank, mGrade };
     });
@@ -393,6 +443,38 @@ export const MonthlyNsemesterGrid = (props: MonthlyNsemesterGridProps) => {
 
   return (
     <div style={{ display: "flex", flexDirection: "column" }}>
+      <Box sx={{ mb: 2, display: "flex", gap: 1, alignItems: "center" }}>
+        {modifiedRows.size > 0 && (
+          <>
+            <Typography
+              variant="caption"
+              sx={{ color: "warning.main", fontWeight: "bold" }}
+            >
+              {modifiedRows.size} row(s) modified
+            </Typography>
+            <Button
+              variant="contained"
+              color="primary"
+              size="small"
+              onClick={handleSaveChanges}
+              disabled={isLoading}
+            >
+              {isLoading ? "Saving..." : "Save Changes"}
+            </Button>
+            <Button
+              variant="outlined"
+              size="small"
+              onClick={() => {
+                setRows(JSON.parse(JSON.stringify(originalRows))); // Restore original
+                setModifiedRows(new Map());
+              }}
+              disabled={isLoading}
+            >
+              Discard
+            </Button>
+          </>
+        )}
+      </Box>
       <DataGrid
         rows={processedRows}
         columns={columns}
@@ -420,7 +502,6 @@ export const MonthlyNsemesterGrid = (props: MonthlyNsemesterGridProps) => {
               export: true,
               extraControls: (
                 <>
-                  
                   <TextField
                     label={t("MonthlyExam.enterAverage")}
                     variant="outlined"

@@ -1,9 +1,10 @@
 "use client";
 
+import { ImportScoreByAi } from "@/app/dashboard/components/Dialog/ImportScoreByAi";
 import { MonthlyNsemesterGrid } from "@/app/dashboard/components/examType/MonthlyNsemesterGrid";
 import { SemesterlyAverageGrid } from "@/app/dashboard/components/examType/SemesterlyAverageGrid";
 import { SemesterlyGrid } from "@/app/dashboard/components/examType/SemesterlyGrid";
-import { Box, Tab, Tabs, Typography, useTheme } from "@mui/material";
+import { Box, Button, Tab, Tabs, Typography, useTheme } from "@mui/material";
 import { useTranslations } from "next-intl";
 import { use, useState } from "react";
 
@@ -40,6 +41,8 @@ export default function Page({ params }: { params: Promise<Params> }) {
           <Typography component="h2" variant="h6" sx={{ mb: 2, textTransform: "capitalize" }}>
             {examType === "monthly" ? t("Common.monthly") : t("Common.semester")}
           </Typography>
+
+          <ImportScoreByAi />
         </div>
 
         <Box>

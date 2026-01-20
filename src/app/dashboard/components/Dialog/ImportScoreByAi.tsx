@@ -38,16 +38,17 @@ import AutoFixHighIcon from "@mui/icons-material/AutoFixHigh";
 import { validateHeaders, matchHeaderToField } from "./ExcelHeaderAliases";
 import dayjs from "dayjs";
 import useClassroomData from "@/app/libs/hooks/useClassroomData";
+import { DATA } from "./Data";
 
-type ImportStudentsDialogProps = {};
+type ImportScoreByAiProps = {};
 
-export const ImportStudentsDialog = (props: ImportStudentsDialogProps) => {
+export const ImportScoreByAi = (props: ImportScoreByAiProps) => {
   const {} = props;
   const [open, setOpen] = React.useState(false);
   const classroom = useAtomValue(classroomAtom);
   const t = useTranslations();
   const [file, setFile] = useState<File | null>(null);
-  const { refetch } = useClassroomData(classroom);
+  const { students, refetch } = useClassroomData(classroom);
 
   const handleClickOpen = () => {
     setOpen(true);
@@ -57,10 +58,77 @@ export const ImportStudentsDialog = (props: ImportStudentsDialogProps) => {
     handleClear();
     setOpen(false);
   };
+  const generateColumnsFromPreview = (previewData: any) => {
+    // Extract subject keys from the first row's scores
+    let subjectKeys: string[] = [];
+    if (
+      Array.isArray(previewData) &&
+      previewData.length > 0 &&
+      previewData[0]?.scores
+    ) {
+      subjectKeys = Object.keys(previewData[0].scores);
+    }
 
-  const [columns, setColumns] = useState<GridColDef[]>([]);
+    // Add score columns for each subject with renderCell to access nested data
+    const scoreColumns = subjectKeys.map((subject) => ({
+      field: subject,
+      headerName: subject,
+      headerClassName: "font-siemreap",
+      width: 70,
+      align: "center",
+      headerAlign: "center",
+      editable: true,
+      sortable: false,
+      disableColumnMenu: true,
+      type: "number",
+      renderCell: (params: GridRenderCellParams) => {
+        return params.row.scores ? params.row.scores[subject] : "";
+      },
+    }));
+
+    return [...scoreColumns];
+  };
+  const [columns, setColumns] = useState<GridColDef[]>([
+    {
+      field: "id",
+      headerName: t("CommonField.id"),
+      headerClassName: "font-siemreap",
+      width: 60,
+      editable: false,
+      renderCell: (params) =>
+        params.api.getRowIndexRelativeToVisibleRows(params.id) + 1,
+    },
+    {
+      field: "fullName",
+      headerName: t("CommonField.fullName"),
+      headerClassName: "font-siemreap",
+      width: 150,
+      editable: true,
+      sortable: true,
+      disableColumnMenu: true,
+    },
+    {
+      field: "gender",
+      headerName: t("CommonField.sex"),
+      headerClassName: "font-siemreap",
+      type: "singleSelect",
+      width: 80,
+      align: "center",
+      headerAlign: "center",
+      editable: true,
+      sortable: false,
+      disableColumnMenu: true,
+      valueOptions: [
+        { value: "M", label: t("Common.male") || "Male" },
+        { value: "F", label: t("Common.female") || "Female" },
+      ],
+    },
+  ]);
   const [rows, setRows] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [abortController, setAbortController] =
+    useState<AbortController | null>(null);
+  const [preview, setPreview] = useState<any>(null);
   const [rowSelectionModel, setRowSelectionModel] =
     useState<GridRowSelectionModel>({
       type: "include", // or 'exclude'
@@ -68,9 +136,15 @@ export const ImportStudentsDialog = (props: ImportStudentsDialogProps) => {
     });
   const notification = useNotifications();
 
+  // Initialize rows with students data when students change
+  React.useEffect(() => {
+    if (students?.student) {
+      setRows(students.student);
+    }
+  }, [students?.student]);
+
   const uploadFileExcel = async () => {
     try {
-      setIsLoading(true);
       const input = document.createElement("input");
       input.type = "file";
       input.accept =
@@ -80,107 +154,86 @@ export const ImportStudentsDialog = (props: ImportStudentsDialogProps) => {
       input.onchange = async () => {
         if (input.files && input.files[0]) {
           const file = input.files[0];
-          const response = await StudentService.excelPreview(file);
-          if (response?.status !== 200) {
-            notification.show(response?.message || t("Common.errorOccurred"), {
-              severity: "error",
-              autoHideDuration: 5000,
-            });
+          setIsLoading(true);
+          const controller = new AbortController();
+          setAbortController(controller);
+
+          try {
+            // const response = await StudentService.aiImport(file, {
+            //   signal: controller.signal,
+            // });
+            // if (response?.status !== 200) {
+            //   notification.show(
+            //     response?.message || t("Common.errorOccurred"),
+            //     {
+            //       severity: "error",
+            //       autoHideDuration: 5000,
+            //     }
+            //   );
+            //   setIsLoading(false);
+            //   return;
+            // }
             setIsLoading(false);
-            return;
-          }
-          const previewRows = response?.payload?.rows || [];
+            // const previewData = DATA || response?.payload || response;
+            const previewData = DATA
+            setPreview(previewData);
 
-          if (previewRows.length > 0) {
-            // Get Excel headers
-            const excelHeaders = Object.keys(previewRows[0]).filter(
-              (key) => key && key.trim() !== ""
-            );
-
-            // Validate headers against accepted aliases
-            const headerValidation = validateHeaders(excelHeaders, [
-              "fullName",
-              "gender",
-              // "dateOfBirth",
-              // "idCard",
-              // "address",
-              // "fatherName",
-              // "fatherOccupation",
-              // "montherName",
-              // "montherOccupation",
-              // "placeOfBirth",
-            ]);
-
-            if (!headerValidation.isValid) {
+            // Merge AI scores with existing student data based on id
+            if (Array.isArray(previewData) && previewData.length > 0) {
+              // Create a map of AI data by id for quick lookup
+              const aiDataMap = new Map(previewData.map((item: any) => [item.id, item]));
+              
+              // Merge existing students with AI scores
+              const mergedRows = (students?.student || []).map((student: any, idx) => {
+                const aiData = aiDataMap.get(idx + 1); // Assuming student IDs by idx + 1 insdtead of student.id
+                return {
+                  ...student,
+                  scores: aiData?.scores || {},
+                };
+              });
+              
+              // Generate columns with score subjects and append to base columns
+              const scoreColumns = generateColumnsFromPreview(previewData);
+              setColumns((prevColumns) => [...prevColumns, ...scoreColumns] as GridColDef[]);
+            //   console.log(mergedRows);
+              setRows(mergedRows);
+            }
+          } catch (error: any) {
+            if (error.name === "AbortError") {
               notification.show(
-                `Invalid headers: ${headerValidation.errors.join(", ")}`,
+                t("Common.cancelled") || "Operation cancelled",
                 {
-                  severity: "error",
-                  autoHideDuration: 5000,
+                  severity: "info",
+                  autoHideDuration: 3000,
                 }
               );
-              setIsLoading(false);
-              return;
+            } else {
+              console.error("uploadFile AI error:", error);
+              notification.show(t("Common.errorOccurred"), {
+                severity: "error",
+                autoHideDuration: 3000,
+              });
             }
-
-            // Filter headers - only include those that match accepted aliases
-            const acceptedHeaders = excelHeaders.filter((header) => {
-              const mappedField = matchHeaderToField(header);
-              return mappedField !== null;
-            });
-
-            // Create columns with mapped field names - only for accepted headers
-            const newColObjectKeys = [
-              {
-                field: "no",
-                headerName: t("CommonField.id"),
-                headerClassName: "font-siemreap",
-                width: 60,
-                editable: false,
-                sortable: false,
-                disableColumnMenu: true,
-                renderCell: (params: any) =>
-                  params.api.getRowIndexRelativeToVisibleRows(params.id) + 1,
-              },
-              ...acceptedHeaders.map((header) => {
-                return {
-                  field: header as string,
-                  headerName: header,
-                  width: 150,
-                  sortable: false,
-                  editable: false,
-                  disableColumnMenu: true,
-                  headerClassName: "font-siemreap",
-                  cellClassName: "font-siemreap",
-                };
-              }),
-            ];
-
-            setFile(file);
-            setColumns(newColObjectKeys);
-            setRows(normalizeRows(previewRows));
-
-            // Show success message with detected headers
-            const rejectedCount = excelHeaders.length - acceptedHeaders.length;
-            let message = `Successfully loaded ${acceptedHeaders.length} columns and ${previewRows.length} rows`;
-            if (rejectedCount > 0) {
-              message += ` (${rejectedCount} unknown columns ignored)`;
-            }
-            notification.show(message, {
-              severity: "success",
-              autoHideDuration: 3000,
-            });
+          } finally {
+            setIsLoading(false);
+            setAbortController(null);
           }
         }
       };
     } catch (error) {
-      console.error("uploadFileExcel error:", error);
+      setIsLoading(false);
+      console.error("uploadFile AI error:", error);
       notification.show(t("Common.errorOccurred"), {
         severity: "error",
         autoHideDuration: 3000,
       });
-    } finally {
-      setIsLoading(false);
+    }
+  };
+
+  const handleCancel = () => {
+    if (abortController) {
+      abortController.abort();
+      setAbortController(null);
     }
   };
 
@@ -188,6 +241,7 @@ export const ImportStudentsDialog = (props: ImportStudentsDialogProps) => {
     setFile(null);
     setRows([]);
     setColumns([]);
+    setPreview(null);
   };
 
   const handleDelete = () => {
@@ -281,25 +335,25 @@ export const ImportStudentsDialog = (props: ImportStudentsDialogProps) => {
     }
   };
 
-  const processRowUpdate = async (
-    newRow: any,
-    oldRow: any,
-    params: { rowId: GridRowId }
-  ): Promise<any> => {
-    setIsLoading(true);
+//   const processRowUpdate = async (
+//     newRow: any,
+//     oldRow: any,
+//     params: { rowId: GridRowId }
+//   ): Promise<any> => {
+//     setIsLoading(true);
 
-    try {
-      if (rows.length >= 60) {
-        return oldRow;
-      }
-      return newRow;
-    } catch (error) {
-      console.error("processRowUpdate error:", error);
-      return oldRow; // rollback
-    } finally {
-      setIsLoading(false);
-    }
-  };
+//     try {
+//       if (rows.length >= 60) {
+//         return oldRow;
+//       }
+//       return newRow;
+//     } catch (error) {
+//       console.error("processRowUpdate error:", error);
+//       return oldRow; // rollback
+//     } finally {
+//       setIsLoading(false);
+//     }
+//   };
 
   return (
     <>
@@ -309,7 +363,7 @@ export const ImportStudentsDialog = (props: ImportStudentsDialogProps) => {
         size="small"
         startIcon={<DriveFolderUploadIcon />}
       >
-        {t("Student.btn.ExcelImport")}
+        AI Import
       </Button>
       <Dialog
         open={open}
@@ -401,13 +455,24 @@ export const ImportStudentsDialog = (props: ImportStudentsDialogProps) => {
                   </Typography>
                 </Box>
                 <Box sx={{ display: "flex", gap: "8px" }}>
-                  <Button
-                    variant="contained"
-                    color="primary"
-                    onClick={uploadFileExcel}
-                  >
-                    {t("Student.ImportDialog.replaceFile")}
-                  </Button>
+                  {isLoading ? (
+                    <Button
+                      variant="contained"
+                      color="inherit"
+                      onClick={handleCancel}
+                    >
+                      {t("Common.cancel")}
+                    </Button>
+                  ) : (
+                    <Button
+                      loading={isLoading}
+                      variant="contained"
+                      color="primary"
+                      onClick={uploadFileExcel}
+                    >
+                      {t("Student.ImportDialog.replaceFile")}
+                    </Button>
+                  )}
                 </Box>
               </Box>
             </Box>
@@ -513,6 +578,42 @@ export const ImportStudentsDialog = (props: ImportStudentsDialogProps) => {
               </Button>
             </Box>
           </Box>
+
+          {/* Display AI Response as JSON */}
+          {preview && (
+            <Box
+              sx={{
+                mt: 2,
+                p: 2,
+                borderRadius: "8px",
+                border: "1px solid",
+                borderColor: "action.disabled",
+                maxHeight: "300px",
+                overflow: "auto",
+              }}
+            >
+              <Typography
+                variant="subtitle2"
+                sx={{ fontWeight: "bold", mb: 1 }}
+              >
+                AI Response Data:
+              </Typography>
+              <Box
+                component="pre"
+                sx={{
+                  p: 1.5,
+                  borderRadius: "4px",
+                  fontSize: "12px",
+                  fontFamily: "monospace",
+                  border: "1px solid",
+                  borderColor: "action.disabled",
+                  overflow: "auto",
+                }}
+              >
+                {JSON.stringify(preview, null, 2)}
+              </Box>
+            </Box>
+          )}
           {/* <!-- Preview Table Card --> */}
           {/* Form fields would go here */}
           <Box
@@ -530,7 +631,7 @@ export const ImportStudentsDialog = (props: ImportStudentsDialogProps) => {
                 setRowSelectionModel(newRowSelectionModel);
               }}
               rowSelectionModel={rowSelectionModel}
-              processRowUpdate={processRowUpdate}
+            //   processRowUpdate={processRowUpdate}
               pageSizeOptions={[40]}
               initialState={{
                 pagination: { paginationModel: { pageSize: 40 } },

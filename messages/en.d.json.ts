@@ -149,6 +149,8 @@ declare const messages: {
       "autoDetect": "Auto-detect Headers",
       "proTip": "Pro Tip",
       "proTipText": "Please ensure the mapping column matches with the system header precisely to avoid encoding errors.",
+      "rowsDeleted": "{count} rows have been deleted.",
+      "noRowsSelected": "No rows selected. Please select at least one student.",
       "noFileSelected": "No file selected. Please choose an Excel file to import.",
       "noteInfoBeforeImport": "Important Notes:\n• Duplicate students within the file will not be inserted\n• Students that already exist in the system will be skipped"
     }

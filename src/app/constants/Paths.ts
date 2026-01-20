@@ -18,6 +18,7 @@ export const Paths = {
         deleteList: "/api/v1/students/delete",
         excelPreview: `/api/v1/students/preview`,
         excelImport: (id: string) => `/api/v1/students/import?classroomId=${id}`,
+        aiImport: `/api/v1/score/ai-extract`,
     },
     exam: {
         upsert: "/api/v1/exam",
