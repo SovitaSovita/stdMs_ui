@@ -368,7 +368,7 @@ export default function Page() {
             </Button>
 
             {/* This button is for importing students from Excel */}
-            {exams.length >= 2 || Number(students?.total) === 0 ? <ImportStudentsDialog /> : null}
+            {Number(students?.total) === 0 ? <ImportStudentsDialog /> : null}
 
             <Button
               onClick={() => setDeleteDialogOpen(true)}
