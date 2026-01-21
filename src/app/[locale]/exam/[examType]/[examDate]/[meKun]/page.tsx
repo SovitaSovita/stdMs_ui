@@ -4,7 +4,9 @@ import { ImportScoreByAi } from "@/app/dashboard/components/Dialog/ImportScoreBy
 import { MonthlyNsemesterGrid } from "@/app/dashboard/components/examType/MonthlyNsemesterGrid";
 import { SemesterlyAverageGrid } from "@/app/dashboard/components/examType/SemesterlyAverageGrid";
 import { SemesterlyGrid } from "@/app/dashboard/components/examType/SemesterlyGrid";
+import { classroomAtom, studentsAtom } from "@/app/libs/jotai/classroomAtom";
 import { Box, Button, Tab, Tabs, Typography, useTheme } from "@mui/material";
+import { useAtom } from "jotai";
 import { useTranslations } from "next-intl";
 import { use, useState } from "react";
 
@@ -25,6 +27,7 @@ export default function Page({ params }: { params: Promise<Params> }) {
   const { examType, examDate, meKun } = use(params);
   const theme = useTheme();
   const t = useTranslations();
+  const [students, setStudents] = useAtom(studentsAtom);
 
   //hide/show each scores cols of datagrid
   const [showSubjects, setShowSubjects] = useState<boolean>(true);
@@ -38,11 +41,17 @@ export default function Page({ params }: { params: Promise<Params> }) {
     <>
       <Box sx={{ width: "100%", maxWidth: { sm: "100%", md: "1700px" } }}>
         <div className="flex justify-between">
-          <Typography component="h2" variant="h6" sx={{ mb: 2, textTransform: "capitalize" }}>
-            {examType === "monthly" ? t("Common.monthly") : t("Common.semester")}
+          <Typography
+            component="h2"
+            variant="h6"
+            sx={{ mb: 2, textTransform: "capitalize" }}
+          >
+            {examType === "monthly"
+              ? t("Common.monthly")
+              : t("Common.semester")}
           </Typography>
 
-          <ImportScoreByAi />
+          {Number(students?.total) > 0 ? <ImportScoreByAi /> : null}
         </div>
 
         <Box>
@@ -80,7 +89,11 @@ export default function Page({ params }: { params: Promise<Params> }) {
                 showSubjects={showSubjects}
               />
             ) : (
-              <SemesterlyGrid examDate={examDate} examType={examType} meKun={meKun}/>
+              <SemesterlyGrid
+                examDate={examDate}
+                examType={examType}
+                meKun={meKun}
+              />
             )}
           </TabPanel>
           <TabPanel value={tabValue} index={1} dir={theme.direction}>
@@ -92,7 +105,11 @@ export default function Page({ params }: { params: Promise<Params> }) {
                 showSubjects={showSubjects}
               />
             ) : (
-              <SemesterlyAverageGrid examDate={examDate} examType={examType} meKun={meKun}/>
+              <SemesterlyAverageGrid
+                examDate={examDate}
+                examType={examType}
+                meKun={meKun}
+              />
             )}
           </TabPanel>
         </Box>

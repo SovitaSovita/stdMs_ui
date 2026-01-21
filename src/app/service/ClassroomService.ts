@@ -23,12 +23,17 @@ const ClassroomService = {
     );
   },
   getById: async (id: string): Promise<ClassInfoResponseType> => {
-    return await RestService.get<ClassInfoResponseType>(
+    try {
+      return await RestService.get<ClassInfoResponseType>(
       Paths.class.getInfoClassById,
       {
         params: { classroomId: id },
       }
     );
+    } catch (error) {
+      console.error("Error fetching classroom by ID:", error);
+      return {} as ClassInfoResponseType;
+    }
   },
   upsertStuScores: async (
     classId: string,

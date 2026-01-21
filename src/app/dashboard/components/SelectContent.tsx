@@ -54,9 +54,15 @@ export default function SelectContent() {
     if (result.length > 0) {
       setClassrooms(result);
 
-      // Restore previously selected classroom (if exists)
+      // Restore previously selected classroom (if exists and is valid)
       const savedId = localStorage.getItem(STORAGE_KEY);
-      const selectedId = savedId || result[0]?.id?.toString();
+      // Validate that savedId exists in the classrooms list
+      const isValidId = savedId && result.some(classroom => classroom.id?.toString() === savedId);
+      // Clear invalid savedId from storage
+      if (savedId && !isValidId) {
+        localStorage.setItem(STORAGE_KEY, "");
+      }
+      const selectedId = isValidId ? savedId : result[0]?.id?.toString();
       setClassroomId(selectedId);
       getClassDetail(selectedId);
     } else if (result.length == 0) {
@@ -72,6 +78,11 @@ export default function SelectContent() {
     const result = await ClassroomService.getById(classId);
     if (result) {
       setClassroomAtom(result);
+    } else {
+      // If the classroom is not found, clear the selection and reload the list
+      setClassroomId("");
+      localStorage.setItem(STORAGE_KEY, "");
+      getCurrentClasses();
     }
   };
 

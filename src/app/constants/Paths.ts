@@ -15,7 +15,7 @@ export const Paths = {
     student: {
         getInfoList: (stuId: string) => `/api/v1/students/${stuId}`,
         upsert: "/api/v1/student",
-        deleteList: "/api/v1/students/delete",
+        deleteList: (id: string) => `/api/v1/students/delete?classId=${id}`,
         excelPreview: `/api/v1/students/preview`,
         excelImport: (id: string) => `/api/v1/students/import?classroomId=${id}`,
         aiImport: `/api/v1/score/ai-extract`,

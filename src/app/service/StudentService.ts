@@ -14,8 +14,8 @@ const StudentService = {
   upsertStudent: async (sentData: StudentsRequestUpsertType): Promise<any> => {
     return await RestService.post(Paths.student.upsert, sentData);
   },
-  deleteList: async (ids: string[]): Promise<any> => {
-    return await RestService.delete(Paths.student.deleteList, ids);
+  deleteList: async (ids: string[], classroomId: string): Promise<any> => {
+    return await RestService.delete(Paths.student.deleteList(classroomId), ids);
   },
   aiImport: async (file: File, options?: { signal?: AbortSignal }): Promise<any> => {
     try {
