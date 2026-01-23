@@ -316,6 +316,7 @@ export default function Page() {
       ...prev,
       {
         id: tempId,
+        // orderNo: "",
         classId: classroom?.id,
         fullName: "",
         idCard: "",
