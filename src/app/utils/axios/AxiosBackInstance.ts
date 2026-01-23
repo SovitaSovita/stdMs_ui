@@ -5,7 +5,7 @@ import axios, {
   InternalAxiosRequestConfig,
 } from "axios";
 import axiosRetry from "axios-retry";
-import { handleRequestSuccess, handleResponseError } from "./Common";
+import { handleRequestSuccess, handleResponseError, handleTokenExpired } from "./Common";
 
 // Back end axios instance
 export const axiosBackInstance: AxiosInstance = axios.create({
@@ -25,6 +25,7 @@ axiosRetry(axiosBackInstance, {
 });
 
 axiosBackInstance.interceptors.request.use(handleRequestSuccess);
+axiosBackInstance.interceptors.response.use((res) => res, handleTokenExpired);
 
 export const addInterceptorsToAxiosBackInstance = ({
   onRequestFulfilled,

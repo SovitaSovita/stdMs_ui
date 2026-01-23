@@ -3,7 +3,6 @@ import Alert from "@mui/material/Alert";
 import Badge from "@mui/material/Badge";
 import Button from "@mui/material/Button";
 import IconButton from "@mui/material/IconButton";
-import Snackbar from "@mui/material/Snackbar";
 import SnackbarContent from "@mui/material/SnackbarContent";
 import type { SnackbarCloseReason } from "@mui/material/Snackbar";
 import type { CloseReason } from "@mui/material/SpeedDial";
@@ -15,6 +14,7 @@ import type {
   ShowNotification,
   ShowNotificationOptions,
 } from "./useNotifications";
+import Snackbar from "@mui/material/Snackbar";
 
 const RootPropsContext = React.createContext<NotificationsProviderProps | null>(
   null
@@ -90,9 +90,12 @@ function Notification({
     <Snackbar key={notificationKey} {...snackbarSlotProps}>
       <Badge badgeContent={badge} color="primary" sx={{ width: "100%" }}>
         {severity ? (
-          <Alert severity={severity} sx={{ width: "100%" }} action={action}>
-            {message}
-          </Alert>
+          // <Alert elevation={6} variant="filled" severity={severity} sx={{ width: "100%" }} action={action}>
+          //   {message}
+          // </Alert>
+          <Alert variant="filled" severity={"success"}>
+  This is a filled success Alert.
+</Alert>
         ) : (
           <SnackbarContent message={message} action={action} />
         )}

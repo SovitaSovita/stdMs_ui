@@ -47,6 +47,7 @@ export type ClassReqFilterDetailType = {
 
 export interface StudentInfoScore {
   id: string;
+  orderNo: string;
   fullName: string;
   idCard?: string;
   gender: "M" | "F";

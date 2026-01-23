@@ -47,13 +47,13 @@ export default function Page() {
 
   const columns: GridColDef<(typeof rows)[number]>[] = [
     {
-      field: "id",
+      field: "orderNo",
       headerName: t("CommonField.id"),
       headerClassName: "font-siemreap",
       width: 90,
       editable: false,
-      renderCell: (params) =>
-        params.api.getRowIndexRelativeToVisibleRows(params.id) + 1,
+      // renderCell: (params) =>
+      //   params.api.getRowIndexRelativeToVisibleRows(params.id) + 1,
     },
     {
       field: "idCard",
@@ -204,8 +204,8 @@ export default function Page() {
     }
 
     // Delete saved rows via API
-    if (dbIds.length > 0) {
-      const result = await StudentService.deleteList(dbIds);
+    if (dbIds.length > 0 && classroom?.id) {
+      const result = await StudentService.deleteList(dbIds, classroom?.id);
       if (result?.status === 200) {
         setRows((prev) => prev.filter((r) => !dbIds.includes(r.id)));
         showAlert({

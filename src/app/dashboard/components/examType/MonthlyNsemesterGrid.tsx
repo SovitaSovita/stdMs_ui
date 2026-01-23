@@ -60,12 +60,12 @@ export const MonthlyNsemesterGrid = (props: MonthlyNsemesterGridProps) => {
   const columns = useMemo(() => {
     const staticColumns: GridColDef<StudentInfoScore>[] = [
       {
-        field: "id",
+        field: "orderNo",
         headerName: "ល​​រ",
         headerClassName: "font-siemreap",
         width: 90,
-        renderCell: (params) =>
-          params.api.getRowIndexRelativeToVisibleRows(params.id) + 1,
+        // renderCell: (params) =>
+        //   params.api.getRowIndexRelativeToVisibleRows(params.id) + 1,
       },
       {
         field: "fullName",

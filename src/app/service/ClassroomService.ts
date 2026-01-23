@@ -19,17 +19,17 @@ const ClassroomService = {
   },
   getInfoList: async (): Promise<ClassInfoResponseType[]> => {
     return await RestService.get<ClassInfoResponseType[]>(
-      Paths.class.getInfoClass
+      Paths.class.getInfoClass,
     );
   },
   getById: async (id: string): Promise<ClassInfoResponseType> => {
     try {
       return await RestService.get<ClassInfoResponseType>(
-      Paths.class.getInfoClassById,
-      {
-        params: { classroomId: id },
-      }
-    );
+        Paths.class.getInfoClassById,
+        {
+          params: { classroomId: id },
+        },
+      );
     } catch (error) {
       console.error("Error fetching classroom by ID:", error);
       return {} as ClassInfoResponseType;
@@ -38,16 +38,16 @@ const ClassroomService = {
   upsertStuScores: async (
     classId: string,
     examId: string,
-    sentData: ScoreUpsertRequest[]
+    sentData: ScoreUpsertRequest[],
   ): Promise<any> => {
     return await RestService.post(
       Paths.class.upsertScore(classId, examId),
-      sentData
+      sentData,
     );
   },
   getDetail: async (
     id: string,
-    sendData: ClassReqFilterDetailType
+    sendData: ClassReqFilterDetailType,
   ): Promise<ClassExamDataResponseType> => {
     return await RestService.post<
       ClassReqFilterDetailType,
@@ -56,12 +56,11 @@ const ClassroomService = {
   },
   getSemesterAvgs: async (
     id: string,
-    examDate: string
+    examDate: string,
   ): Promise<ClassAvgExamFilterResponseType> => {
-    return await RestService.post<
-      string,
-      ClassAvgExamFilterResponseType
-    >(Paths.class.getSemesterAvgs(id , examDate));
+    return await RestService.post<string, ClassAvgExamFilterResponseType>(
+      Paths.class.getSemesterAvgs(id, examDate),
+    );
   },
 };
 

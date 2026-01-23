@@ -1,8 +1,27 @@
 import { Settings } from "@/app/constants/type";
 import { GridDensity } from "@mui/x-data-grid";
-import axios, { InternalAxiosRequestConfig } from "axios";
+import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
 import dayjs, { Dayjs } from "dayjs";
-import { getSession } from "next-auth/react";
+import { getSession, signOut } from "next-auth/react";
+
+export const handleTokenExpired = async (error: AxiosError) => {
+  if (error.response?.status === 403) {
+    // Clear session
+    await signOut({ redirect: true, callbackUrl: "/signin" });
+    
+    // Clear any stored data
+    localStorage.removeItem("selectedClassroomId");
+    sessionStorage.clear();
+    
+    // Redirect to login
+    // window.location.href = "/signin";
+    
+    // Optional: Show notification
+    // toast.error("Your session has expired. Please sign in again.");
+  }
+  
+  return Promise.reject(error);
+};
 
 export const handleRequestSuccess = async (
   config: InternalAxiosRequestConfig
@@ -18,7 +37,6 @@ export const handleRequestSuccess = async (
 export const handleResponseError = async (error: any) => {
   const { config: originalRequest } = error;
   const session = await getSession();
-
   // 인증 실패가 아니거나, 재발급 리퀘스트 실패할 경우
   if (error.response?.status !== 401) {
     return Promise.reject(error);

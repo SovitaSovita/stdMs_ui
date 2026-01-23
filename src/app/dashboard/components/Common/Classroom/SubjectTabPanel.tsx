@@ -79,6 +79,8 @@ export const SubjectTabPanel = () => {
       {
         id: tempId,
         name: "",
+        nameEn: "",
+        nameKh: "",
         teacherName: "",
         maxScore: 0.0,
         credit: "",
@@ -136,7 +138,19 @@ export const SubjectTabPanel = () => {
       },
       {
         field: "name",
-        headerName: t("CommonField.subject"),
+        headerName: t("CommonField.subject") + " (EN)",
+        headerClassName: "font-siemreap",
+        headerAlign: "left",
+        align: "left",
+        width: 150,
+        editable: true,
+        sortable: true,
+        filterable: false,
+        disableColumnMenu: true,
+      },
+      {
+        field: "nameKh",
+        headerName: t("CommonField.subject") + " (KH)",
         headerClassName: "font-siemreap",
         headerAlign: "left",
         align: "left",
@@ -185,7 +199,7 @@ export const SubjectTabPanel = () => {
         disableColumnMenu: true,
       },
       {
-        field: "desciption",
+        field: "description",
         headerName: t("CommonField.description"),
         headerClassName: "font-siemreap",
         headerAlign: "center",
@@ -227,8 +241,11 @@ export const SubjectTabPanel = () => {
     setIsLoading(true);
 
     try {
+      console.log(newRow);
+      console.log(oldRow);
       if (
         newRow.name === oldRow.name &&
+        newRow.nameKh === oldRow.nameKh &&
         newRow.teacherName === oldRow.teacherName &&
         newRow.maxScore === oldRow.maxScore &&
         newRow.credit === oldRow.credit &&

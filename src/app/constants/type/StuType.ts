@@ -6,6 +6,7 @@ export type StuInfoDetailResponseType = {
 };
 export type StudentsInfo = {
   id: string;
+  orderNo: string;
   fullName: string;
   idCard: string;
   gender: "M" | "F";

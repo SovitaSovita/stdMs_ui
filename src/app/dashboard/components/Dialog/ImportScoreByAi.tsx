@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import Button from "@mui/material/Button";
 import TextField from "@mui/material/TextField";
 import Dialog from "@mui/material/Dialog";
@@ -8,6 +8,7 @@ import DialogContentText from "@mui/material/DialogContentText";
 import DialogTitle from "@mui/material/DialogTitle";
 import {
   Box,
+  CircularProgress,
   FormControl,
   FormHelperText,
   InputLabel,
@@ -39,6 +40,15 @@ import { validateHeaders, matchHeaderToField } from "./ExcelHeaderAliases";
 import dayjs from "dayjs";
 import useClassroomData from "@/app/libs/hooks/useClassroomData";
 import { DATA } from "./Data";
+import {
+  GoogleGenAI,
+  createUserContent,
+  createPartFromUri,
+} from "@google/genai";
+const GEMINI_API_KEY = process.env.NEXT_PUBLIC_GEMINI_API_KEY as string;
+const ai = new GoogleGenAI({
+  apiKey: GEMINI_API_KEY,
+});
 
 type ImportScoreByAiProps = {};
 
@@ -48,82 +58,22 @@ export const ImportScoreByAi = (props: ImportScoreByAiProps) => {
   const classroom = useAtomValue(classroomAtom);
   const t = useTranslations();
   const [file, setFile] = useState<File | null>(null);
-  const { students, refetch } = useClassroomData(classroom);
+  const abortControllerRef = useRef<AbortController | null>(null);
+  const fileReaderRef = useRef<FileReader | null>(null);
+
+  const { students, subjects, refetch } = useClassroomData(classroom);
 
   const handleClickOpen = () => {
     setOpen(true);
   };
 
   const handleClose = () => {
+    if(isLoading){
+      handleCancel();
+    }
     handleClear();
     setOpen(false);
   };
-  const generateColumnsFromPreview = (previewData: any) => {
-    // Extract subject keys from the first row's scores
-    let subjectKeys: string[] = [];
-    if (
-      Array.isArray(previewData) &&
-      previewData.length > 0 &&
-      previewData[0]?.scores
-    ) {
-      subjectKeys = Object.keys(previewData[0].scores);
-    }
-
-    // Add score columns for each subject with renderCell to access nested data
-    const scoreColumns = subjectKeys.map((subject) => ({
-      field: subject,
-      headerName: subject,
-      headerClassName: "font-siemreap",
-      width: 70,
-      align: "center",
-      headerAlign: "center",
-      editable: true,
-      sortable: false,
-      disableColumnMenu: true,
-      type: "number",
-      renderCell: (params: GridRenderCellParams) => {
-        return params.row.scores ? params.row.scores[subject] : "";
-      },
-    }));
-
-    return [...scoreColumns];
-  };
-  const [columns, setColumns] = useState<GridColDef[]>([
-    {
-      field: "id",
-      headerName: t("CommonField.id"),
-      headerClassName: "font-siemreap",
-      width: 60,
-      editable: false,
-      renderCell: (params) =>
-        params.api.getRowIndexRelativeToVisibleRows(params.id) + 1,
-    },
-    {
-      field: "fullName",
-      headerName: t("CommonField.fullName"),
-      headerClassName: "font-siemreap",
-      width: 150,
-      editable: true,
-      sortable: true,
-      disableColumnMenu: true,
-    },
-    {
-      field: "gender",
-      headerName: t("CommonField.sex"),
-      headerClassName: "font-siemreap",
-      type: "singleSelect",
-      width: 80,
-      align: "center",
-      headerAlign: "center",
-      editable: true,
-      sortable: false,
-      disableColumnMenu: true,
-      valueOptions: [
-        { value: "M", label: t("Common.male") || "Male" },
-        { value: "F", label: t("Common.female") || "Female" },
-      ],
-    },
-  ]);
   const [rows, setRows] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [abortController, setAbortController] =
@@ -136,14 +86,92 @@ export const ImportScoreByAi = (props: ImportScoreByAiProps) => {
     });
   const notification = useNotifications();
 
-  // Initialize rows with students data when students change
+  const columns = React.useMemo(() => {
+    const baseColumns: GridColDef[] = [
+      {
+        field: "orderNo",
+        headerName: t("CommonField.id"),
+        headerClassName: "font-siemreap",
+        width: 60,
+        editable: false,
+      },
+      {
+        field: "fullName",
+        headerName: t("CommonField.fullName"),
+        headerClassName: "font-siemreap",
+        width: 150,
+        editable: true,
+        sortable: true,
+        disableColumnMenu: true,
+      },
+      {
+        field: "gender",
+        headerName: t("CommonField.sex"),
+        headerClassName: "font-siemreap",
+        type: "singleSelect",
+        width: 80,
+        align: "center",
+        headerAlign: "center",
+        editable: true,
+        sortable: false,
+        disableColumnMenu: true,
+        valueOptions: [
+          { value: "M", label: t("Common.male") || "Male" },
+          { value: "F", label: t("Common.female") || "Female" },
+        ],
+      },
+    ];
+    const baseSubjectColumns: GridColDef[] = subjects.map((subject) => ({
+      field: subject.name,
+      headerName: subject.name,
+      headerClassName: "font-siemreap",
+      width: 70,
+      align: "center",
+      headerAlign: "center",
+      editable: true,
+      sortable: false,
+      disableColumnMenu: true,
+    }));
+    // Safely extract score keys with null checks
+    const scoreKeys =
+      rows.length > 0 && rows[0].scores ? Object.keys(rows[0].scores) : [];
+
+    const dynamicScoreColumns: GridColDef[] = subjects.flatMap((subject) => {
+      if (!subject) return [];
+      const baseCol: GridColDef = {
+        field: subject.name,
+        headerName: subject.name,
+        type: "string",
+        width: 70,
+        align: "center",
+        headerAlign: "center",
+        editable: true,
+        sortable: false,
+        disableColumnMenu: true,
+        valueGetter: (value, row, column) => {
+          const field = column?.field;
+          const scoreArr = row?.scores;
+          if (!scoreArr) return "";
+          return scoreArr[field] || 0;
+        },
+      };
+      return [baseCol];
+    });
+
+    if (preview) {
+      return [...baseColumns, ...dynamicScoreColumns] as GridColDef[]; // Use dynamicScoreColumns when preview AI exists
+    }
+    return [...baseColumns, ...baseSubjectColumns] as GridColDef[]; // Fallback to baseSubjectColumns if no preview
+  }, [preview]);
+
+  // Initialize rows
   React.useEffect(() => {
     if (students?.student) {
       setRows(students.student);
     }
-  }, [students?.student]);
+  }, [students, open]);
 
-  const uploadFileExcel = async () => {
+  const uploadImageToAiRead = async () => {
     try {
       const input = document.createElement("input");
       input.type = "file";
@@ -152,95 +180,114 @@ export const ImportScoreByAi = (props: ImportScoreByAiProps) => {
       input.click();
 
       input.onchange = async () => {
-        if (input.files && input.files[0]) {
-          const file = input.files[0];
-          setIsLoading(true);
-          const controller = new AbortController();
-          setAbortController(controller);
+        if (!input.files?.[0]) return;
 
+        const file = input.files[0];
+        setIsLoading(true);
+
+        const controller = new AbortController();
+        abortControllerRef.current = controller;
+
+        const reader = new FileReader();
+        fileReaderRef.current = reader;
+
+        reader.onload = async (e) => {
           try {
-            // const response = await StudentService.aiImport(file, {
-            //   signal: controller.signal,
-            // });
-            // if (response?.status !== 200) {
-            //   notification.show(
-            //     response?.message || t("Common.errorOccurred"),
-            //     {
-            //       severity: "error",
-            //       autoHideDuration: 5000,
-            //     }
-            //   );
-            //   setIsLoading(false);
-            //   return;
-            // }
-            setIsLoading(false);
-            // const previewData = DATA || response?.payload || response;
-            const previewData = DATA
+            if (controller.signal.aborted) return;
+
+            const buffer = e.target?.result as ArrayBuffer;
+            const base64ImageData = Buffer.from(buffer).toString("base64");
+
+            const result = await ai.models.generateContent({
+              model: "gemini-3-flash-preview",
+              config: {
+                temperature: 0.2,
+                abortSignal: controller.signal,
+              },
+              contents: [
+                {
+                  inlineData: {
+                    mimeType: file.type,
+                    data: base64ImageData,
+                  },
+                },
+                {
+                  text:
+                    "Extract the data from this grade sheet.\n" +
+                    "Return a JSON array of objects with keys: 'id', 'name', 'gender', 'scores'.\n" +
+                    "If unreadable, use null.",
+                },
+              ],
+            });
+
+            if (controller.signal.aborted) return;
+
+            const cleanJson = (result.text || "")
+              .replace(/```json|```/g, "")
+              .trim();
+
+            const previewData = JSON.parse(cleanJson);
             setPreview(previewData);
 
-            // Merge AI scores with existing student data based on id
-            if (Array.isArray(previewData) && previewData.length > 0) {
-              // Create a map of AI data by id for quick lookup
-              const aiDataMap = new Map(previewData.map((item: any) => [item.id, item]));
-              
-              // Merge existing students with AI scores
-              const mergedRows = (students?.student || []).map((student: any, idx) => {
-                const aiData = aiDataMap.get(idx + 1); // Assuming student IDs by idx + 1 insdtead of student.id
-                return {
+            if (Array.isArray(previewData)) {
+              const aiDataMap = new Map(
+                previewData.map((item: any) => [item.id, item]),
+              );
+
+              const mergedRows = (students?.student || []).map(
+                (student: StudentsInfo) => ({
                   ...student,
-                  scores: aiData?.scores || {},
-                };
-              });
-              
-              // Generate columns with score subjects and append to base columns
-              const scoreColumns = generateColumnsFromPreview(previewData);
-              setColumns((prevColumns) => [...prevColumns, ...scoreColumns] as GridColDef[]);
-            //   console.log(mergedRows);
+                  scores: aiDataMap.get(student.orderNo)?.scores || {},
+                }),
+              );
+
               setRows(mergedRows);
             }
-          } catch (error: any) {
-            if (error.name === "AbortError") {
-              notification.show(
-                t("Common.cancelled") || "Operation cancelled",
-                {
-                  severity: "info",
-                  autoHideDuration: 3000,
-                }
-              );
+          } catch (err: any) {
+            if (err.name === "AbortError") {
+              console.log("AI request aborted");
             } else {
-              console.error("uploadFile AI error:", error);
+              console.error("AI error:", err);
               notification.show(t("Common.errorOccurred"), {
                 severity: "error",
-                autoHideDuration: 3000,
               });
             }
           } finally {
             setIsLoading(false);
-            setAbortController(null);
+            abortControllerRef.current = null;
+            fileReaderRef.current = null;
           }
-        }
+        };
+
+        reader.onerror = () => {
+          setIsLoading(false);
+          notification.show(t("Common.errorOccurred"), { severity: "error" });
+        };
+
+        reader.readAsArrayBuffer(file);
       };
-    } catch (error) {
+    } catch (err) {
       setIsLoading(false);
-      console.error("uploadFile AI error:", error);
-      notification.show(t("Common.errorOccurred"), {
-        severity: "error",
-        autoHideDuration: 3000,
-      });
+      notification.show(t("Common.errorOccurred"), { severity: "error" });
     }
   };
 
   const handleCancel = () => {
-    if (abortController) {
-      abortController.abort();
-      setAbortController(null);
-    }
+    abortControllerRef.current?.abort();
+    fileReaderRef.current?.abort();
+    abortControllerRef.current = null;
+    fileReaderRef.current = null;
+    setIsLoading(false);
+
+    notification.show(t("Common.cancel"), {
+      severity: "info",
+      autoHideDuration: 3000,
+    });
   };
 
   const handleClear = () => {
     setFile(null);
     setRows([]);
-    setColumns([]);
     setPreview(null);
   };
 
@@ -253,7 +300,7 @@ export const ImportScoreByAi = (props: ImportScoreByAiProps) => {
         {
           severity: "warning",
           autoHideDuration: 3000,
-        }
+        },
       );
       return;
     }
@@ -271,13 +318,13 @@ export const ImportScoreByAi = (props: ImportScoreByAiProps) => {
       {
         severity: "success",
         autoHideDuration: 3000,
-      }
+      },
     );
   };
 
   const getSelectedIds = (
     rowSelectionModel: GridRowSelectionModel,
-    rows: { id: GridRowId }[]
+    rows: { id: GridRowId }[],
   ): GridRowId[] => {
     if (rowSelectionModel.type === "include") {
       return Array.from(rowSelectionModel.ids);
@@ -287,13 +334,6 @@ export const ImportScoreByAi = (props: ImportScoreByAiProps) => {
     return rows
       .map((row) => row.id)
       .filter((id) => !rowSelectionModel.ids.has(id));
-  };
-
-  const normalizeRows = (rows: Array<Record<string, string>>) => {
-    return rows.map((row, index) => ({
-      id: index + 1,
-      ...row,
-    }));
   };
 
   const handleSave = async () => {
@@ -335,25 +375,28 @@ export const ImportScoreByAi = (props: ImportScoreByAiProps) => {
     }
   };
 
-//   const processRowUpdate = async (
-//     newRow: any,
-//     oldRow: any,
-//     params: { rowId: GridRowId }
-//   ): Promise<any> => {
-//     setIsLoading(true);
+  //   const processRowUpdate = async (
+  //     newRow: any,
+  //     oldRow: any,
+  //     params: { rowId: GridRowId }
+  //   ): Promise<any> => {
+  //     setIsLoading(true);
 
-//     try {
-//       if (rows.length >= 60) {
-//         return oldRow;
-//       }
-//       return newRow;
-//     } catch (error) {
-//       console.error("processRowUpdate error:", error);
-//       return oldRow; // rollback
-//     } finally {
-//       setIsLoading(false);
-//     }
-//   };
+  //     try {
+  //       if (rows.length >= 60) {
+  //         return oldRow;
+  //       }
+  //       return newRow;
+  //     } catch (error) {
+  //       console.error("processRowUpdate error:", error);
+  //       return oldRow; // rollback
+  //     } finally {
+  //       setIsLoading(false);
+  //     }
+  //   };
+
+  // console.log("rows", rows);
+  // console.log("columns", columns);
 
   return (
     <>
@@ -460,6 +503,7 @@ export const ImportScoreByAi = (props: ImportScoreByAiProps) => {
                       variant="contained"
                       color="inherit"
                       onClick={handleCancel}
+                      startIcon={<CircularProgress size={16}/>}
                     >
                       {t("Common.cancel")}
                     </Button>
@@ -468,7 +512,7 @@ export const ImportScoreByAi = (props: ImportScoreByAiProps) => {
                       loading={isLoading}
                       variant="contained"
                       color="primary"
-                      onClick={uploadFileExcel}
+                      onClick={uploadImageToAiRead}
                     >
                       {t("Student.ImportDialog.replaceFile")}
                     </Button>
@@ -573,10 +617,35 @@ export const ImportScoreByAi = (props: ImportScoreByAiProps) => {
               <Button variant="contained" color="error" onClick={handleDelete}>
                 {t("Common.delete")}
               </Button>
-              <Button variant="contained" color="error" onClick={handleClear}>
+              {/* <Button variant="contained" color="error" onClick={handleClear}>
                 {t("Common.clear")}
-              </Button>
+              </Button> */}
             </Box>
+          </Box>
+
+          {/* <!-- Preview Table Card --> */}
+          {/* Form fields would go here */}
+          <Box
+            className="font-siemreap"
+            sx={{ height: 500, width: "100%", mt: 2 }}
+          >
+            <DataGrid
+              rows={rows}
+              columns={columns}
+              loading={isLoading}
+              hideFooterSelectedRowCount
+              disableRowSelectionOnClick
+              checkboxSelection={true}
+              onRowSelectionModelChange={(newRowSelectionModel) => {
+                setRowSelectionModel(newRowSelectionModel);
+              }}
+              rowSelectionModel={rowSelectionModel}
+              //   processRowUpdate={processRowUpdate}
+              pageSizeOptions={[40]}
+              initialState={{
+                pagination: { paginationModel: { pageSize: 40 } },
+              }}
+            />
           </Box>
 
           {/* Display AI Response as JSON */}
@@ -614,30 +683,6 @@ export const ImportScoreByAi = (props: ImportScoreByAiProps) => {
               </Box>
             </Box>
           )}
-          {/* <!-- Preview Table Card --> */}
-          {/* Form fields would go here */}
-          <Box
-            className="font-siemreap"
-            sx={{ height: 500, width: "100%", mt: 2 }}
-          >
-            <DataGrid
-              rows={rows}
-              columns={columns}
-              loading={isLoading}
-              hideFooterSelectedRowCount
-              disableRowSelectionOnClick
-              checkboxSelection={true}
-              onRowSelectionModelChange={(newRowSelectionModel) => {
-                setRowSelectionModel(newRowSelectionModel);
-              }}
-              rowSelectionModel={rowSelectionModel}
-            //   processRowUpdate={processRowUpdate}
-              pageSizeOptions={[40]}
-              initialState={{
-                pagination: { paginationModel: { pageSize: 40 } },
-              }}
-            />
-          </Box>
         </DialogContent>
         <DialogActions>
           <Button onClick={handleClose}>{t("Common.cancel")}</Button>

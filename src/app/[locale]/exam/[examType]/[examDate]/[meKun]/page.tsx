@@ -51,7 +51,8 @@ export default function Page({ params }: { params: Promise<Params> }) {
               : t("Common.semester")}
           </Typography>
 
-          {Number(students?.total) > 0 ? <ImportScoreByAi /> : null}
+          {/* {Number(students?.total) > 0 ? <ImportScoreByAi /> : null} */}
+          <ImportScoreByAi />
         </div>
 
         <Box>

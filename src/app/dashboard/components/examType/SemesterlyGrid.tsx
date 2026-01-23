@@ -58,12 +58,12 @@ export const SemesterlyGrid = (props: SemesterlyGridProps) => {
   const columns = useMemo(() => {
     const staticColumns: GridColDef<StudentInfoScore>[] = [
       {
-        field: "id",
+        field: "orderNo",
         headerName: t("CommonField.id"),
         headerClassName: "font-siemreap",
         width: 90,
-        renderCell: (params) =>
-          params.api.getRowIndexRelativeToVisibleRows(params.id) + 1,
+        // renderCell: (params) =>
+        //   params.api.getRowIndexRelativeToVisibleRows(params.id) + 1,
       },
       {
         field: "fullName",
