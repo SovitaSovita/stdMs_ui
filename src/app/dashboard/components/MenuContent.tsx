@@ -20,12 +20,6 @@ import { useTranslations } from "next-intl";
 const mainListItems = [
   { key: "home", text: "Home", icon: <HomeRoundedIcon />, path: "/" },
   {
-    key: "classroom",
-    text: "Classroom",
-    icon: <AnalyticsRoundedIcon />,
-    path: "/classrooms",
-  },
-  {
     key: "student",
     text: "Student",
     icon: <PeopleRoundedIcon />,

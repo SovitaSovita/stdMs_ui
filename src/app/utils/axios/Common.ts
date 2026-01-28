@@ -7,7 +7,7 @@ import { getSession, signOut } from "next-auth/react";
 export const handleTokenExpired = async (error: AxiosError) => {
   if (error.response?.status === 403) {
     // Clear session
-    await signOut({ redirect: true, callbackUrl: "/signin" });
+    await signOut({ redirect: true });
     
     // Clear any stored data
     localStorage.removeItem("selectedClassroomId");

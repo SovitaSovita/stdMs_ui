@@ -215,7 +215,7 @@ export default function SignIn(props: { disableCustomTheme?: boolean }) {
             >
               Sign in
             </Button>
-            <Link
+            {/* <Link
               component="button"
               type="button"
               onClick={handleClickOpen}
@@ -223,9 +223,9 @@ export default function SignIn(props: { disableCustomTheme?: boolean }) {
               sx={{ alignSelf: "center" }}
             >
               Forgot your password?
-            </Link>
+            </Link> */}
           </Box>
-          <Divider>or</Divider>
+          {/* <Divider>or</Divider>
           <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
             <Button
               fullWidth
@@ -253,7 +253,7 @@ export default function SignIn(props: { disableCustomTheme?: boolean }) {
                 Sign up
               </Link>
             </Typography>
-          </Box>
+          </Box> */}
         </Card>
       </SignInContainer>
     </AppTheme>

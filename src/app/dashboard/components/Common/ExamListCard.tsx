@@ -176,8 +176,8 @@ export default function ExamListCard(props: ExamListCardProps) {
               >
                 <CalendarMonthIcon fontSize="small" />
                 <Typography variant="caption">
-                  {dayjs(exam?.examDate).format("DD-MM-YYYY")} •{" "}
-                  {exam?.time && dayjs(exam?.time, "HH:mm").format("hh:mm A")}
+                  {exam?.examDate} •{" "}
+                  {exam?.time && exam?.time?.slice(0, 5)}
                 </Typography>
               </Box>
 

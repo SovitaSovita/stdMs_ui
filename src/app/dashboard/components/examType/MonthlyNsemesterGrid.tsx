@@ -32,6 +32,7 @@ import { useAtom, useAtomValue } from "jotai";
 import { useTranslations } from "next-intl";
 import { notFound } from "next/navigation";
 import { ChangeEvent, use, useEffect, useMemo, useState } from "react";
+import { ImportScoreByAi } from "../Dialog/ImportScoreByAi";
 
 type MonthlyNsemesterGridProps = {
   examType: string;
@@ -198,39 +199,36 @@ export const MonthlyNsemesterGrid = (props: MonthlyNsemesterGridProps) => {
     }
   }, [isValidType, isValidDate]);
 
-  useEffect(() => {
-    async function fetchExam() {
-      try {
-        if (!classroom?.id) return;
+  const fetchExam = async () => {
+    try {
+      if (!classroom?.id) return;
 
-        const formatted = `${examDate.slice(2)}-${examDate.slice(0, 2)}-01`;
-        const sendData: ClassReqFilterDetailType = {
-          examType: examType.toUpperCase(),
-          examDate: formatted,
-        };
-        const result = await ClassroomService.getDetail(
-          classroom?.id,
-          sendData
-        );
-        if (result) {
-          setExamData(result);
-          setRows(result?.students);
-          setOriginalRows(JSON.parse(JSON.stringify(result?.students))); // Deep copy
-        }
-      } catch {
-        // swallow – we just show “no data”
-      } finally {
-        setLoading(false);
+      const formatted = `${examDate.slice(2)}-${examDate.slice(0, 2)}-01`;
+      const sendData: ClassReqFilterDetailType = {
+        examType: examType.toUpperCase(),
+        examDate: formatted,
+      };
+      const result = await ClassroomService.getDetail(classroom?.id, sendData);
+      if (result) {
+        setExamData(result);
+        setRows(result?.students);
+        setOriginalRows(JSON.parse(JSON.stringify(result?.students))); // Deep copy
       }
+    } catch {
+      // swallow – we just show “no data”
+    } finally {
+      setLoading(false);
     }
+  };
 
+  useEffect(() => {
     if (isValidType && isValidDate && classroom) fetchExam();
   }, [classroom, isValidType, isValidDate]);
 
   const processRowUpdate = async (
     newRow: StudentInfoScore,
     oldRow: StudentInfoScore,
-    params: { rowId: GridRowId }
+    params: { rowId: GridRowId },
   ): Promise<StudentInfoScore> => {
     try {
       // Find which top-level field was edited
@@ -259,7 +257,7 @@ export const MonthlyNsemesterGrid = (props: MonthlyNsemesterGridProps) => {
 
       // Update the row locally
       setRows((prev) =>
-        prev.map((r) => (r.id === updatedRow.id ? updatedRow : r))
+        prev.map((r) => (r.id === updatedRow.id ? updatedRow : r)),
       );
 
       // Track this row as modified (don't save yet)
@@ -300,7 +298,7 @@ export const MonthlyNsemesterGrid = (props: MonthlyNsemesterGridProps) => {
           // Check if this subject score was actually modified by comparing with originalRows
           const originalRow = originalRows.find((r) => r.id === modifiedRow.id);
           const originalScore = originalRow?.scores?.[subjectName];
-          
+
           if (score !== originalScore) {
             sendData.push({
               studentId: modifiedRow.id,
@@ -322,7 +320,7 @@ export const MonthlyNsemesterGrid = (props: MonthlyNsemesterGridProps) => {
       const result = await ClassroomService.upsertStuScores(
         classroom.id,
         examData.exams.id,
-        sendData
+        sendData,
       );
 
       if (result) {
@@ -370,7 +368,7 @@ export const MonthlyNsemesterGrid = (props: MonthlyNsemesterGridProps) => {
     if (examType === "semester") {
       subjectNames.forEach((subject) => {
         const sorted = [...withTotals].sort(
-          (a, b) => (b.scores?.[subject] || 0) - (a.scores?.[subject] || 0)
+          (a, b) => (b.scores?.[subject] || 0) - (a.scores?.[subject] || 0),
         );
 
         let prevScore: number | null = null;
@@ -404,7 +402,7 @@ export const MonthlyNsemesterGrid = (props: MonthlyNsemesterGridProps) => {
 
     // Step 3: Total score ranking (overall)
     const sortedByTotal = [...withTotals].sort(
-      (a, b) => b.totalScore - a.totalScore
+      (a, b) => b.totalScore - a.totalScore,
     );
 
     let prevTotal: number | null = null;
@@ -437,15 +435,23 @@ export const MonthlyNsemesterGrid = (props: MonthlyNsemesterGridProps) => {
 
     // Step 4: Reorder back to original
     return withTotals.map(
-      (r) => withRank.find((w) => w.id === r.id) ?? r
+      (r) => withRank.find((w) => w.id === r.id) ?? r,
     ) as StudentInfoScore[];
   }, [rows, meKun, examType]);
 
   return (
     <div style={{ display: "flex", flexDirection: "column" }}>
-      <Box sx={{ mb: 2, display: "flex", gap: 1, alignItems: "center" }}>
-        {modifiedRows.size > 0 && (
-          <>
+      <Box
+        sx={{
+          mb: 2,
+          display: "flex",
+          gap: 1,
+          alignItems: "center",
+          justifyContent: "space-between",
+        }}
+      >
+        {modifiedRows.size > 0 ? (
+          <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
             <Typography
               variant="caption"
               sx={{ color: "warning.main", fontWeight: "bold" }}
@@ -472,8 +478,12 @@ export const MonthlyNsemesterGrid = (props: MonthlyNsemesterGridProps) => {
             >
               Discard
             </Button>
-          </>
+          </Box>
+        ) : (
+          <Box></Box>
         )}
+        {/* {Number(students?.total) > 0 ? <ImportScoreByAi /> : null} */}
+        <ImportScoreByAi examId={examData?.exams?.id} callback={fetchExam} />
       </Box>
       <DataGrid
         rows={processedRows}
