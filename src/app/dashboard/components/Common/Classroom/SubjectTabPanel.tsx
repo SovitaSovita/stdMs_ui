@@ -40,6 +40,7 @@ import {
 import { showAlertAtom } from "@/app/libs/jotai/alertAtom";
 import { DeleteConfirmationDialog } from "../../Dialog/DeleteConfirmationDialog";
 import useNotifications from "@/app/libs/hooks/useNotifications/useNotifications";
+import { AddSubjectDialog } from "../../Dialog/AddSubjectDialog";
 
 export const SubjectTabPanel = () => {
   const { data: session, status }: { data: any; status: any } = useSession();
@@ -143,7 +144,7 @@ export const SubjectTabPanel = () => {
         headerAlign: "left",
         align: "left",
         width: 150,
-        editable: true,
+        editable: false,
         sortable: true,
         filterable: false,
         disableColumnMenu: true,
@@ -155,7 +156,7 @@ export const SubjectTabPanel = () => {
         headerAlign: "left",
         align: "left",
         width: 150,
-        editable: true,
+        editable: false,
         sortable: true,
         filterable: false,
         disableColumnMenu: true,
@@ -241,8 +242,6 @@ export const SubjectTabPanel = () => {
     setIsLoading(true);
 
     try {
-      console.log(newRow);
-      console.log(oldRow);
       if (
         newRow.name === oldRow.name &&
         newRow.nameKh === oldRow.nameKh &&
@@ -341,14 +340,15 @@ export const SubjectTabPanel = () => {
         >
           {t("Common.subject")}
         </Typography>
-        <Button
+        {/* <Button
           onClick={handleAdd}
           variant="contained"
           size="small"
           startIcon={<AddIcon />}
         >
           {t("Common.add")}
-        </Button>
+        </Button> */}
+        <AddSubjectDialog />
       </Box>
       <Grid container spacing={2} columns={12}>
         <DataGrid
@@ -358,11 +358,11 @@ export const SubjectTabPanel = () => {
           initialState={{
             pagination: {
               paginationModel: {
-                pageSize: 10,
+                pageSize: 15,
               },
             },
           }}
-          pageSizeOptions={[10, 15, 20, 50]}
+          pageSizeOptions={[15, 15, 20, 50]}
           disableRowSelectionOnClick
           processRowUpdate={processRowUpdate}
         />

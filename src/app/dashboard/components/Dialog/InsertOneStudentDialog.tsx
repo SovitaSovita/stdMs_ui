@@ -134,7 +134,6 @@ export const InsertOneStudentDialog = (props: InsertOneStudentDialogProps) => {
             <Box display={"flex"} gap={4}>
               <TextField
                 autoFocus
-                required
                 margin="dense"
                 name="fatherName"
                 placeholder={t("CommonField.fatherName")}
@@ -144,16 +143,9 @@ export const InsertOneStudentDialog = (props: InsertOneStudentDialogProps) => {
                 value={formik.values.fatherName}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
-                error={
-                  formik.touched.fatherName && Boolean(formik.errors.fatherName)
-                }
-                helperText={
-                  formik.touched.fatherName && formik.errors.fatherName
-                }
               />
               <TextField
                 autoFocus
-                required
                 margin="dense"
                 name="fatherOccupation"
                 placeholder={t("CommonField.occupation")}
@@ -162,22 +154,12 @@ export const InsertOneStudentDialog = (props: InsertOneStudentDialogProps) => {
                 variant="outlined"
                 value={formik.values.fatherOccupation}
                 onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                error={
-                  formik.touched.fatherOccupation &&
-                  Boolean(formik.errors.fatherOccupation)
-                }
-                helperText={
-                  formik.touched.fatherOccupation &&
-                  formik.errors.fatherOccupation
-                }
               />
             </Box>
 
             <Box display={"flex"} gap={4}>
               <TextField
                 autoFocus
-                required
                 margin="dense"
                 name="montherName"
                 placeholder={t("CommonField.montherName")}
@@ -186,18 +168,9 @@ export const InsertOneStudentDialog = (props: InsertOneStudentDialogProps) => {
                 variant="outlined"
                 value={formik.values.montherName}
                 onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                error={
-                  formik.touched.montherName &&
-                  Boolean(formik.errors.montherName)
-                }
-                helperText={
-                  formik.touched.montherName && formik.errors.montherName
-                }
               />
               <TextField
                 autoFocus
-                required
                 margin="dense"
                 name="montherOccupation"
                 placeholder={t("CommonField.occupation")}
@@ -206,22 +179,12 @@ export const InsertOneStudentDialog = (props: InsertOneStudentDialogProps) => {
                 variant="outlined"
                 value={formik.values.montherOccupation}
                 onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                error={
-                  formik.touched.montherOccupation &&
-                  Boolean(formik.errors.montherOccupation)
-                }
-                helperText={
-                  formik.touched.montherOccupation &&
-                  formik.errors.montherOccupation
-                }
               />
             </Box>
 
             <TextField
               multiline
               rows={3}
-              required
               margin="dense"
               name="placeOfBirth"
               placeholder={t("CommonField.placeOfBirth")}
@@ -230,20 +193,11 @@ export const InsertOneStudentDialog = (props: InsertOneStudentDialogProps) => {
               variant="outlined"
               value={formik.values.placeOfBirth}
               onChange={formik.handleChange}
-              onBlur={formik.handleBlur}
-              error={
-                formik.touched.placeOfBirth &&
-                Boolean(formik.errors.placeOfBirth)
-              }
-              helperText={
-                formik.touched.placeOfBirth && formik.errors.placeOfBirth
-              }
             />
 
             <TextField
               multiline
               rows={3}
-              required
               margin="dense"
               name="address"
               placeholder={t("CommonField.address")}
@@ -252,9 +206,6 @@ export const InsertOneStudentDialog = (props: InsertOneStudentDialogProps) => {
               variant="outlined"
               value={formik.values.address}
               onChange={formik.handleChange}
-              onBlur={formik.handleBlur}
-              error={formik.touched.address && Boolean(formik.errors.address)}
-              helperText={formik.touched.address && formik.errors.address}
             />
           </DialogContent>
 

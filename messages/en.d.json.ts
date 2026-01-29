@@ -193,6 +193,12 @@ declare const messages: {
     "about": "About",
     "feedback": "Feedback",
     "manageSubject": "Manage Subject"
-  }
+  },
+  "Subject": {
+    "khmer": "Khmer",
+    "math": "Math",
+    "english": "English",
+    "AddTitle": "Please Add Subject information"
+  } 
 };
 export default messages;

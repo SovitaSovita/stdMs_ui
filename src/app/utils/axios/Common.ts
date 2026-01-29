@@ -28,7 +28,7 @@ export const handleRequestSuccess = async (
 ): Promise<InternalAxiosRequestConfig> => {
   const session = await getSession();
   // const isAdmin = JSON.parse(localStorage.getItem("isAdminMode") || "false");
-  const accessToken = session?.token;
+  const accessToken = session?.accessToken;
 
   config.headers.Authorization = "Bearer " + accessToken;
   return config;
@@ -45,7 +45,7 @@ export const handleResponseError = async (error: any) => {
   // const isAdmin = JSON.parse(localStorage.getItem("isAdminMode") || "false");
 
   try {
-    const accessToken = session?.token;
+    const accessToken = session?.accessToken;
     if (typeof accessToken === "string") {
       originalRequest.headers.Authorization = "Bearer " + accessToken;
       return axios(originalRequest);

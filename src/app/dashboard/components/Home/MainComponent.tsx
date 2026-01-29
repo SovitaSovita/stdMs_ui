@@ -110,7 +110,7 @@ export default function MainComponent() {
                 </Typography>
               </Grid>
             </Grid>
-          </Grid>
+          </Grid> 
         </Grid>
       </Card>
 

@@ -48,6 +48,7 @@ import {
   GoogleGenAI,
   createUserContent,
   createPartFromUri,
+  ThinkingLevel,
 } from "@google/genai";
 import ClassroomService from "@/app/service/ClassroomService";
 import { DeleteConfirmationDialog } from "./DeleteConfirmationDialog";
@@ -195,6 +196,7 @@ export const ImportScoreByAi = (props: ImportScoreByAiProps) => {
         if (!input.files?.[0]) return;
 
         const file = input.files[0];
+        setFile(file);
         setIsLoading(true);
 
         const controller = new AbortController();
@@ -213,8 +215,11 @@ export const ImportScoreByAi = (props: ImportScoreByAiProps) => {
             const result = await ai.models.generateContent({
               model: "gemini-3-flash-preview",
               config: {
-                temperature: 0.2,
+                temperature: 1,
                 abortSignal: controller.signal,
+                thinkingConfig: {
+                  thinkingLevel: ThinkingLevel.HIGH
+                }
               },
               contents: [
                 {
@@ -234,11 +239,16 @@ export const ImportScoreByAi = (props: ImportScoreByAiProps) => {
 
             if (controller.signal.aborted) return;
 
+            console.log("result.text >", result.text);
+
             const cleanJson = (result.text || "")
               .replace(/```json|```/g, "")
               .trim();
 
+            console.log("cleanJson >", cleanJson);
+
             const previewData = JSON.parse(cleanJson);
+            console.log("previewData >", previewData);
             // const previewData = DATA;
             setPreview(previewData);
 

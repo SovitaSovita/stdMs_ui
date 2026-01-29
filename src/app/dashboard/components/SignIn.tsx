@@ -201,10 +201,10 @@ export default function SignIn(props: { disableCustomTheme?: boolean }) {
                 color={passwordError ? "error" : "primary"}
               />
             </FormControl>
-            <FormControlLabel
+            {/* <FormControlLabel
               control={<Checkbox value="remember" color="primary" />}
               label="Remember me"
-            />
+            /> */}
             <ForgotPassword open={open} handleClose={handleClose} />
             <Button
               type="submit"
@@ -215,7 +215,7 @@ export default function SignIn(props: { disableCustomTheme?: boolean }) {
             >
               Sign in
             </Button>
-            {/* <Link
+            <Link
               component="button"
               type="button"
               onClick={handleClickOpen}
@@ -223,7 +223,7 @@ export default function SignIn(props: { disableCustomTheme?: boolean }) {
               sx={{ alignSelf: "center" }}
             >
               Forgot your password?
-            </Link> */}
+            </Link>
           </Box>
           {/* <Divider>or</Divider>
           <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>

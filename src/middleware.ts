@@ -14,7 +14,7 @@ export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
   // Public routes (allow access)
-  const publicRoutes = ["/auth/signin"];
+  const publicRoutes = ["/auth/signin", "/auth/reset-password"];
   if (publicRoutes.some((route) => pathname.includes(route))) {
     return response;
   }
