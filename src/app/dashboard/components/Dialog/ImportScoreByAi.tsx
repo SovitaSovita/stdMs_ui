@@ -1,58 +1,39 @@
-import React, { use, useRef, useState } from "react";
+import React, { use, useEffect, useRef, useState } from "react";
 import Button from "@mui/material/Button";
 import TextField from "@mui/material/TextField";
 import Dialog from "@mui/material/Dialog";
 import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
-import DialogContentText from "@mui/material/DialogContentText";
 import DialogTitle from "@mui/material/DialogTitle";
 import {
   Box,
   CircularProgress,
-  FormControl,
-  FormHelperText,
-  InputLabel,
-  MenuItem,
-  Select,
+  LinearProgress,
   Typography,
 } from "@mui/material";
-import { useFormik } from "formik";
-import { useInsertOneStutSchema } from "@/app/libs/hooks/Validation";
-import CustomDatePicker from "../CustomDatePicker";
 import {
   ScoreUpsertRequest,
   StudentsInfo,
-  StudentsRequestUpsertType,
 } from "@/app/constants/type";
-import StudentService from "@/app/service/StudentService";
-import { classroomAtom, examAtom } from "@/app/libs/jotai/classroomAtom";
+import { classroomAtom } from "@/app/libs/jotai/classroomAtom";
 import { useAtomValue } from "jotai";
 import { useTranslations } from "next-intl";
-import DriveFolderUploadIcon from "@mui/icons-material/DriveFolderUpload";
-import {
+import SmartToyIcon from '@mui/icons-material/SmartToy';import {
   DataGrid,
   GridColDef,
-  GridRenderCellParams,
   GridRowId,
   GridRowSelectionModel,
 } from "@mui/x-data-grid";
 import useNotifications from "@/app/libs/hooks/useNotifications/useNotifications";
-import CallSplitIcon from "@mui/icons-material/CallSplit";
-import InfoOutlineIcon from "@mui/icons-material/InfoOutline";
-import AutoFixHighIcon from "@mui/icons-material/AutoFixHigh";
-import { validateHeaders, matchHeaderToField } from "./ExcelHeaderAliases";
-import dayjs from "dayjs";
 import useClassroomData from "@/app/libs/hooks/useClassroomData";
-import { DATA } from "./Data";
 import {
   GoogleGenAI,
-  createUserContent,
-  createPartFromUri,
   ThinkingLevel,
 } from "@google/genai";
 import ClassroomService from "@/app/service/ClassroomService";
-import { DeleteConfirmationDialog } from "./DeleteConfirmationDialog";
 import { AskForConfirmationDialog } from "./AskForConfirmationDialog";
+import LoopIcon from "@mui/icons-material/Loop";
+
 const GEMINI_API_KEY = process.env.NEXT_PUBLIC_GEMINI_API_KEY as string;
 const ai = new GoogleGenAI({
   apiKey: GEMINI_API_KEY,
@@ -65,14 +46,30 @@ type ImportScoreByAiProps = {
 
 export const ImportScoreByAi = (props: ImportScoreByAiProps) => {
   const { examId, callback } = props;
+
+  const [progress, setProgress] = React.useState(0);
+  const [statusText, setStatusText] = React.useState("Initializing...");
   const [open, setOpen] = React.useState(false);
   const [saveConfirmDialogOpen, setSaveConfirmDeleteDialogOpen] =
     React.useState(false);
+  const [
+    beforeUploadConfirmDialogOpen,
+    setBeforeUploadConfirmDeleteDialogOpen,
+  ] = React.useState(false);
   const classroom = useAtomValue(classroomAtom);
   const t = useTranslations();
   const [file, setFile] = useState<File | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
   const fileReaderRef = useRef<FileReader | null>(null);
+  const [previewUrl, setPreviewUrl] = useState("");
+
+  /* ================= Image Preview ================= */
+  useEffect(() => {
+    if (!file) return;
+    const url = URL.createObjectURL(file);
+    setPreviewUrl(url);
+    return () => URL.revokeObjectURL(url);
+  }, [file]);
 
   const { students, subjects, refetch } = useClassroomData(classroom);
 
@@ -145,9 +142,6 @@ export const ImportScoreByAi = (props: ImportScoreByAiProps) => {
       sortable: false,
       disableColumnMenu: true,
     }));
-    // Safely extract score keys with null checks
-    const scoreKeys =
-      rows.length > 0 && rows[0].scores ? Object.keys(rows[0].scores) : [];
 
     const dynamicScoreColumns: GridColDef[] = subjects.flatMap((subject) => {
       if (!subject) return [];
@@ -199,35 +193,69 @@ export const ImportScoreByAi = (props: ImportScoreByAiProps) => {
         setFile(file);
         setIsLoading(true);
 
+        // 1. Reset Progress
+        setProgress(0);
+        setStatusText("Reading file...");
+
         const controller = new AbortController();
         abortControllerRef.current = controller;
 
         const reader = new FileReader();
         fileReaderRef.current = reader;
 
+        // Optional: Track real file reading progress (usually very fast)
+        reader.onprogress = (event) => {
+          if (event.lengthComputable) {
+            // Map file reading to the first 20% of the bar
+            const readPercent = (event.loaded / event.total) * 20;
+            setProgress(Math.min(readPercent, 20));
+          }
+        };
+
         reader.onload = async (e) => {
           try {
             if (controller.signal.aborted) return;
 
+            //Start "AI Thinking" Simulation (20% -> 90%)
+            setStatusText("Digitizing & Extracting Data...");
+
+            const progressInterval = setInterval(() => {
+              setProgress((prev) => {
+                if (prev >= 90) {
+                  return 90; // Cap at 90% and wait for real response
+                }
+                // random increment
+                const increment = Math.random() * 5 + 1;
+                return prev + increment;
+              });
+            }, 500);
+
             const buffer = e.target?.result as ArrayBuffer;
             const base64ImageData = Buffer.from(buffer).toString("base64");
 
+            // --- AI CALL ---
             const result = await ai.models.generateContent({
               model: "gemini-3-flash-preview",
+
               config: {
                 temperature: 1,
+
                 abortSignal: controller.signal,
+
                 thinkingConfig: {
-                  thinkingLevel: ThinkingLevel.HIGH
-                }
+                  thinkingLevel: ThinkingLevel.HIGH,
+                },
               },
+
               contents: [
                 {
                   inlineData: {
                     mimeType: file.type,
+
                     data: base64ImageData,
                   },
                 },
+
                 {
                   text:
                     "Extract the data from this grade sheet.\n" +
@@ -237,19 +265,19 @@ export const ImportScoreByAi = (props: ImportScoreByAiProps) => {
               ],
             });
 
+            //Request Complete - Snap to 100%
+            clearInterval(progressInterval);
+            setProgress(100);
+            setStatusText("Complete!");
+
             if (controller.signal.aborted) return;
 
+            // --- PROCESS DATA ---
             console.log("result.text >", result.text);
-
             const cleanJson = (result.text || "")
               .replace(/```json|```/g, "")
               .trim();
-
-            console.log("cleanJson >", cleanJson);
-
             const previewData = JSON.parse(cleanJson);
-            console.log("previewData >", previewData);
-            // const previewData = DATA;
             setPreview(previewData);
 
             if (Array.isArray(previewData)) {
@@ -257,24 +285,26 @@ export const ImportScoreByAi = (props: ImportScoreByAiProps) => {
                 previewData.map((item: any) => [item.id, item]),
               );
 
-              //get only subjects that existing in classroom subjects
               const filterSubjects = subjects.map((sub) => sub.name);
+
               const mergedRows = (students?.student || []).map(
                 (student: StudentsInfo) => ({
                   ...student,
+
                   scores:
                     filterSubjects.reduce(
                       (acc, subject) => {
                         acc[subject] =
                           aiDataMap.get(student.orderNo)?.scores?.[subject] ||
                           0;
+
                         return acc;
                       },
+
                       {} as Record<string, number>,
                     ) || {},
                 }),
               );
-
               setRows(mergedRows);
             }
           } catch (err: any) {
@@ -282,30 +312,27 @@ export const ImportScoreByAi = (props: ImportScoreByAiProps) => {
               console.log("AI request aborted");
             } else {
               console.error("AI error:", err);
-              notification.show(t("Common.errorOccurred"), {
-                severity: "error",
-              });
+              // notification.show(...)
             }
           } finally {
-            setIsLoading(false);
+            // Wait a moment so user sees the 100% bar before closing/resetting
+            setTimeout(() => {
+              setIsLoading(false);
+              setProgress(0);
+            }, 800);
+
             abortControllerRef.current = null;
             fileReaderRef.current = null;
           }
-        };
-
-        reader.onerror = () => {
-          setIsLoading(false);
-          notification.show(t("Common.errorOccurred"), { severity: "error" });
         };
 
         reader.readAsArrayBuffer(file);
       };
     } catch (err) {
       setIsLoading(false);
-      notification.show(t("Common.errorOccurred"), { severity: "error" });
+      // notification.show(...)
     }
   };
-
   const handleCancel = () => {
     abortControllerRef.current?.abort();
     fileReaderRef.current?.abort();
@@ -321,6 +348,7 @@ export const ImportScoreByAi = (props: ImportScoreByAiProps) => {
 
   const handleClear = () => {
     setFile(null);
+    setPreviewUrl("");
     setRows([]);
     setPreview(null);
   };
@@ -495,7 +523,7 @@ export const ImportScoreByAi = (props: ImportScoreByAiProps) => {
         onClick={handleClickOpen}
         variant="contained"
         size="small"
-        startIcon={<DriveFolderUploadIcon />}
+        startIcon={<SmartToyIcon />}
       >
         AI Import
       </Button>
@@ -562,7 +590,7 @@ export const ImportScoreByAi = (props: ImportScoreByAiProps) => {
                     justifyContent: "center",
                   }}
                 >
-                  <DriveFolderUploadIcon
+                  <SmartToyIcon
                     sx={{
                       color: "primary.main",
                       fontSize: "32px",
@@ -577,6 +605,15 @@ export const ImportScoreByAi = (props: ImportScoreByAiProps) => {
                       marginBottom: "8px",
                     }}
                   >
+                    {t("Common.aiHelp")}
+                  </Typography>
+                  <Typography
+                    variant="h6"
+                    sx={{
+                      fontWeight: "bold",
+                      marginBottom: "8px",
+                    }}
+                  >
                     {file && file.name}
                   </Typography>
                   <Typography variant="caption">
@@ -584,7 +621,7 @@ export const ImportScoreByAi = (props: ImportScoreByAiProps) => {
                       size: file?.size
                         ? (file.size / 1024).toFixed(2) + " KB"
                         : "0 KB",
-                      rows: preview?.length,
+                      rows: preview?.length || "0",
                     })}
                   </Typography>
                 </Box>
@@ -603,96 +640,98 @@ export const ImportScoreByAi = (props: ImportScoreByAiProps) => {
                       loading={isLoading}
                       variant="contained"
                       color="primary"
-                      onClick={uploadImageToAiRead}
+                      onClick={() =>
+                        setBeforeUploadConfirmDeleteDialogOpen(true)
+                      }
                     >
-                      {t("Student.ImportDialog.replaceFile")}
+                      {t("Common.uploadPhoto")}
                     </Button>
                   )}
                 </Box>
               </Box>
             </Box>
-            {/* Right Side: Mapping Sidebar (Col 4) */}
-            <Box
-              sx={{
-                display: { xs: "none", lg: "flex" },
-                flexDirection: "column",
-                gap: "24px",
-                width: "100%",
-              }}
-            >
+
+            {/* Right side */}
+            {isLoading && (
               <Box
                 sx={{
-                  borderRadius: "12px",
-                  border: "1px solid",
-                  borderColor: "divider",
+                  position: "relative",
+                  borderRadius: 3,
                   overflow: "hidden",
+                  aspectRatio: "4/3",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  bgcolor: "background.paper", // Optional: prevents transparency issues
+                  border: 1,
+                  borderColor: "divider",
                 }}
               >
+                {/* Background Image Layer (Optional) */}
                 <Box
                   sx={{
-                    padding: "14px",
-                    borderBottom: "1px solid",
-                    borderBottomColor: "divider",
-                    backgroundColor: "action.hover",
+                    position: "absolute",
+                    inset: 0,
+                    opacity: 0.2, // Lower opacity to make text readable
+                    backgroundImage: `url(${previewUrl || "https://lh3.googleusercontent.com/aida-public/AB6AXuDLV5RjkXItwQelnoZbFD_L2eziKFYvxD22bo0gM55TtScSpsww4zbTFJ-rj7Ux7tTAZTWIF04GEAaF2GqPMEejlbUiBa1bkKga5AV1lEQa7xUjZ2seU8vlSDf-C6uMpSuEQnXO-FvZ8db9T9YvfTtbKX4d_PeMRfAcVBrQuew2yMUFxCCEBTbfoGnXei4oi_e7288VlCPiRPaSbIMwrFiBsAAXsgMHjDoJhUwJ68HfHt6CscGzyb8VrmVLnJl5TLo0gg3GdHbmingV"})`,
+                    backgroundSize: "cover",
+                    filter: "grayscale(100%)", // Nice effect for "processing" state
+                  }}
+                />
+
+                {/* Progress / Status Overlay */}
+                <Box
+                  sx={{
+                    position: "absolute",
+                    inset: 0,
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    zIndex: 10,
                   }}
                 >
-                  <Box
-                    sx={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "8px",
-                      marginBottom: "8px",
-                    }}
-                  >
-                    <CallSplitIcon
-                      sx={{ color: "primary.main" }}
-                      fontSize="large"
+                  {/* Progress Bar Container */}
+                  <Box sx={{ width: 256, mb: 2 }}>
+                    <LinearProgress
+                      variant="determinate"
+                      value={progress} // LINKED TO STATE
+                      sx={{
+                        height: 8,
+                        borderRadius: "999px",
+                        // Smooth transition for the bar animation
+                        "& .MuiLinearProgress-bar": {
+                          transition: "transform 0.2s linear",
+                        },
+                      }}
                     />
-                    <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>
-                      {t("Student.ImportDialog.columnMapping")}
-                    </Typography>
                   </Box>
-                  <Typography variant="caption" sx={{ color: "#9dabb9" }}>
-                    {t("Student.ImportDialog.connectHeaders")}
+
+                  {/* Dynamic Status Text */}
+                  <Typography
+                    variant="h6"
+                    fontWeight="bold"
+                    sx={{ display: "flex", alignItems: "center", gap: 1.5 }}
+                  >
+                    <LoopIcon
+                      sx={{
+                        animation: "spin 1s linear infinite",
+                        "@keyframes spin": {
+                          "0%": { transform: "rotate(0deg)" },
+                          "100%": { transform: "rotate(360deg)" },
+                        },
+                      }}
+                    />
+                    {/* Show integer percentage */}
+                    Digitizing... {Math.round(progress)}%
+                  </Typography>
+
+                  <Typography variant="body2" sx={{ opacity: 0.8, mt: 0.5 }}>
+                    {statusText}
                   </Typography>
                 </Box>
-                {/* Helper Tip Card */}
-                <Box
-                  sx={{
-                    padding: "16px",
-                    border: "1px solid rgba(33, 150, 243, 0.2)",
-                    display: "flex",
-                    gap: "12px",
-                  }}
-                >
-                  <InfoOutlineIcon
-                    sx={{ color: "primary.main", flexShrink: 0 }}
-                  />
-                  <Box>
-                    <Typography
-                      variant="caption"
-                      sx={{
-                        fontWeight: "bold",
-                        display: "block",
-                      }}
-                    >
-                      {t("Student.ImportDialog.proTip")}
-                    </Typography>
-                    <Typography
-                      variant="caption"
-                      color="textSecondary"
-                      sx={{
-                        marginTop: "8px",
-                        display: "block",
-                        lineHeight: 1.6,
-                      }}
-                    >
-                      {t("Student.ImportDialog.aiProTipText")}
-                    </Typography>
-                  </Box>
-                </Box>
               </Box>
-            </Box>
+            )}
           </Box>
 
           <Box mt={2}>
@@ -787,6 +826,22 @@ export const ImportScoreByAi = (props: ImportScoreByAiProps) => {
               : rows.length,
         })}
         confirmText={t("Common.save")}
+        cancelText={t("Common.cancel")}
+      />
+
+      <AskForConfirmationDialog
+        open={beforeUploadConfirmDialogOpen}
+        onClose={() => setBeforeUploadConfirmDeleteDialogOpen(false)}
+        onConfirm={uploadImageToAiRead}
+        itemName="scores2"
+        title={t("Common.titleBeforeUploadPhotoConfirm")}
+        message={t("Common.beforeUploadPhotoConfirm", {
+          count:
+            rowSelectionModel.ids.size > 0
+              ? rowSelectionModel.ids.size
+              : rows.length,
+        })}
+        confirmText={t("Common.confirm")}
         cancelText={t("Common.cancel")}
       />
     </>

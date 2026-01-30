@@ -62,7 +62,7 @@ export const MonthlyNsemesterGrid = (props: MonthlyNsemesterGridProps) => {
     const staticColumns: GridColDef<StudentInfoScore>[] = [
       {
         field: "orderNo",
-        headerName: "ល​​រ",
+        headerName: t("CommonField.id"),
         headerClassName: "font-siemreap",
         width: 90,
         // renderCell: (params) =>
@@ -70,7 +70,7 @@ export const MonthlyNsemesterGrid = (props: MonthlyNsemesterGridProps) => {
       },
       {
         field: "fullName",
-        headerName: "គោត្តនាម និងនាម",
+        headerName: t("CommonField.fullName"),
         headerClassName: "font-siemreap",
         width: showSubjects ? 150 : 170,
         // valueGetter: (value, row) =>
@@ -80,7 +80,7 @@ export const MonthlyNsemesterGrid = (props: MonthlyNsemesterGridProps) => {
       },
       {
         field: "gender",
-        headerName: "ភេទ",
+        headerName: t("CommonField.sex"),
         headerClassName: "font-siemreap",
         type: "singleSelect",
         width: 100,
@@ -93,7 +93,7 @@ export const MonthlyNsemesterGrid = (props: MonthlyNsemesterGridProps) => {
     const staticColumns2: GridColDef<StudentInfoScore>[] = [
       {
         field: "totalScore",
-        headerName: "ពិ.សរុប",
+        headerName: t("Common.total"),
         headerClassName: "font-siemreap",
         align: "center",
         disableReorder: true,
@@ -104,7 +104,7 @@ export const MonthlyNsemesterGrid = (props: MonthlyNsemesterGridProps) => {
       },
       {
         field: "average",
-        headerName: "ម.ភាគ",
+        headerName: t("CommonField.average"),
         headerClassName: "font-siemreap",
         cellClassName: "font-semibold",
         type: "string",
@@ -116,7 +116,7 @@ export const MonthlyNsemesterGrid = (props: MonthlyNsemesterGridProps) => {
       },
       {
         field: "mRanking",
-        headerName: "ចំ.ថ្នាក់",
+        headerName: t("CommonField.ranking"),
         headerClassName: "font-siemreap",
         cellClassName: "text-red-500 font-semibold",
         type: "string",
@@ -128,7 +128,7 @@ export const MonthlyNsemesterGrid = (props: MonthlyNsemesterGridProps) => {
       },
       {
         field: "mGrade",
-        headerName: "និទ្ទេស",
+        headerName: t("CommonField.grade"),
         headerClassName: "font-siemreap",
         cellClassName: "text-red-500 font-semibold",
         type: "string",
