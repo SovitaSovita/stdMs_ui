@@ -77,7 +77,7 @@ export default function ResetPassword(props: { disableCustomTheme?: boolean }) {
       .then((res) => {
         if (!res.ok) throw new Error();
       })
-      .catch(() => router.push("/expired-link"));
+      .catch(() => router.push("/auth/expired-link"));
   }, []);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {

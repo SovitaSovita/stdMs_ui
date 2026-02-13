@@ -12,6 +12,7 @@ import "../globals.css";
 import Provider from "../Provider";
 import DashboardLayout from "../dashboard/DashboardLayout";
 import ClientLayout from "./ClientLayout";
+import AuthInitializer from "../dashboard/components/AuthInitializer";
 
 type Props = {
   children: React.ReactNode;
@@ -48,6 +49,7 @@ export default async function LocaleLayout({ children, params }: Props) {
 
   return (
     <Provider>
+      <AuthInitializer />
       <NextIntlClientProvider>
         <ClientLayout>{children}</ClientLayout>
       </NextIntlClientProvider>

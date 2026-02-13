@@ -8,7 +8,6 @@ import Grid from "@mui/material/Grid";
 import { DataGrid, GridColDef, GridRenderCellParams } from "@mui/x-data-grid";
 import dayjs from "dayjs";
 import { useAtom, useAtomValue } from "jotai";
-import { useSession } from "next-auth/react";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useState } from "react";
 import ManageAccountsIcon from "@mui/icons-material/ManageAccounts";

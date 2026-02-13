@@ -29,7 +29,6 @@ import {
 } from "@mui/x-data-grid";
 import dayjs from "dayjs";
 import { useAtom, useAtomValue } from "jotai";
-import { useSession } from "next-auth/react";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useState } from "react";
 import SubjectService from "@/app/service/SubjectService";
@@ -43,7 +42,6 @@ import useNotifications from "@/app/libs/hooks/useNotifications/useNotifications
 import { AddSubjectDialog } from "../../Dialog/AddSubjectDialog";
 
 export const SubjectTabPanel = () => {
-  const { data: session, status }: { data: any; status: any } = useSession();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const notifications = useNotifications();
