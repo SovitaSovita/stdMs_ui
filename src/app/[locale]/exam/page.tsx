@@ -3,7 +3,11 @@
 import { ExamResponse, ModeType } from "@/app/constants/type";
 import ExamForm from "@/app/dashboard/components/Common/ExamForm";
 import ExamListCard from "@/app/dashboard/components/Common/ExamListCard";
-import { classroomAtom, examAtom, examsAtom } from "@/app/libs/jotai/classroomAtom";
+import {
+  classroomAtom,
+  examAtom,
+  examsAtom,
+} from "@/app/libs/jotai/classroomAtom";
 import { ScreenExamAtom } from "@/app/libs/jotai/commonAtom";
 import ExamService from "@/app/service/ExamService";
 import { Box, Button, Grid, Typography } from "@mui/material";
@@ -22,7 +26,7 @@ export default function Page() {
   const [activeView, setActiveView] = useAtom(ScreenExamAtom);
   const [exams, setExams] = useAtom(examsAtom);
   const setExam = useSetAtom(examAtom);
-  
+
   // Get screen from URL query
   const queryScreen = searchParams.get("screen") as ModeType | null;
 
@@ -100,14 +104,7 @@ export default function Page() {
               </Button>
             </Box>
 
-            <Grid
-              container
-              spacing={2}
-              columns={12}
-              sx={{ mb: (theme) => theme.spacing(2) }}
-            >
-              <ExamListCard />
-            </Grid>
+            <ExamListCard />
           </>
         );
       case "create":

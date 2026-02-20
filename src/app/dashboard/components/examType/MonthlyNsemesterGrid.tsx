@@ -39,10 +39,11 @@ type MonthlyNsemesterGridProps = {
   examDate: string;
   showSubjects: boolean;
   meKun: number;
+  onProcessedRowsChange?: (rows: StudentInfoScore[]) => void;
 };
 
 export const MonthlyNsemesterGrid = (props: MonthlyNsemesterGridProps) => {
-  const { examDate, examType, meKun, showSubjects } = props;
+  const { examDate, examType, meKun, showSubjects, onProcessedRowsChange } = props;
   const [settings, setSettings] = useState<Settings>(getInitialSettings());
   const t = useTranslations();
 
@@ -434,10 +435,19 @@ export const MonthlyNsemesterGrid = (props: MonthlyNsemesterGridProps) => {
     });
 
     // Step 4: Reorder back to original
-    return withTotals.map(
+    const finalRows = withTotals.map(
       (r) => withRank.find((w) => w.id === r.id) ?? r,
     ) as StudentInfoScore[];
+    return finalRows;
   }, [rows, meKun, examType]);
+
+  // Notify parent of processedRows changes
+  useEffect(() => {
+    if (onProcessedRowsChange) {
+      onProcessedRowsChange(processedRows);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [processedRows]);
 
   return (
     <div style={{ display: "flex", flexDirection: "column" }}>

@@ -32,7 +32,7 @@ export default function MainComponent() {
   const { data: session, status }: { data: any; status: any } = useSession();
   const classroom = useAtomValue(classroomAtom);
   const t = useTranslations();
-  const { students, subjects, exams, refetch } = useClassroomData(classroom);
+  const { students, subjects, exams } = useClassroomData(classroom);
 
   return (
     <Box sx={{ width: "100%", maxWidth: { sm: "100%", md: "1700px" } }}>

@@ -1,12 +1,18 @@
 "use client";
 
 import { ImportScoreByAi } from "@/app/dashboard/components/Dialog/ImportScoreByAi";
+import { HonorRollChart } from "@/app/dashboard/components/examType/HonorRollChart";
 import { MonthlyNsemesterGrid } from "@/app/dashboard/components/examType/MonthlyNsemesterGrid";
 import { SemesterlyAverageGrid } from "@/app/dashboard/components/examType/SemesterlyAverageGrid";
 import { SemesterlyGrid } from "@/app/dashboard/components/examType/SemesterlyGrid";
-import { classroomAtom, studentsAtom } from "@/app/libs/jotai/classroomAtom";
+import {
+  classroomAtom,
+  studentsAtom,
+  top5StudentsAtom,
+} from "@/app/libs/jotai/classroomAtom";
+import { StudentMonthlyExamsAvgResponse } from "@/app/constants/type";
 import { Box, Button, Tab, Tabs, Typography, useTheme } from "@mui/material";
-import { useAtom } from "jotai";
+import { useAtom, useSetAtom } from "jotai";
 import { useTranslations } from "next-intl";
 import { use, useState } from "react";
 
@@ -28,13 +34,29 @@ export default function Page({ params }: { params: Promise<Params> }) {
   const theme = useTheme();
   const t = useTranslations();
   const [students, setStudents] = useAtom(studentsAtom);
+  const setTop5Students = useSetAtom(top5StudentsAtom);
 
   //hide/show each scores cols of datagrid
   const [showSubjects, setShowSubjects] = useState<boolean>(true);
   const [tabValue, setTabValue] = useState(0);
+
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
-    setShowSubjects((prev) => !prev);
+    setShowSubjects((prev) => newValue === 0); // Show subjects only on the first tab
     setTabValue(newValue);
+  };
+
+  // Handler to extract top 5 students and set atom
+  const handleProcessedRowsChange = (rows: any[]) => {
+    if (!rows || rows.length === 0) {
+      setTop5Students([]);
+      return;
+    }
+    // Filter and sort by mRanking, take top 5
+    const top5 = rows
+      .filter((row) => row.mRanking && row.mRanking >= 1 && row.mRanking <= 5)
+      .sort((a, b) => a.mRanking - b.mRanking)
+      .slice(0, 5);
+    setTop5Students(top5);
   };
 
   return (
@@ -77,6 +99,14 @@ export default function Page({ params }: { params: Promise<Params> }) {
               }
               {...a11yProps(1)}
             />
+            {examType === "semester" && (
+              <Tab label={t("SemesterExam.viewRanking")} {...a11yProps(2)} />
+            )}
+
+            <Tab
+              label={t("MonthlyExam.viewHonorRollChart")}
+              {...a11yProps(3)}
+            />
           </Tabs>
           <TabPanel value={tabValue} index={0} dir={theme.direction}>
             {tabValue == 0 && examType === "monthly" ? (
@@ -85,6 +115,7 @@ export default function Page({ params }: { params: Promise<Params> }) {
                 examType={examType}
                 meKun={meKun}
                 showSubjects={showSubjects}
+                onProcessedRowsChange={handleProcessedRowsChange}
               />
             ) : (
               <SemesterlyGrid
@@ -101,14 +132,29 @@ export default function Page({ params }: { params: Promise<Params> }) {
                 examType={examType}
                 meKun={meKun}
                 showSubjects={showSubjects}
+                onProcessedRowsChange={handleProcessedRowsChange}
               />
             ) : (
               <SemesterlyAverageGrid
                 examDate={examDate}
                 examType={examType}
-                meKun={meKun}
+                isShow={false}
               />
             )}
+          </TabPanel>
+          <TabPanel value={tabValue} index={2} dir={theme.direction}>
+            {tabValue == 2 && examType === "semester" ? (
+              <SemesterlyAverageGrid
+                examDate={examDate}
+                examType={examType}
+                isShow={true}
+              />
+            ) : <HonorRollChart />}
+          </TabPanel>
+
+          {/* Honor Roll Chart Tab */}
+          <TabPanel value={tabValue} index={3} dir={theme.direction}>
+            {tabValue == 3 && <HonorRollChart />}
           </TabPanel>
         </Box>
       </Box>

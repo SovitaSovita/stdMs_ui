@@ -71,7 +71,7 @@ export const ImportScoreByAi = (props: ImportScoreByAiProps) => {
     return () => URL.revokeObjectURL(url);
   }, [file]);
 
-  const { students, subjects, refetch } = useClassroomData(classroom);
+  const { students, subjects } = useClassroomData(classroom);
 
   const handleClickOpen = () => {
     setOpen(true);

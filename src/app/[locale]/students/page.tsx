@@ -22,7 +22,7 @@ import {
 import { useAtom, useAtomValue } from "jotai";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { showAlertAtom } from "@/app/libs/jotai/alertAtom";
+import useNotifications from "@/app/libs/hooks/useNotifications/useNotifications";
 import dayjs from "dayjs";
 import GroupAddIcon from "@mui/icons-material/GroupAdd";
 import DeleteSweepIcon from "@mui/icons-material/DeleteSweep";
@@ -32,8 +32,6 @@ import {
   SETTINGS_STORAGE_KEY,
 } from "@/app/utils/axios/Common";
 import { ImportStudentsDialog } from "@/app/dashboard/components/Dialog/ImportStudentsDialog";
-import DriveFolderUploadIcon from "@mui/icons-material/DriveFolderUpload";
-import useClassroomData from "@/app/libs/hooks/useClassroomData";
 
 declare module "@mui/x-data-grid" {
   interface FooterPropsOverrides {
@@ -167,11 +165,9 @@ export default function Page() {
   const [rows, setRows] = useState<StudentsInfo[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const classroom = useAtomValue(classroomAtom);
-  const exams = useAtomValue(examsAtom);
-  const [students, setStudents] = useAtom(studentsAtom);
+  const students = useAtomValue(studentsAtom);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [, showAlert] = useAtom(showAlertAtom);
-  const { refetch } = useClassroomData(classroom);
+  const notification = useNotifications();
 
   const [rowSelectionModel, setRowSelectionModel] =
     useState<GridRowSelectionModel>({
@@ -208,13 +204,11 @@ export default function Page() {
       const result = await StudentService.deleteList(dbIds, classroom?.id);
       if (result?.status === 200) {
         setRows((prev) => prev.filter((r) => !dbIds.includes(r.id)));
-        showAlert({
-          message: result?.message || "Deleted successfully.",
+        notification.show(result?.message || "Deleted successfully.", {
           severity: "success",
         });
       } else {
-        showAlert({
-          message: "Failed to delete records.",
+        notification.show("Failed to delete records.", {
           severity: "error",
         });
       }
@@ -230,8 +224,7 @@ export default function Page() {
 
     try {
       if (rows.length >= 60) {
-        showAlert({
-          message: "Cannot add more than 60 students.",
+        notification.show("Cannot add more than 60 students.", {
           severity: "error",
         });
         return oldRow;
@@ -240,16 +233,15 @@ export default function Page() {
       const isTempRow = String(newRow.id).startsWith("temp-");
 
       if (!newRow.fullName) {
-        showAlert({
-          message:
-            t("CommonField.fullName") +
-            t("CommonValidate.cannotEmpty") +
-            " " +
-            t("CommonValidate.inputFirst", {
-              fullName: t("CommonField.fullName"),
-            }),
-          severity: "error",
-        });
+        notification.show(
+          t("CommonField.fullName") +
+          t("CommonValidate.cannotEmpty") +
+          " " +
+          t("CommonValidate.inputFirst", {
+            fullName: t("CommonField.fullName"),
+          }),
+          { severity: "error" }
+        );
         return oldRow;
       }
 
@@ -281,23 +273,20 @@ export default function Page() {
               r.id === newRow.id ? { ...newRow, id: newStudent.id } : r
             )
           );
-          showAlert({
-            message: "Student added successfully.",
+          notification.show("Student added successfully.", {
             severity: "success",
           });
           return newStudent;
         } else {
           //Update old
           setRows((prev) => prev.map((r) => (r.id === newRow.id ? newRow : r)));
-          showAlert({
-            message: "Student updated successfully.",
+          notification.show("Student updated successfully.", {
             severity: "success",
           });
           return newRow;
         }
       } else {
-        showAlert({
-          message: "Failed to save student.",
+        notification.show("Failed to save student.", {
           severity: "error",
         });
         return oldRow;

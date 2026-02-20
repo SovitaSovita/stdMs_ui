@@ -42,8 +42,11 @@
     "address": "Address",
     "subject": "Subject",
     "code": "Code",
+    "semester": "Semester",
+    "averageSemester": "Average Semester",
     "ranking": "Ranking",
     "totalScore": "Total Score",
+    "avgSemester": "Avg Semester",
     "average": "Average",
     "grade": "Grade"
   },
@@ -89,6 +92,7 @@
     "createClassroom": "Create new Classroom",
     "monthly": "Monthly",
     "semester": "Semester",
+    "semesterNum": "Semester {num}",
     "mekun": "Credit",
     "months": {
       "Jan": "January",
@@ -175,7 +179,8 @@
     "viewDetails": "View Details"
   },
   "MonthlyExam": {
-    "viewRanking": "Montly ranking",
+    "viewRanking": "Monthly ranking",
+    "viewHonorRollChart": "Honor roll chart",
     "viewAll": "View all",
     "monthlyScores": "Monthly scores",
     "enterAverage": "Enter average"
@@ -202,5 +207,5 @@
     "math": "Math",
     "english": "English",
     "AddTitle": "Please Add Subject information"
-  } 
+  }
 }

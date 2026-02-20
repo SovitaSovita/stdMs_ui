@@ -1,4 +1,4 @@
-import { ClassInfoResponseType, ExamResponse, StudentsInfo, StuInfoDetailResponseType } from "@/app/constants/type";
+import { ClassInfoResponseType, ExamResponse, StudentsInfo, StuInfoDetailResponseType, StudentMonthlyExamsAvgResponse } from "@/app/constants/type";
 import { SubjectResponse } from "@/app/constants/type/SubjectType";
 import { atom } from "jotai";
 import { atomWithStorage } from "jotai/utils";
@@ -15,3 +15,6 @@ export const examAtom = atom<ExamResponse>({} as ExamResponse);
 export const subjectsAtom = atom<SubjectResponse[]>([]);
 export const attendanceAtom = atom<StudentsInfo[]>([]);
 export const classLoadingAtom = atom(false);
+
+// Top 5 students atom for honor roll chart
+export const top5StudentsAtom = atom<StudentMonthlyExamsAvgResponse[]>([]);

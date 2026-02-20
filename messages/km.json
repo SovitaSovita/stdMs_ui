@@ -42,8 +42,11 @@
     "address": "ទីលំនៅបច្ចុប្បន្ន",
     "subject": "មុខវិជ្ជា",
     "code": "កូដ",
+    "semester": "ប្រចាំឆមាស",
+    "averageSemester": "មធ្យមភាគប្រចាំឆមាស",
     "ranking": "ចំ.ថ្នាក់",
     "totalScore": "ពិន្ទុសរុប",
+    "avgSemester": "ម.ប្រចាំឆមាស",
     "average": "ម.ភាគ",
     "grade": "និទ្ទេស"
   },
@@ -89,6 +92,7 @@
     "createClassroom": "បង្កើតថ្នាក់ថ្មី",
     "monthly": "ប្រចាំខែ",
     "semester": "ប្រចាំឆមាស",
+    "semesterNum": "ប្រចាំឆមាសលើកទី {num}",
     "mekun": "មេគុណ",
     "months": {
       "Jan": "មករា",
@@ -176,6 +180,7 @@
   },
   "MonthlyExam": {
     "viewRanking": "ចំណាត់ថ្នាក់ប្រចាំខែ",
+    "viewHonorRollChart": "តារាងកិត្តិយស",
     "viewAll": "មើលទាំងមូល",
     "monthlyScores": "បញ្ជីស្រង់ពិន្ទុប្រចាំខែ",
     "enterAverage": "សូមបញ្ចូលមេគុណ"

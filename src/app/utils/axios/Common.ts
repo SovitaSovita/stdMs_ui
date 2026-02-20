@@ -2,24 +2,24 @@ import { Settings } from "@/app/constants/type";
 import { GridDensity } from "@mui/x-data-grid";
 import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
 import dayjs, { Dayjs } from "dayjs";
+import { getToken } from "next-auth/jwt";
 import { getSession, signOut } from "next-auth/react";
 
 export const handleTokenExpired = async (error: AxiosError) => {
-  if (error.response?.status === 403) {
-    // Clear session
-    await signOut({ redirect: true });
-    
-    // Clear any stored data
-    localStorage.removeItem("selectedClassroomId");
-    sessionStorage.clear();
-    
-    // Redirect to login
-    // window.location.href = "/signin";
-    
-    // Optional: Show notification
-    // toast.error("Your session has expired. Please sign in again.");
+  const status = error.response?.status;
+  if (status === 401) {
+    // show user notification (client-side only)
+    if (typeof window !== "undefined") {
+      // avoid infinite redirect: don't redirect if already on signin
+      if (!window.location.pathname.startsWith("/signin")) {
+        // signOut clears session cookie
+        await signOut({ redirect: false });
+        localStorage.clear();
+        // optional toast: show user what happened
+        window.location.href = "/auth/signin";
+      }
+    }
   }
-  
   return Promise.reject(error);
 };
 
@@ -27,10 +27,15 @@ export const handleRequestSuccess = async (
   config: InternalAxiosRequestConfig
 ): Promise<InternalAxiosRequestConfig> => {
   const session = await getSession();
-  // const isAdmin = JSON.parse(localStorage.getItem("isAdminMode") || "false");
-  const accessToken = session?.accessToken;
-
-  config.headers.Authorization = "Bearer " + accessToken;
+  const token = session?.accessToken;
+  config.headers = config.headers || {};
+  if (typeof token === "string" && token.length > 0) {
+    // only set when token exists
+    config.headers.Authorization = `Bearer ${token}`;
+  } else {
+    // ensure no stale header
+    delete config.headers.Authorization;
+  }
   return config;
 };
 
@@ -126,7 +131,6 @@ export function getFullYearRangeBounds(yearRange: string | undefined | null): {
 
   return { min, max };
 }
-
 
 /* --------------------------------------------------------------
     Custom Toolbar Common

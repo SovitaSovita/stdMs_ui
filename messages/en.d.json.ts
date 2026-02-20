@@ -45,8 +45,11 @@ declare const messages: {
     "address": "Address",
     "subject": "Subject",
     "code": "Code",
+    "semester": "Semester",
+    "averageSemester": "Average Semester",
     "ranking": "Ranking",
     "totalScore": "Total Score",
+    "avgSemester": "Avg Semester",
     "average": "Average",
     "grade": "Grade"
   },
@@ -92,6 +95,7 @@ declare const messages: {
     "createClassroom": "Create new Classroom",
     "monthly": "Monthly",
     "semester": "Semester",
+    "semesterNum": "Semester {num}",
     "mekun": "Credit",
     "months": {
       "Jan": "January",
@@ -178,7 +182,8 @@ declare const messages: {
     "viewDetails": "View Details"
   },
   "MonthlyExam": {
-    "viewRanking": "Montly ranking",
+    "viewRanking": "Monthly ranking",
+    "viewHonorRollChart": "Honor roll chart",
     "viewAll": "View all",
     "monthlyScores": "Monthly scores",
     "enterAverage": "Enter average"
@@ -205,6 +210,6 @@ declare const messages: {
     "math": "Math",
     "english": "English",
     "AddTitle": "Please Add Subject information"
-  } 
+  }
 };
 export default messages;

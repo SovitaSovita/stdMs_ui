@@ -117,7 +117,10 @@ export function CustomDataGridToolbar(props: ToolbarProps) {
           col.field === "totalScore" ||
           col.field === "average" ||
           col.field === "mRanking" ||
-          col.field === "mGrade"
+          col.field === "mGrade" ||
+          col.field === "totalAvgSemester" ||
+          col.field === "tRanking" ||
+          col.field === "tGrade"
         ) {
           customWidth = 10; // 'orderNo', 'gender'
         } else if (col.width) {
@@ -136,7 +139,6 @@ export function CustomDataGridToolbar(props: ToolbarProps) {
         };
       });
 
-    // console.log(columns);
     worksheet.columns = columns;
 
     // --- 3. INSERT TITLE ROWS ---
@@ -161,7 +163,9 @@ export function CustomDataGridToolbar(props: ToolbarProps) {
 
     // --- 5. ADD DATA ---
     const rowIds = apiRef.current.getSortedRowIds();
-    const rowsToExport = rowIds.map((id) => apiRef.current.getRow(id));
+    const rowsToExport = rowIds.map((id) => {
+      return apiRef.current.getRow(id);
+    });
 
     rowsToExport.forEach((row, index) => {
       const rowData: any = {
@@ -172,6 +176,9 @@ export function CustomDataGridToolbar(props: ToolbarProps) {
         average: row.average,
         mRanking: row.mRanking,
         mGrade: row.mGrade,
+        totalAvgSemester: row?.totalAvgSemester,
+        tRanking: row?.tRanking,
+        tGrade: row?.tGrade,
       };
 
       //When TAB Averaga Of Semesterly
@@ -191,7 +198,6 @@ export function CustomDataGridToolbar(props: ToolbarProps) {
           rowData[subject + "_Rank"] = row[subject + "_rank"]; ////When TAB បញ្ជីស្រង់ពិន្ទុឆមាស
         });
       }
-      // console.log("rowData", rowData);
       worksheet.addRow(rowData);
     });
 
@@ -257,7 +263,13 @@ export function CustomDataGridToolbar(props: ToolbarProps) {
           name: "Khmer OS Battambang",
           family: 4,
           size: 10,
-          color: ["average", "mRanking", "mGrade"].includes(columnKey)
+          color: [
+            "average",
+            "mRanking",
+            "mGrade",
+            "tRanking",
+            "tGrade",
+          ].includes(columnKey)
             ? { argb: "FFFF0000" }
             : { argb: "FF000000" },
         };

@@ -21,6 +21,10 @@ export const dataGridCustomizations = {
         backgroundColor: (theme.vars || theme).palette.background.default,
         [`& .${gridClasses.columnHeader}`]: {
           backgroundColor: (theme.vars || theme).palette.background.paper,
+          border: `1px solid ${(theme.vars || theme).palette.divider}`,
+        },
+        [`& .${gridClasses.columnHeaderTitle}`]: {
+          fontWeight: 'bold',
         },
         [`& .${gridClasses.footerContainer}`]: {
           backgroundColor: (theme.vars || theme).palette.background.paper,

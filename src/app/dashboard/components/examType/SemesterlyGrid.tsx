@@ -52,8 +52,6 @@ export const SemesterlyGrid = (props: SemesterlyGridProps) => {
   const [rows, setRows] = useState<StudentInfoScore[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [showSubjects, setShowSubjects] = useState<boolean>(true);
-  const [semesterlyAverageShow, setSemesterlyAverageShow] =
-    useState<boolean>(true);
 
   const columns = useMemo(() => {
     const staticColumns: GridColDef<StudentInfoScore>[] = [
@@ -61,7 +59,7 @@ export const SemesterlyGrid = (props: SemesterlyGridProps) => {
         field: "orderNo",
         headerName: t("CommonField.id"),
         headerClassName: "font-siemreap",
-        width: 90,
+        width: 50,
         // renderCell: (params) =>
         //   params.api.getRowIndexRelativeToVisibleRows(params.id) + 1,
       },
@@ -69,7 +67,7 @@ export const SemesterlyGrid = (props: SemesterlyGridProps) => {
         field: "fullName",
         headerName: t("CommonField.fullName"),
         headerClassName: "font-siemreap",
-        width: showSubjects ? 150 : 170,
+        width: showSubjects ? 170 : 190,
         // valueGetter: (value, row) =>
         //   `${row.firstName || ""} ${row.lastName || ""}`,
         sortable: true,
@@ -80,7 +78,7 @@ export const SemesterlyGrid = (props: SemesterlyGridProps) => {
         headerName: t("CommonField.sex"),
         headerClassName: "font-siemreap",
         type: "singleSelect",
-        width: 100,
+        width: 60,
         align: "center",
         headerAlign: "center",
         disableColumnMenu: true,
