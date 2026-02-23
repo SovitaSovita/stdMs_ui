@@ -95,6 +95,7 @@ declare const messages: {
     "createClassroom": "Create new Classroom",
     "monthly": "Monthly",
     "semester": "Semester",
+    "examTitleTemplate": "{examType} Exam of {monthYear}",
     "semesterNum": "Semester {num}",
     "mekun": "Credit",
     "months": {
@@ -111,7 +112,16 @@ declare const messages: {
       "Nov": "November",
       "Dec": "December"
     },
-    "errorOccurred": "An error occurred. Please try again."
+    "errorOccurred": "An error occurred. Please try again.",
+    "examTitle": "Exam Title",
+    "examType": "Exam Type",
+    "examMonth": "Exam Month",
+    "examTime": "Exam Time",
+    "description": "Description",
+    "enterMekun": "Enter mekun",
+    "enterDescription": "Enter description",
+    "createExam": "Create Exam",
+    "updateExam": "Update Exam"
   },
   "Classroom": {
     "createNew": "Create new class",
@@ -197,6 +207,7 @@ declare const messages: {
     "home": "Home",
     "classroom": "Classroom",
     "student": "Student",
+    "subject": "Subject",
     "exam": "Examing",
     "monthlyExam": "Monthly Exam",
     "SemesterExam": "Semester Exam",
@@ -210,6 +221,20 @@ declare const messages: {
     "math": "Math",
     "english": "English",
     "AddTitle": "Please Add Subject information"
+  },
+  "HonorRoll": {
+    "title": "Honor Roll",
+    "grade": "Grade",
+    "yearStudy": "Year of Study",
+    "1Rank": "1st Rank",
+    "2Rank": "2nd Rank",
+    "3Rank": "3rd Rank",
+    "4Rank": "4th Rank",
+    "5Rank": "5th Rank",
+    "excellentAchievement": "Excellent Achievement",
+    "honorRecognition": "Honor Recognition",
+    "downloadReport": "Download Report",
+    "shareSuccess": "Share Success"
   }
 };
 export default messages;

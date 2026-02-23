@@ -47,10 +47,10 @@ export default function ExamForm() {
   const { min: minDate, max: maxDate } = getFullYearRangeBounds(
     classroom?.year
   );
-  const [exam, setExam] = useAtom(examAtom);
+  const exam = useAtomValue(examAtom);
 
   // Check if we're in edit mode
-  const isEditMode = !!exam;
+  const isEditMode = !!exam?.id;
 
   const formik = useFormik({
     initialValues: {
@@ -119,18 +119,22 @@ export default function ExamForm() {
   // Helper: generate the title from the current values
   // ------------------------------------------------------------
   const generateTitle = (examType: string, examDate: dayjs.Dayjs | null) => {
-    if (!examType || !examDate?.isValid()) return examType.toLowerCase();
-    const monthYear = examDate.format("MMMM YYYY");
-    // “MONTHLY Exam of October 2025”  or  “SEMESTER Exam of October 2025”
-    if (locale === "en") {
-      return `${examType.charAt(0)}${examType
-        .slice(1)
-        .toLowerCase()} Exam of ${monthYear}`;
-    } else {
-      return `ប្រលង${
-        examType === "SEMESTER" ? "ប្រចាំឆមាស" : "ប្រចាំខែ "
-      } នៃ ${monthYear}`;
-    }
+    if (!examType || !examDate?.isValid()) return (examType || "").toLowerCase();
+
+    // Determine localized month and year using messages/Common.months (e.g. "Jan" -> "January" or Khmer)
+    const monthAbbr = examDate.format("MMM");
+    const year = examDate.format("YYYY");
+    const localizedMonth = t(`months.${monthAbbr}`);
+    const monthYear = `${localizedMonth} ${year}`;
+
+    // Localized exam type label (expects keys `monthly` and `semester` in messages/Common)
+    const examTypeLabel = examType === "SEMESTER" ? t("semester") : t("monthly");
+
+    // Use a template translation so both English and Khmer can control order/particles.
+    // Add `examTitleTemplate` to your messages/Common files:
+    // en: "{examType} Exam of {monthYear}"
+    // km: "ប្រលង{examType} នៃ {monthYear}"
+    return t("examTitleTemplate", { examType: examTypeLabel, monthYear });
   };
 
   return (
@@ -148,7 +152,7 @@ export default function ExamForm() {
             size={{ xs: 12, sm: 12 }}
             sx={{ display: "flex", flexDirection: "column" }}
           >
-            <FormLabel sx={{ mb: 0.5, fontWeight: 400 }}>Exam Title</FormLabel>
+            <FormLabel sx={{ mb: 0.5, fontWeight: 400 }}>{t("examTitle")}</FormLabel>
             <TextField
               name="title"
               fullWidth
@@ -166,7 +170,7 @@ export default function ExamForm() {
             <Grid size={{ xs: 12, sm: 6, lg: 6 }}>
               <FormControl fullWidth>
                 <FormLabel sx={{ mb: 0.5, fontWeight: 400 }}>
-                  Exam Type
+                  {t("examType")}
                 </FormLabel>
                 <Select
                   value={formik?.values.examType ?? ""}
@@ -195,7 +199,7 @@ export default function ExamForm() {
             <Grid size={{ xs: 12, sm: 6, lg: 6 }}>
               <FormControl fullWidth>
                 <FormLabel sx={{ mb: 0.5, fontWeight: 400 }}>
-                  Exam Month
+                  {t("examMonth")}
                 </FormLabel>
                 <CustomDatePicker
                   name="examDate"
@@ -222,7 +226,7 @@ export default function ExamForm() {
           <Grid container spacing={2}>
             <Grid size={{ xs: 12, sm: 6, lg: 6 }}>
               <FormControl fullWidth>
-                <FormLabel sx={{ mb: 1, fontWeight: 400 }}>Exam Time</FormLabel>
+                <FormLabel sx={{ mb: 1, fontWeight: 400 }}>{t("examTime")}</FormLabel>
                 <LocalizationProvider dateAdapter={AdapterDayjs}>
                   <TimePicker
                     value={dayjs(formik.values.time, "HH:mm")}
@@ -251,7 +255,7 @@ export default function ExamForm() {
             </Grid>
             <Grid size={{ xs: 12, sm: 6, lg: 6 }}>
               <FormControl fullWidth>
-                <FormLabel sx={{ mb: 1, fontWeight: 400 }}>Mekun</FormLabel>
+                <FormLabel sx={{ mb: 1, fontWeight: 400 }}>{t("mekun")}</FormLabel>
                 <TextField
                   variant="outlined"
                   size="small"
@@ -264,7 +268,7 @@ export default function ExamForm() {
                       step: 1, // or 0.1 if you allow decimals
                     },
                   }}
-                  placeholder="Enter mekun"
+                  placeholder={t("enterMekun")}
                   onChange={formik.handleChange}
                   onBlur={formik.handleBlur}
                   error={formik.touched.meKun && Boolean(formik.errors.meKun)}
@@ -276,7 +280,7 @@ export default function ExamForm() {
 
           <Grid size={{ xs: 12, sm: 12 }}>
             <FormControl fullWidth>
-              <FormLabel sx={{ mb: 1, fontWeight: 400 }}>Description</FormLabel>
+              <FormLabel sx={{ mb: 1, fontWeight: 400 }}>{t("description")}</FormLabel>
               <TextField
                 fullWidth
                 multiline
@@ -286,7 +290,7 @@ export default function ExamForm() {
                 name="description"
                 type="text"
                 value={formik.values.description}
-                placeholder="Enter description"
+                placeholder={t("enterDescription")}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
                 error={
@@ -307,7 +311,7 @@ export default function ExamForm() {
           startIcon={<ArrowBackIcon />}
           onClick={handleBack}
         >
-          Back
+          {t("back")}
         </Button>
         <Button
           type="submit"
@@ -315,7 +319,7 @@ export default function ExamForm() {
           size="medium"
           disabled={isSubmitting}
         >
-          {isEditMode ? "Update Exam" : "Create Exam"}
+          {isEditMode ? t("updateExam") : t("createExam")}
         </Button>
       </Stack>
     </Box>

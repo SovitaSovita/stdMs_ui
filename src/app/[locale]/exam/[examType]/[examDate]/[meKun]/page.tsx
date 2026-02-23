@@ -33,7 +33,6 @@ export default function Page({ params }: { params: Promise<Params> }) {
   const { examType, examDate, meKun } = use(params);
   const theme = useTheme();
   const t = useTranslations();
-  const [students, setStudents] = useAtom(studentsAtom);
   const setTop5Students = useSetAtom(top5StudentsAtom);
 
   //hide/show each scores cols of datagrid
@@ -122,6 +121,7 @@ export default function Page({ params }: { params: Promise<Params> }) {
                 examDate={examDate}
                 examType={examType}
                 meKun={meKun}
+                onProcessedRowsChange={handleProcessedRowsChange}
               />
             )}
           </TabPanel>
@@ -139,22 +139,24 @@ export default function Page({ params }: { params: Promise<Params> }) {
                 examDate={examDate}
                 examType={examType}
                 isShow={false}
+                onProcessedRowsChange={handleProcessedRowsChange}
               />
             )}
           </TabPanel>
-          <TabPanel value={tabValue} index={2} dir={theme.direction}>
-            {tabValue == 2 && examType === "semester" ? (
+          {tabValue == 2 && examType === "semester" && (
+            <TabPanel value={tabValue} index={2} dir={theme.direction}>
               <SemesterlyAverageGrid
                 examDate={examDate}
                 examType={examType}
                 isShow={true}
+                onProcessedRowsChange={handleProcessedRowsChange}
               />
-            ) : <HonorRollChart />}
-          </TabPanel>
+            </TabPanel>
+          )}
 
           {/* Honor Roll Chart Tab */}
-          <TabPanel value={tabValue} index={3} dir={theme.direction}>
-            {tabValue == 3 && <HonorRollChart />}
+          <TabPanel value={tabValue} index={examType === "monthly" ? 2 : 3} dir={theme.direction}>
+            { tabValue == (examType === "monthly" ? 2 : 3) && <HonorRollChart />}
           </TabPanel>
         </Box>
       </Box>

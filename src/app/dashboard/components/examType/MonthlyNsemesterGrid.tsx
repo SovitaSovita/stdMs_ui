@@ -43,7 +43,8 @@ type MonthlyNsemesterGridProps = {
 };
 
 export const MonthlyNsemesterGrid = (props: MonthlyNsemesterGridProps) => {
-  const { examDate, examType, meKun, showSubjects, onProcessedRowsChange } = props;
+  const { examDate, examType, meKun, showSubjects, onProcessedRowsChange } =
+    props;
   const [settings, setSettings] = useState<Settings>(getInitialSettings());
   const t = useTranslations();
 
@@ -493,7 +494,9 @@ export const MonthlyNsemesterGrid = (props: MonthlyNsemesterGridProps) => {
           <Box></Box>
         )}
         {/* {Number(students?.total) > 0 ? <ImportScoreByAi /> : null} */}
-        <ImportScoreByAi examId={examData?.exams?.id} callback={fetchExam} />
+        {showSubjects && (
+          <ImportScoreByAi examId={examData?.exams?.id} callback={fetchExam} />
+        )}
       </Box>
       <DataGrid
         rows={processedRows}
@@ -520,6 +523,7 @@ export const MonthlyNsemesterGrid = (props: MonthlyNsemesterGridProps) => {
             toolbarButtons: {
               search: true,
               export: true,
+              settings: true,
               extraControls: (
                 <>
                   <TextField

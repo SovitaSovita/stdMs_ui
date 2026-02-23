@@ -37,10 +37,11 @@ type SemesterlyGridProps = {
   examType: string;
   examDate: string;
   meKun: number;
+  onProcessedRowsChange?: (rows: StudentInfoScore[]) => void;
 };
 
 export const SemesterlyGrid = (props: SemesterlyGridProps) => {
-  const { examDate, examType, meKun } = props;
+  const { examDate, examType, meKun, onProcessedRowsChange } = props;
   const [settings, setSettings] = useState<Settings>(getInitialSettings());
   const t = useTranslations();
 
@@ -206,7 +207,7 @@ export const SemesterlyGrid = (props: SemesterlyGridProps) => {
         };
         const result = await ClassroomService.getDetail(
           classroom?.id,
-          sendData
+          sendData,
         );
         if (result) {
           setExamData(result);
@@ -222,11 +223,10 @@ export const SemesterlyGrid = (props: SemesterlyGridProps) => {
     if (isValidType && isValidDate && classroom) fetchExam();
   }, [classroom, isValidType, isValidDate]);
 
-
   const processRowUpdate = async (
     newRow: StudentInfoScore,
     oldRow: StudentInfoScore,
-    params: { rowId: GridRowId }
+    params: { rowId: GridRowId },
   ): Promise<StudentInfoScore> => {
     setIsLoading(true);
 
@@ -271,12 +271,12 @@ export const SemesterlyGrid = (props: SemesterlyGridProps) => {
       const result = await ClassroomService.upsertStuScores(
         classroom.id,
         examData.exams.id,
-        sendData
+        sendData,
       );
 
       if (result) {
         setRows((prev) =>
-          prev.map((r) => (r.id === updatedRow.id ? updatedRow : r))
+          prev.map((r) => (r.id === updatedRow.id ? updatedRow : r)),
         );
 
         showAlert({
@@ -306,9 +306,7 @@ export const SemesterlyGrid = (props: SemesterlyGridProps) => {
       const values = Object.values(scores).map(Number);
       const totalScore = values.reduce((sum, v) => sum + (v || 0), 0);
       const average =
-        values.length > 0
-          ? (totalScore / Number(meKun)).toFixed(2)
-          : "0.00";
+        values.length > 0 ? (totalScore / Number(meKun)).toFixed(2) : "0.00";
 
       return {
         ...row,
@@ -321,7 +319,7 @@ export const SemesterlyGrid = (props: SemesterlyGridProps) => {
     if (examType === "semester") {
       subjectNames.forEach((subject) => {
         const sorted = [...withTotals].sort(
-          (a, b) => (b.scores?.[subject] || 0) - (a.scores?.[subject] || 0)
+          (a, b) => (b.scores?.[subject] || 0) - (a.scores?.[subject] || 0),
         );
 
         let prevScore: number | null = null;
@@ -355,7 +353,7 @@ export const SemesterlyGrid = (props: SemesterlyGridProps) => {
 
     // Step 3: Total score ranking (overall)
     const sortedByTotal = [...withTotals].sort(
-      (a, b) => b.totalScore - a.totalScore
+      (a, b) => b.totalScore - a.totalScore,
     );
 
     let prevTotal: number | null = null;
@@ -374,23 +372,31 @@ export const SemesterlyGrid = (props: SemesterlyGridProps) => {
         average >= 45
           ? "A"
           : average >= 40
-          ? "B"
-          : average >= 35
-          ? "C"
-          : average >= 30
-          ? "D"
-          : average >= 25
-          ? "E"
-          : "F";
+            ? "B"
+            : average >= 35
+              ? "C"
+              : average >= 30
+                ? "D"
+                : average >= 25
+                  ? "E"
+                  : "F";
 
       return { ...row, mRanking: rank, mGrade };
     });
 
     // Step 4: Reorder back to original
     return withTotals.map(
-      (r) => withRank.find((w) => w.id === r.id) ?? r
+      (r) => withRank.find((w) => w.id === r.id) ?? r,
     ) as StudentInfoScore[];
   }, [rows, meKun, examType]);
+
+  // Notify parent of processedRows changes
+  useEffect(() => {
+    if (onProcessedRowsChange) {
+      onProcessedRowsChange(processedRows);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [processedRows]);
 
   return (
     <>
@@ -419,6 +425,7 @@ export const SemesterlyGrid = (props: SemesterlyGridProps) => {
             toolbarButtons: {
               search: true,
               export: true,
+              settings: true,
               extraControls: (
                 <>
                   <TextField

@@ -145,7 +145,7 @@ export const DENISTY_OPTIONS: { label: string; value: GridDensity }[] = [
 export const SETTINGS_STORAGE_KEY = "mui-data-grid-settings";
 
 export const SETTINGS_DEFAULT: Settings = {
-  density: "standard",
+  density: "compact",
   showCellBorders: true,
   showColumnBorders: true,
 };

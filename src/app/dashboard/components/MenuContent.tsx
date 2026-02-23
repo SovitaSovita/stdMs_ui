@@ -26,6 +26,12 @@ const mainListItems = [
     path: "/students",
   },
   {
+    key: "subject",
+    text: "Subject",
+    icon: <PeopleRoundedIcon />,
+    path: "/subjects",
+  },
+  {
     key: "exam",
     text: "Monthly Exam",
     icon: <AssignmentRoundedIcon />,

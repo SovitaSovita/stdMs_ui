@@ -49,10 +49,11 @@ type SemesterlyAverageGridProps = {
   examType: string;
   examDate: string;
   isShow?: boolean;
+    onProcessedRowsChange?: (rows: StudentMonthlyExamsAvgResponse[]) => void;
 };
 
 export const SemesterlyAverageGrid = (props: SemesterlyAverageGridProps) => {
-  const { examDate, examType, isShow = true } = props;
+  const { examDate, examType, isShow = true, onProcessedRowsChange } = props;
   const [settings, setSettings] = useState<Settings>(getInitialSettings());
   const t = useTranslations();
 
@@ -321,7 +322,7 @@ export const SemesterlyAverageGrid = (props: SemesterlyAverageGridProps) => {
         align: "center",
         headerAlign: "center",
         editable: false,
-        sortable: false,
+        sortable: true,
         disableColumnMenu: true,
         valueGetter: (value, row, column) => {
           const field = column?.field;
@@ -344,7 +345,7 @@ export const SemesterlyAverageGrid = (props: SemesterlyAverageGridProps) => {
           align: "center",
           headerAlign: "center",
           editable: false,
-          sortable: false,
+          sortable: true,
           disableColumnMenu: true,
           valueGetter: (value, row, column) => {
             const field = column?.field as string;
@@ -367,7 +368,7 @@ export const SemesterlyAverageGrid = (props: SemesterlyAverageGridProps) => {
           align: "center",
           headerAlign: "center",
           editable: false,
-          sortable: false,
+          sortable: true,
           disableColumnMenu: true,
           valueGetter: (value, row) => {
             const monthlyVal = row?.monthlyAverage?.[key] ?? 0;
@@ -386,7 +387,7 @@ export const SemesterlyAverageGrid = (props: SemesterlyAverageGridProps) => {
           align: "center",
           headerAlign: "center",
           editable: false,
-          sortable: false,
+          sortable: true,
           disableColumnMenu: true,
           valueGetter: (value, row) => {
             if (!row || !row.id) return "";
@@ -419,7 +420,7 @@ export const SemesterlyAverageGrid = (props: SemesterlyAverageGridProps) => {
           align: "center",
           headerAlign: "center",
           editable: false,
-          sortable: false,
+          sortable: true,
           disableColumnMenu: true,
           valueGetter: (value, row) => {
             // Use the same grading logic as mGrade, but for this semester's average
@@ -497,6 +498,14 @@ export const SemesterlyAverageGrid = (props: SemesterlyAverageGridProps) => {
     return groups;
   }, [isShow, ExamMonthKeys, ExamSemesterKeys, t]);
 
+    // Notify parent of processedRows changes
+  useEffect(() => {
+    if (onProcessedRowsChange) {
+      onProcessedRowsChange(processedRows);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [processedRows]);
+
   return (
     <>
       <DataGrid
@@ -529,6 +538,7 @@ export const SemesterlyAverageGrid = (props: SemesterlyAverageGridProps) => {
             toolbarButtons: {
               search: true,
               export: true,
+              settings: true,
               extraControls: (
                 <>
                   <TextField

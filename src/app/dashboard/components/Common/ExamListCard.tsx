@@ -176,8 +176,7 @@ export default function ExamListCard(props: ExamListCardProps) {
               >
                 <CalendarMonthIcon fontSize="small" />
                 <Typography variant="caption">
-                  {exam?.examDate} •{" "}
-                  {exam?.time && exam?.time?.slice(0, 5)}
+                  {exam?.examDate} • {exam?.time && exam?.time?.slice(0, 5)}
                 </Typography>
               </Box>
 
@@ -203,13 +202,14 @@ export default function ExamListCard(props: ExamListCardProps) {
                 fullWidth
                 variant="outlined"
                 size="small"
-                onClick={() =>
+                onClick={() => {
+                  setExam(exam);
                   router.push(
                     `exam/${exam?.examType.toLowerCase()}/${dayjs(
-                      exam?.examDate
-                    ).format("MMYYYY")}/${exam?.meKun}`
-                  )
-                }
+                      exam?.examDate,
+                    ).format("MMYYYY")}/${exam?.meKun}`,
+                  );
+                }}
               >
                 View Details
               </Button>
