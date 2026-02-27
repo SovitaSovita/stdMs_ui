@@ -7,7 +7,7 @@ import { getSession, signOut } from "next-auth/react";
 
 export const handleTokenExpired = async (error: AxiosError) => {
   const status = error.response?.status;
-  if (status === 401) {
+  if (status === 401 && (error?.response?.statusText == "TOKEN_EXPIRED")) {
     // show user notification (client-side only)
     if (typeof window !== "undefined") {
       // avoid infinite redirect: don't redirect if already on signin
@@ -118,8 +118,8 @@ export function getFullYearRangeBounds(yearRange: string | undefined | null): {
   }
 
   const [startStr, endStr] = yearRange.split("-").map((s) => s.trim());
-  const startYear = Number(startStr);
-  const endYear = Number(endStr);
+  const startYear = Number(startStr) - 1;
+  const endYear = Number(endStr) + 1;
 
   if (Number.isNaN(startYear) || Number.isNaN(endYear)) {
     throw new Error(`Invalid year format: ${yearRange}`);

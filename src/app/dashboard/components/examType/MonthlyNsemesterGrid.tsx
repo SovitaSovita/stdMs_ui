@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useCallback } from "react";
 import {
   ClassExamDataResponseType,
   ClassReqFilterDetailType,
@@ -197,11 +197,11 @@ export const MonthlyNsemesterGrid = (props: MonthlyNsemesterGridProps) => {
 
   useEffect(() => {
     if (!isValidType || !isValidDate) {
-      notFound(); // redirects to closest `not-found.tsx` or 404 page
+      notFound();
     }
   }, [isValidType, isValidDate]);
 
-  const fetchExam = async () => {
+  const fetchExam = useCallback(async () => {
     try {
       if (!classroom?.id) return;
 
@@ -221,11 +221,13 @@ export const MonthlyNsemesterGrid = (props: MonthlyNsemesterGridProps) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [classroom, examType, examDate]);
 
   useEffect(() => {
-    if (isValidType && isValidDate && classroom) fetchExam();
-  }, [classroom, isValidType, isValidDate]);
+    if (isValidType && isValidDate && classroom) {
+      fetchExam();
+    }
+  }, [isValidType, isValidDate, classroom]);
 
   const processRowUpdate = async (
     newRow: StudentInfoScore,

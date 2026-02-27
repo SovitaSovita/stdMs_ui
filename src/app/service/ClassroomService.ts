@@ -56,10 +56,11 @@ const ClassroomService = {
   },
   getSemesterAvgs: async (
     id: string,
-    examDate: string,
+    semesterNumber: string,
+    mekun: string,
   ): Promise<ClassAvgExamFilterResponseType> => {
     return await RestService.post<string, ClassAvgExamFilterResponseType>(
-      Paths.class.getSemesterAvgs(id, examDate),
+      Paths.class.getSemesterAvgs(id, semesterNumber, mekun),
     );
   },
 };

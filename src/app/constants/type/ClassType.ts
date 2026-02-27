@@ -105,6 +105,7 @@ export type StudentMonthlyExamsAvgResponse = {
   gender: "M" | "F";
   dateOfBirth: string;
   totalScore: Record<string, number>;
-  totalAverage: number;
+  totalMonthlyAverage: number; // provided by backend
+  totalSemesterAverage: number; // provided by backend; may replicate monthlyAverage["SEMESTER_#"]
   [key: string]: string | number | Record<string, number> | undefined;
 };

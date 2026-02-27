@@ -47,7 +47,7 @@ export const ImportStudentsDialog = (props: ImportStudentsDialogProps) => {
   const classroom = useAtomValue(classroomAtom);
   const t = useTranslations();
   const [file, setFile] = useState<File | null>(null);
-  const { refetch } = useClassroomData(classroom);
+  const { refetch } = useClassroomData(classroom, { autoFetch: false });
 
   const handleClickOpen = () => {
     setOpen(true);

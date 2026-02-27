@@ -36,7 +36,7 @@ export default function ExamListCard(props: ExamListCardProps) {
   const t = useTranslations();
   const setActiveView = useSetAtom(ScreenExamAtom);
   const classroom = useAtomValue(classroomAtom);
-  const { exams, refetch } = useClassroomData(classroom);
+  const { exams, refetch } = useClassroomData(classroom, { autoFetch: false });
   const [exam, setExam] = useAtom(examAtom);
   const notification = useNotifications();
   const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
@@ -50,6 +50,7 @@ export default function ExamListCard(props: ExamListCardProps) {
           severity: "success",
           autoHideDuration: 3000,
         });
+        refetch.fetchExams();
       }
     } catch (error: any) {
       const errorMessage =
@@ -61,8 +62,6 @@ export default function ExamListCard(props: ExamListCardProps) {
         severity: "error",
         autoHideDuration: 3000,
       });
-    } finally {
-      refetch.fetchExams();
     }
   };
 
@@ -73,6 +72,7 @@ export default function ExamListCard(props: ExamListCardProps) {
         buttonLabel={t("Exam.createExam")}
         onButtonClick={() => {
           setActiveView("create");
+          setExam({} as ExamResponse);
           router.push("/exam?screen=create");
         }}
       />
@@ -111,10 +111,10 @@ export default function ExamListCard(props: ExamListCardProps) {
                 display="flex"
                 justifyContent="space-between"
                 alignItems="flex-start"
-                mb={2}
+                mb={1}
               >
                 <Chip
-                  label={exam.examType}
+                  label={t(`Common.${exam?.examType?.toLowerCase()}`)}
                   color={exam?.examType === "SEMESTER" ? "warning" : "primary"}
                   size="small"
                   variant="outlined"
@@ -143,8 +143,8 @@ export default function ExamListCard(props: ExamListCardProps) {
                   </button>
                   <button
                     onClick={() => {
-                      setDeleteDialogOpen(true);
                       setExam(exam);
+                      setDeleteDialogOpen(true);
                     }}
                     className="p-1 text-[#9dabb9] hover:text-red-400 hover:bg-[#283039] rounded"
                   >
@@ -186,6 +186,15 @@ export default function ExamListCard(props: ExamListCardProps) {
                 </Typography>
                 <Typography variant="subtitle2" component="h5" fontWeight={600}>
                   {exam?.meKun}
+                </Typography>
+              </Box>
+              <Box display={"flex"} mt={1}>
+                <Typography
+                  variant="body2"
+                  color="textSecondary"
+                  sx={{ lineHeight: 1.4 }}
+                >
+                  {t("Common.semesterNum", { num: exam?.semesterNumber })}
                 </Typography>
               </Box>
             </CardContent>

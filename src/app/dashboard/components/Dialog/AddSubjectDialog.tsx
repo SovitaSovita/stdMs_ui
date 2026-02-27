@@ -26,7 +26,7 @@ export const AddSubjectDialog = (props: AddSubjectDialogProps) => {
 
   const [open, setOpen] = React.useState(false);
   const classroom = useAtomValue(classroomAtom);
-  const { refetch } = useClassroomData(classroom);
+  const { refetch } = useClassroomData(classroom, { autoFetch: false });
   const t = useTranslations();
   const validationSchema = useUpsertSubjectSchema();
   const subjectsSelect = [
@@ -35,15 +35,14 @@ export const AddSubjectDialog = (props: AddSubjectDialogProps) => {
     { code: "P", name: "Physics", nameKh: "រូបវិទ្យា" },
     { code: "C", name: "Chemistry", nameKh: "គីមីវិទ្យា" },
     { code: "B", name: "Biology", nameKh: "ជីវវិទ្យា" },
-    { code: "Es", name: "Earth Science", nameKh: "វិទ្យាសាស្ត្រផែនដី" },
+    { code: "Es", name: "Earth Science", nameKh: "ផែនដីវិទ្យា" },
+    { code: "G", name: "Geography", nameKh: "ភូមិវិទ្យា" },
     { code: "H", name: "History", nameKh: "ប្រវត្តិសាស្ត្រ" },
-    { code: "G", name: "Geography", nameKh: "ភូមិសាស្ត្រ" },
-    { code: "I", name: "Informatics", nameKh: "ព័ត៌មានវិទ្យា" },
-    { code: "HE", name: "Health Education", nameKh: "អប់រំសុខភាព" },
+    { code: "E", name: "Economics", nameKh: "សេដ្ឋកិច្ខ" },
+    { code: "HE", name: "Health Education", nameKh: "សីលធម៍" },
     { code: "EN", name: "English", nameKh: "អង់គ្លេស" },
-    { code: "ED", name: "Civic Education", nameKh: "អប់រំពលរដ្ឋ" },
-    { code: "SI", name: "Social Studies", nameKh: "សង្គមវិទ្យា" },
-    { code: "IT", name: "Information Tech", nameKh: "បច្ចេកវិទ្យាព័ត៌មាន" },
+    { code: "IT", name: "Technology", nameKh: "បច្ចេកទេស" },
+    { code: "S", name: "Sports", nameKh: "កីឡា" },
   ];
 
   const subjectExists = useMemo(() => {

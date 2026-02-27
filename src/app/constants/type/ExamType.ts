@@ -3,6 +3,7 @@ export type ExamUpsertRequest = {
   title: string;
   examType: "MONTHLY" | "SEMESTER";
   examDate: string;
+  semesterNumber: string;
   meKun: number;
   classId?: string;
   time?: string;
@@ -14,6 +15,7 @@ export type ExamResponse = {
   examType: "MONTHLY" | "SEMESTER";
   examDate: string;
   time?: string;
+  semesterNumber: string;
   meKun: number;
   description?: string;
 };

@@ -7,12 +7,13 @@ import { SemesterlyAverageGrid } from "@/app/dashboard/components/examType/Semes
 import { SemesterlyGrid } from "@/app/dashboard/components/examType/SemesterlyGrid";
 import {
   classroomAtom,
+  examAtom,
   studentsAtom,
   top5StudentsAtom,
 } from "@/app/libs/jotai/classroomAtom";
 import { StudentMonthlyExamsAvgResponse } from "@/app/constants/type";
 import { Box, Button, Tab, Tabs, Typography, useTheme } from "@mui/material";
-import { useAtom, useSetAtom } from "jotai";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { useTranslations } from "next-intl";
 import { use, useState } from "react";
 
@@ -34,6 +35,7 @@ export default function Page({ params }: { params: Promise<Params> }) {
   const theme = useTheme();
   const t = useTranslations();
   const setTop5Students = useSetAtom(top5StudentsAtom);
+  const exam = useAtomValue(examAtom);
 
   //hide/show each scores cols of datagrid
   const [showSubjects, setShowSubjects] = useState<boolean>(true);
@@ -50,10 +52,15 @@ export default function Page({ params }: { params: Promise<Params> }) {
       setTop5Students([]);
       return;
     }
-    // Filter and sort by mRanking, take top 5
+
+    // Filter and sort by appropriate ranking, take top 5
+    const rankingField = examType === "semester" ? "tRanking" : "mRanking";
     const top5 = rows
-      .filter((row) => row.mRanking && row.mRanking >= 1 && row.mRanking <= 5)
-      .sort((a, b) => a.mRanking - b.mRanking)
+      .filter((row) => {
+        const val = row[rankingField];
+        return val && val >= 1 && val <= 5;
+      })
+      .sort((a, b) => a[rankingField] - b[rankingField])
       .slice(0, 5);
     setTop5Students(top5);
   };
@@ -86,7 +93,7 @@ export default function Page({ params }: { params: Promise<Params> }) {
               label={
                 examType === "monthly"
                   ? t("MonthlyExam.monthlyScores")
-                  : t("SemesterExam.semesterScores")
+                  : t("SemesterExam.semesterScores", { num: exam?.semesterNumber || "" })
               }
               {...a11yProps(0)}
             />
@@ -94,12 +101,12 @@ export default function Page({ params }: { params: Promise<Params> }) {
               label={
                 examType === "monthly"
                   ? t("MonthlyExam.viewRanking")
-                  : t("SemesterExam.semesterlyAverageRanking")
+                  : t("SemesterExam.semesterlyAverageRanking", { num: exam?.semesterNumber || "" })
               }
               {...a11yProps(1)}
             />
             {examType === "semester" && (
-              <Tab label={t("SemesterExam.viewRanking")} {...a11yProps(2)} />
+              <Tab label={t("SemesterExam.viewRanking", { num: exam?.semesterNumber || "" })} {...a11yProps(2)} />
             )}
 
             <Tab

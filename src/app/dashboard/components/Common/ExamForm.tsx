@@ -45,7 +45,7 @@ export default function ExamForm() {
   const classroom = useAtomValue(classroomAtom);
   const validationSchema = useUpsertExamSchema();
   const { min: minDate, max: maxDate } = getFullYearRangeBounds(
-    classroom?.year
+    classroom?.year,
   );
   const exam = useAtomValue(examAtom);
 
@@ -58,6 +58,7 @@ export default function ExamForm() {
       title: exam?.title || "",
       examType: exam?.examType || "MONTHLY",
       examDate: exam?.examDate || "",
+      semesterNumber: exam?.semesterNumber || "1",
       meKun: exam?.meKun || 1.0,
       classId: classroom?.id || "",
       time: exam?.time || "",
@@ -78,6 +79,9 @@ export default function ExamForm() {
     // Include id if we're updating
     if (exam?.id) {
       sendData.id = exam.id;
+    }
+    if (!sendData.time || sendData.time === "Invalid Date") {
+      sendData.time = "";
     }
 
     if (!sendData.classId) return;
@@ -119,7 +123,8 @@ export default function ExamForm() {
   // Helper: generate the title from the current values
   // ------------------------------------------------------------
   const generateTitle = (examType: string, examDate: dayjs.Dayjs | null) => {
-    if (!examType || !examDate?.isValid()) return (examType || "").toLowerCase();
+    if (!examType || !examDate?.isValid())
+      return (examType || "").toLowerCase();
 
     // Determine localized month and year using messages/Common.months (e.g. "Jan" -> "January" or Khmer)
     const monthAbbr = examDate.format("MMM");
@@ -128,7 +133,8 @@ export default function ExamForm() {
     const monthYear = `${localizedMonth} ${year}`;
 
     // Localized exam type label (expects keys `monthly` and `semester` in messages/Common)
-    const examTypeLabel = examType === "SEMESTER" ? t("semester") : t("monthly");
+    const examTypeLabel =
+      examType === "SEMESTER" ? t("semester") : t("monthly");
 
     // Use a template translation so both English and Khmer can control order/particles.
     // Add `examTitleTemplate` to your messages/Common files:
@@ -152,7 +158,9 @@ export default function ExamForm() {
             size={{ xs: 12, sm: 12 }}
             sx={{ display: "flex", flexDirection: "column" }}
           >
-            <FormLabel sx={{ mb: 0.5, fontWeight: 400 }}>{t("examTitle")}</FormLabel>
+            <FormLabel sx={{ mb: 0.5, fontWeight: 400 }}>
+              {t("examTitle")}
+            </FormLabel>
             <TextField
               name="title"
               fullWidth
@@ -173,6 +181,7 @@ export default function ExamForm() {
                   {t("examType")}
                 </FormLabel>
                 <Select
+                  disabled={isEditMode}
                   value={formik?.values.examType ?? ""}
                   onChange={(e) => {
                     const val = e.target.value;
@@ -180,7 +189,7 @@ export default function ExamForm() {
                     formik.setFieldTouched("examType", true);
                     const newTitle = generateTitle(
                       val,
-                      dayjs(formik.values.examDate)
+                      dayjs(formik.values.examDate),
                     );
                     formik.setFieldValue("title", newTitle);
                   }}
@@ -199,6 +208,26 @@ export default function ExamForm() {
             <Grid size={{ xs: 12, sm: 6, lg: 6 }}>
               <FormControl fullWidth>
                 <FormLabel sx={{ mb: 0.5, fontWeight: 400 }}>
+                  {t("semesterNum", { num: "" })}
+                </FormLabel>
+                <Select
+                  value={formik?.values.semesterNumber ?? "1"}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  name="semesterNumber"
+                  defaultValue={formik?.values.semesterNumber || "1"}
+                  fullWidth
+                  variant="outlined"
+                >
+                  <MenuItem value="1">{t("semesterNum", { num: 1 })}</MenuItem>
+                  <MenuItem value="2">{t("semesterNum", { num: 2 })}</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+
+            <Grid size={{ xs: 12, sm: 6, lg: 6 }}>
+              <FormControl fullWidth>
+                <FormLabel sx={{ mb: 0.5, fontWeight: 400 }}>
                   {t("examMonth")}
                 </FormLabel>
                 <CustomDatePicker
@@ -210,7 +239,7 @@ export default function ExamForm() {
                     formik.setFieldTouched("examDate", true);
                     const newTitle = generateTitle(
                       formik.values.examType,
-                      dayjs(val)
+                      dayjs(val),
                     );
                     formik.setFieldValue("title", newTitle);
                   }}
@@ -226,14 +255,16 @@ export default function ExamForm() {
           <Grid container spacing={2}>
             <Grid size={{ xs: 12, sm: 6, lg: 6 }}>
               <FormControl fullWidth>
-                <FormLabel sx={{ mb: 1, fontWeight: 400 }}>{t("examTime")}</FormLabel>
+                <FormLabel sx={{ mb: 1, fontWeight: 400 }}>
+                  {t("examTime")}
+                </FormLabel>
                 <LocalizationProvider dateAdapter={AdapterDayjs}>
                   <TimePicker
                     value={dayjs(formik.values.time, "HH:mm")}
                     onChange={(newValue) => {
                       formik.setFieldValue(
                         "time",
-                        dayjs(newValue).format("HH:mm").toString()
+                        dayjs(newValue).format("HH:mm").toString(),
                       );
                     }}
                     slotProps={{
@@ -244,7 +275,7 @@ export default function ExamForm() {
                         variant: "outlined",
                         onBlur: formik.handleBlur,
                         error: Boolean(
-                          formik.touched.time && formik.errors.time
+                          formik.touched.time && formik.errors.time,
                         ),
                         helperText: formik.touched.time && formik.errors.time,
                       },
@@ -255,7 +286,9 @@ export default function ExamForm() {
             </Grid>
             <Grid size={{ xs: 12, sm: 6, lg: 6 }}>
               <FormControl fullWidth>
-                <FormLabel sx={{ mb: 1, fontWeight: 400 }}>{t("mekun")}</FormLabel>
+                <FormLabel sx={{ mb: 1, fontWeight: 400 }}>
+                  {t("mekun")}
+                </FormLabel>
                 <TextField
                   variant="outlined"
                   size="small"
@@ -280,7 +313,9 @@ export default function ExamForm() {
 
           <Grid size={{ xs: 12, sm: 12 }}>
             <FormControl fullWidth>
-              <FormLabel sx={{ mb: 1, fontWeight: 400 }}>{t("description")}</FormLabel>
+              <FormLabel sx={{ mb: 1, fontWeight: 400 }}>
+                {t("description")}
+              </FormLabel>
               <TextField
                 fullWidth
                 multiline
@@ -317,6 +352,7 @@ export default function ExamForm() {
           type="submit"
           variant="contained"
           size="medium"
+          loading={isSubmitting}
           disabled={isSubmitting}
         >
           {isEditMode ? t("updateExam") : t("createExam")}

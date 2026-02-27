@@ -5,7 +5,15 @@ import StudentService from "@/app/service/StudentService";
 import SubjectService from "@/app/service/SubjectService";
 import ExamService from "@/app/service/ExamService";
 
-export default function useClassroomData(classroom?: { id?: string } | null) {
+type UseClassroomDataOptions = {
+  autoFetch?: boolean;
+};
+
+export default function useClassroomData(
+  classroom?: { id?: string } | null,
+  options?: UseClassroomDataOptions,
+) {
+  const autoFetch = options?.autoFetch ?? true;
   const [students, setStudents] = useAtom(studentsAtom);
   const [subjects, setSubjects] = useAtom(subjectsAtom);
   const [exams, setExams] = useAtom(examsAtom);
@@ -29,10 +37,11 @@ export default function useClassroomData(classroom?: { id?: string } | null) {
   }, [classroom?.id, setExams]);
 
   useEffect(() => {
+    if (!autoFetch) return;
     fetchStudents();
     fetchSubjects();
     fetchExams();
-  }, [fetchStudents, fetchSubjects, fetchExams]);
+  }, [fetchStudents, fetchSubjects, fetchExams, autoFetch]);
 
   return { students, subjects, exams, refetch: { fetchStudents, fetchSubjects, fetchExams } };
 }

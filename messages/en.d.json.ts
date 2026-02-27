@@ -45,11 +45,11 @@ declare const messages: {
     "address": "Address",
     "subject": "Subject",
     "code": "Code",
-    "semester": "Semester",
-    "averageSemester": "Average Semester",
+    "semester": "Semester, {num}",
+    "averageSemester": "Average Semester {num}",
     "ranking": "Ranking",
     "totalScore": "Total Score",
-    "avgSemester": "Avg Semester",
+    "avgSemester": "Avg Semester {num}",
     "average": "Average",
     "grade": "Grade"
   },
@@ -199,9 +199,9 @@ declare const messages: {
     "enterAverage": "Enter average"
   },
   "SemesterExam": {
-    "viewRanking": "Semester ranking",
-    "semesterScores": "Semester scores",
-    "semesterlyAverageRanking": "Semesterly average"
+    "viewRanking": "Semester ranking {num}",
+    "semesterScores": "Semester scores {num}",
+    "semesterlyAverageRanking": "Semesterly average {num}"
   },
   "MenuList": {
     "home": "Home",

@@ -31,7 +31,7 @@ export const InsertOneStudentDialog = (props: InsertOneStudentDialogProps) => {
   const {} = props;
   const [open, setOpen] = React.useState(false);
   const classroom = useAtomValue(classroomAtom);
-  const { refetch } = useClassroomData(classroom);
+  const { refetch } = useClassroomData(classroom, { autoFetch: false });
   const t = useTranslations();
   const validationSchema = useInsertOneStutSchema();
 

@@ -10,7 +10,7 @@ export const mekunSemesterAtom = atomWithStorage<number | null>("mekunSemester",
 
 export const studentsAtom = atom<StuInfoDetailResponseType | null>(null);
 export const examsAtom = atom<ExamResponse[]>([]);
-export const examAtom = atom<ExamResponse>({} as ExamResponse);
+export const examAtom = atomWithStorage<ExamResponse>("examData", {} as ExamResponse);
 
 export const subjectsAtom = atom<SubjectResponse[]>([]);
 export const attendanceAtom = atom<StudentsInfo[]>([]);

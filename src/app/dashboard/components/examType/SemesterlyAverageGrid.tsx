@@ -14,7 +14,7 @@ import { CustomDataGridToolbar } from "@/app/dashboard/components/Common/CustomD
 import { showAlertAtom } from "@/app/libs/jotai/alertAtom";
 import {
   classroomAtom,
-  mekunSemesterAtom,
+  examAtom,
 } from "@/app/libs/jotai/classroomAtom";
 import ClassroomService from "@/app/service/ClassroomService";
 import {
@@ -27,7 +27,6 @@ import {
   Button,
   Tab,
   Tabs,
-  TextField,
   Typography,
   useTheme,
 } from "@mui/material";
@@ -39,29 +38,29 @@ import {
   GridRowId,
 } from "@mui/x-data-grid";
 import dayjs from "dayjs";
-import { useAtom, useAtomValue } from "jotai";
+import { useAtomValue } from "jotai";
 import { useTranslations } from "next-intl";
 import { notFound } from "next/navigation";
-import { ChangeEvent, useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import useNotifications from "@/app/libs/hooks/useNotifications/useNotifications";
 
 type SemesterlyAverageGridProps = {
   examType: string;
   examDate: string;
   isShow?: boolean;
-    onProcessedRowsChange?: (rows: StudentMonthlyExamsAvgResponse[]) => void;
+  onProcessedRowsChange?: (rows: StudentMonthlyExamsAvgResponse[]) => void;
 };
 
 export const SemesterlyAverageGrid = (props: SemesterlyAverageGridProps) => {
   const { examDate, examType, isShow = true, onProcessedRowsChange } = props;
   const [settings, setSettings] = useState<Settings>(getInitialSettings());
   const t = useTranslations();
+  const exam = useAtomValue(examAtom);
 
   useEffect(() => {
     localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settings));
   }, [settings]);
 
-  const [mekunSemester, setMekunSemester] = useAtom(mekunSemesterAtom);
   const [examData, setExamData] = useState<ClassAvgExamFilterResponseType>();
   const [rows, setRows] = useState<StudentMonthlyExamsAvgResponse[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -84,12 +83,13 @@ export const SemesterlyAverageGrid = (props: SemesterlyAverageGridProps) => {
   const fetchExam = useCallback(async () => {
     try {
       if (!classroom?.id) return;
+      if (!exam?.semesterNumber) return;
 
       setLoading(true);
-      const dateFormatted = `${examDate.slice(2)}-${examDate.slice(0, 2)}-01`;
       const result = await ClassroomService.getSemesterAvgs(
         classroom?.id,
-        dateFormatted,
+        exam?.semesterNumber,
+        "3",
       );
       if (result) {
         setExamData(result);
@@ -100,7 +100,7 @@ export const SemesterlyAverageGrid = (props: SemesterlyAverageGridProps) => {
     } finally {
       setLoading(false);
     }
-  }, [classroom?.id, examDate]);
+  }, [classroom?.id, exam?.semesterNumber]);
 
   useEffect(() => {
     if (isValidType && isValidDate && classroom) {
@@ -108,98 +108,25 @@ export const SemesterlyAverageGrid = (props: SemesterlyAverageGridProps) => {
     }
   }, [fetchExam, isValidType, isValidDate, classroom?.id]);
 
-  // handle input Mekun
-  const handleInputMekun = (event: ChangeEvent<HTMLInputElement>) => {
-    const val = Number(event.target.value);
-    setMekunSemester(val);
-  };
+
 
   // Compute scores, average, ranking, and grade
   const processedRows = useMemo(() => {
     if (!rows.length) return [];
 
-    // Step 1: Calculate average & Total average
-    const withTotals: any = rows.map((row) => {
-      const totalAverages = row.monthlyAverage || {};
-      const values = Object.values(totalAverages).map(Number);
-      const divisorOfSemester = Number(mekunSemester) || 1;
-
-      //Total average
-      const totalAverage =
-        values.length > 0
-          ? values.reduce((sum, v) => sum + (v || 0), 0) / divisorOfSemester
-          : 0.0;
-
-      return {
-        ...row,
-        totalAverage: !isFinite(Number(totalAverage))
-          ? 0
-          : Number(totalAverage?.toFixed(2)),
-      };
-    });
-
-    // Step 2: Compute per-semester totalAvgSemester, tRanking, tGrade
-    // Get all semester keys from the first row (if any)
-    const semesterKeys =
-      withTotals.length > 0 && withTotals[0]?.monthlyAverage
-        ? Object.keys(withTotals[0].monthlyAverage).filter((key) =>
-            dayjs(key).format("MMYYYY").includes(examDate)
-          )
-        : [];
-
-    // For each semester key, compute totalAvgSemester, tRanking, tGrade for all rows
-    let rowsWithSemesterFields = withTotals.map((row: any) => ({ ...row }));
-    semesterKeys.forEach((key) => {
-      // Compute combined average for each row for this semester
-      const combinedAverages = rowsWithSemesterFields.map((row: any) => {
-        const monthlyVal = row?.monthlyAverage?.[key] ?? 0;
-        const totalAvg = row?.totalAverage ?? 0;
-        return (Number(totalAvg) + Number(monthlyVal)) / 2;
-      });
-      // Compute ranking for this semester
-      const sorted = [...combinedAverages].sort((a, b) => b - a);
-      rowsWithSemesterFields = rowsWithSemesterFields.map((row: any) => {
-        const monthlyVal = row?.monthlyAverage?.[key] ?? 0;
-        const totalAvg = row?.totalAverage ?? 0;
-        const combined = (Number(totalAvg) + Number(monthlyVal)) / 2;
-        // tRanking
-        const tRanking = combined === 0 ? 0 : sorted.findIndex((v) => v === combined) + 1;
-        // tGrade
-        let tGrade = "F";
-        if (isFinite(combined)) {
-          if (combined >= 45) tGrade = "A";
-          else if (combined >= 40) tGrade = "B";
-          else if (combined >= 35) tGrade = "C";
-          else if (combined >= 30) tGrade = "D";
-          else if (combined >= 25) tGrade = "E";
-        }
-        // totalAvgSemester
-        return {
-          ...row,
-          [`totalAvgSemester`]: isFinite(combined) ? combined.toFixed(2) : "0.00",
-          [`tRanking`]: tRanking,
-          [`tGrade`]: tGrade,
-        };
-      });
-    });
-
-    // Step 3: Total score ranking (overall)
-    const sortedByTotal = [...rowsWithSemesterFields].sort(
-      (a, b) => b.totalAverage - a.totalAverage,
+    // compute overall monthly ranking/grade using totalMonthlyAverage
+    const monthlySorted = [...rows].sort(
+      (a, b) => b.totalMonthlyAverage - a.totalMonthlyAverage,
     );
-
-    let prevTotal: number | null = null;
+    let prev: number | null = null;
     let rank = 0;
-
-    const withRank = sortedByTotal.map((row, index) => {
-      if (row.totalAverage === 0) return { ...row, mRanking: 0 };
-
-      if (row.totalAverage !== prevTotal) {
-        rank = index + 1;
-        prevTotal = row.totalAverage;
+    const monthlyRanked = monthlySorted.map((r, idx) => {
+      if (r.totalMonthlyAverage === 0) return { ...r, mRanking: 0 };
+      if (r.totalMonthlyAverage !== prev) {
+        rank = idx + 1;
+        prev = r.totalMonthlyAverage;
       }
-
-      const average = row.totalAverage;
+      const average = r.totalMonthlyAverage;
       const mGrade =
         average >= 45
           ? "A"
@@ -212,21 +139,68 @@ export const SemesterlyAverageGrid = (props: SemesterlyAverageGridProps) => {
                 : average >= 25
                   ? "E"
                   : "F";
+      return { ...r, mRanking: rank, mGrade };
+    });
+    const monthlyMap = new Map<string, any>(
+      monthlyRanked.map((r) => [r.id, { mRanking: (r as any).mRanking, mGrade: (r as any).mGrade }]),
+    );
 
-      return { ...row, mRanking: rank, mGrade };
+    // compute semester ranking/grade using totalSemesterAverage
+    const semesterSorted = [...rows].sort(
+      (a, b) => b.totalSemesterAverage - a.totalSemesterAverage,
+    );
+    prev = null;
+    rank = 0;
+    const semesterMap = new Map<string, any>();
+    semesterSorted.forEach((r, idx) => {
+      if (r.totalSemesterAverage === 0) {
+        semesterMap.set(r.id, { tRanking: 0 });
+        return;
+      }
+      if (r.totalSemesterAverage !== prev) {
+        rank = idx + 1;
+        prev = r.totalSemesterAverage;
+      }
+      const average = r.totalSemesterAverage;
+      const tGrade =
+        average >= 45
+          ? "A"
+          : average >= 40
+            ? "B"
+            : average >= 35
+              ? "C"
+              : average >= 30
+                ? "D"
+                : average >= 25
+                  ? "E"
+                  : "F";
+      semesterMap.set(r.id, { tRanking: rank, tGrade });
     });
 
-    // Step 4: Reorder back to original
-    return rowsWithSemesterFields.map(
-      (r: any) => withRank.find((w) => w.id === r.id) ?? r,
-    ) as StudentMonthlyExamsAvgResponse[];
-  }, [rows, mekunSemester, examDate]);
+    // merge back preserving original order
+    return rows.map((r) => {
+      const m = monthlyMap.get(r.id) || {};
+      const s = semesterMap.get(r.id) || {};
+      return {
+        ...r,
+        mRanking: m.mRanking,
+        mGrade: m.mGrade,
+        tRanking: s.tRanking,
+        tGrade: s.tGrade,
+      } as StudentMonthlyExamsAvgResponse & {
+        mRanking?: number;
+        mGrade?: string;
+        tRanking?: number;
+        tGrade?: string;
+      };
+    });
+  }, [rows]);
 
   // Extract exam month keys for column grouping
   const ExamMonthKeys = useMemo(() => {
     return processedRows.length > 0 && processedRows[0]?.monthlyAverage
       ? Object.keys(processedRows[0].monthlyAverage).filter((key) => {
-          return !dayjs(key).format("MMYYYY").includes(examDate); // exclude keys that match the current examDate
+          return typeof key === 'string' && !key.startsWith('SEMESTER_'); // exclude semester keys
         })
       : [];
   }, [processedRows]);
@@ -235,7 +209,7 @@ export const SemesterlyAverageGrid = (props: SemesterlyAverageGridProps) => {
   const ExamSemesterKeys = useMemo(() => {
     return processedRows.length > 0 && processedRows[0]?.monthlyAverage
       ? Object.keys(processedRows[0].monthlyAverage).filter((key) => {
-          return dayjs(key).format("MMYYYY").includes(examDate); // exclude keys that not match the current examDate
+          return typeof key === 'string' && key.startsWith('SEMESTER_'); // only semester keys
         })
       : [];
   }, [processedRows]);
@@ -277,7 +251,7 @@ export const SemesterlyAverageGrid = (props: SemesterlyAverageGridProps) => {
     //មធ្យមភាគប្រចាំឆមាសលើកទី...
     const staticColumns2: GridColDef<StudentMonthlyExamsAvgResponse>[] = [
       {
-        field: "totalAverage",
+        field: "totalMonthlyAverage",
         headerName: t("Common.total"),
         headerClassName: "font-siemreap",
         cellClassName: "font-semibold",
@@ -287,7 +261,11 @@ export const SemesterlyAverageGrid = (props: SemesterlyAverageGridProps) => {
         headerAlign: "center",
         sortable: true,
         disableColumnMenu: true,
+        valueGetter: (value, row) => {
+            return row?.totalMonthlyAverage?.toFixed(2) || "0.00";
+          },
       },
+
       {
         field: "mRanking",
         headerName: t("CommonField.ranking"),
@@ -339,7 +317,7 @@ export const SemesterlyAverageGrid = (props: SemesterlyAverageGridProps) => {
       (key) => {
         const baseCol: GridColDef = {
           field: key,
-          headerName: t("CommonField.avgSemester"),
+          headerName: t("CommonField.avgSemester", { num: exam?.semesterNumber || ""}),
           type: "string",
           width: 120,
           align: "center",
@@ -361,7 +339,7 @@ export const SemesterlyAverageGrid = (props: SemesterlyAverageGridProps) => {
         };
 
         const totalAvgSemester: GridColDef = {
-          field: `totalAvgSemester`,
+          field: `totalSemesterAverage`,
           headerName: t("CommonField.average"),
           type: "string",
           width: 120,
@@ -371,10 +349,7 @@ export const SemesterlyAverageGrid = (props: SemesterlyAverageGridProps) => {
           sortable: true,
           disableColumnMenu: true,
           valueGetter: (value, row) => {
-            const monthlyVal = row?.monthlyAverage?.[key] ?? 0;
-            const totalAvg = row?.totalAverage ?? 0;
-            const combined = (Number(totalAvg) + Number(monthlyVal)) / 2;
-            return isFinite(combined) ? combined.toFixed(2) : "0.00";
+            return row?.totalSemesterAverage?.toFixed(2) || "0.00";
           },
         };
 
@@ -389,26 +364,7 @@ export const SemesterlyAverageGrid = (props: SemesterlyAverageGridProps) => {
           editable: false,
           sortable: true,
           disableColumnMenu: true,
-          valueGetter: (value, row) => {
-            if (!row || !row.id) return "";
-            if (!Array.isArray(processedRows)) return "";
-            const combined =
-              (Number(row.totalAverage ?? 0) +
-                Number(row.monthlyAverage?.[key] ?? 0)) /
-              2;
-            // Gather all combined values for this semester
-            const allCombined = processedRows.map(
-              (r: any) =>
-                (Number(r.totalAverage ?? 0) +
-                  Number(r.monthlyAverage?.[key] ?? 0)) /
-                2,
-            );
-            // Sort descending
-            const sorted = [...allCombined].sort((a, b) => b - a);
-            // Find rank (1-based)
-            const rank = sorted.findIndex((v) => v === combined) + 1;
-            return combined === 0 ? 0 : rank;
-          },
+          valueGetter: (value, row) => row?.tRanking ?? "",
         };
 
         const tgradeCol: GridColDef = {
@@ -422,19 +378,7 @@ export const SemesterlyAverageGrid = (props: SemesterlyAverageGridProps) => {
           editable: false,
           sortable: true,
           disableColumnMenu: true,
-          valueGetter: (value, row) => {
-            // Use the same grading logic as mGrade, but for this semester's average
-            const monthlyVal = row?.monthlyAverage?.[key] ?? 0;
-            const totalAvg = row?.totalAverage ?? 0;
-            const combined = (Number(totalAvg) + Number(monthlyVal)) / 2;
-            if (!isFinite(combined)) return "F";
-            if (combined >= 45) return "A";
-            if (combined >= 40) return "B";
-            if (combined >= 35) return "C";
-            if (combined >= 30) return "D";
-            if (combined >= 25) return "E";
-            return "F";
-          },
+          valueGetter: (value, row) => row?.tGrade ?? "",
         };
 
         //when Tab = view only Semesterly Average
@@ -461,7 +405,6 @@ export const SemesterlyAverageGrid = (props: SemesterlyAverageGridProps) => {
 
   // Grouping header
   const columnGroupingModel: GridColumnGroupingModel = useMemo(() => {
-    
     if (isShow) {
       // No group headers,
       return [];
@@ -470,12 +413,12 @@ export const SemesterlyAverageGrid = (props: SemesterlyAverageGridProps) => {
     const groups: GridColumnGroupingModel = [
       {
         groupId: "monthlyAvg",
-        headerName: `${t("CommonField.averageSemester")}`,
+        headerName: `${t("CommonField.averageSemester", { num: exam?.semesterNumber || ""})}`,
         headerAlign: "center",
         headerClassName: "font-siemreap",
         children: [
           ...ExamMonthKeys.map((key) => ({ field: key })),
-          { field: "totalAverage" },
+          { field: "totalMonthlyAverage" },
           { field: "mRanking" },
         ],
       },
@@ -485,11 +428,11 @@ export const SemesterlyAverageGrid = (props: SemesterlyAverageGridProps) => {
     ExamSemesterKeys.forEach((key, idx) => {
       groups.push({
         groupId: `semester_${key}`,
-        headerName: `${t("CommonField.semester")}`,
+        headerName: `${t("CommonField.semester", { num: exam?.semesterNumber || ""})}`,
         headerAlign: "center",
         headerClassName: "font-siemreap",
         children: [
-          { field: `totalAvgSemester` },
+          { field: `totalSemesterAverage` },
           { field: `tRanking` },
           { field: `tGrade` },
         ],
@@ -498,7 +441,7 @@ export const SemesterlyAverageGrid = (props: SemesterlyAverageGridProps) => {
     return groups;
   }, [isShow, ExamMonthKeys, ExamSemesterKeys, t]);
 
-    // Notify parent of processedRows changes
+  // Notify parent of processedRows changes
   useEffect(() => {
     if (onProcessedRowsChange) {
       onProcessedRowsChange(processedRows);
@@ -539,27 +482,7 @@ export const SemesterlyAverageGrid = (props: SemesterlyAverageGridProps) => {
               search: true,
               export: true,
               settings: true,
-              extraControls: (
-                <>
-                  <TextField
-                    label={t("MonthlyExam.enterAverage")}
-                    variant="outlined"
-                    size="small"
-                    name="mekunSemester"
-                    type="number"
-                    value={mekunSemester}
-                    slotProps={{
-                      htmlInput: {
-                        min: 1,
-                        step: 1, // or 0.1 if you allow decimals
-                      },
-                    }}
-                    // placeholder="Average"
-                    onChange={handleInputMekun}
-                    sx={{ mt: 1 }}
-                  />
-                </>
-              ),
+              extraControls: null,
             },
           },
         }}

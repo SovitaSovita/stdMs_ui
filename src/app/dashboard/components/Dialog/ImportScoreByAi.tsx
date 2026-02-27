@@ -11,28 +11,27 @@ import {
   LinearProgress,
   Typography,
 } from "@mui/material";
+import { ScoreUpsertRequest, StudentsInfo } from "@/app/constants/type";
 import {
-  ScoreUpsertRequest,
-  StudentsInfo,
-} from "@/app/constants/type";
-import { classroomAtom } from "@/app/libs/jotai/classroomAtom";
+  classroomAtom,
+  studentsAtom,
+  subjectsAtom,
+} from "@/app/libs/jotai/classroomAtom";
 import { useAtomValue } from "jotai";
 import { useTranslations } from "next-intl";
-import SmartToyIcon from '@mui/icons-material/SmartToy';import {
+import SmartToyIcon from "@mui/icons-material/SmartToy";
+import {
   DataGrid,
   GridColDef,
   GridRowId,
   GridRowSelectionModel,
 } from "@mui/x-data-grid";
 import useNotifications from "@/app/libs/hooks/useNotifications/useNotifications";
-import useClassroomData from "@/app/libs/hooks/useClassroomData";
-import {
-  GoogleGenAI,
-  ThinkingLevel,
-} from "@google/genai";
+import { GoogleGenAI, ThinkingLevel } from "@google/genai";
 import ClassroomService from "@/app/service/ClassroomService";
 import { AskForConfirmationDialog } from "./AskForConfirmationDialog";
 import LoopIcon from "@mui/icons-material/Loop";
+import useClassroomData from "@/app/libs/hooks/useClassroomData";
 
 const GEMINI_API_KEY = process.env.NEXT_PUBLIC_GEMINI_API_KEY as string;
 const ai = new GoogleGenAI({
@@ -63,6 +62,10 @@ export const ImportScoreByAi = (props: ImportScoreByAiProps) => {
   const fileReaderRef = useRef<FileReader | null>(null);
   const [previewUrl, setPreviewUrl] = useState("");
 
+  const { students, subjects } = useClassroomData(classroom, { autoFetch: true });
+  // const students = useAtomValue(studentsAtom);
+  // const subjects = useAtomValue(subjectsAtom);
+
   /* ================= Image Preview ================= */
   useEffect(() => {
     if (!file) return;
@@ -70,8 +73,6 @@ export const ImportScoreByAi = (props: ImportScoreByAiProps) => {
     setPreviewUrl(url);
     return () => URL.revokeObjectURL(url);
   }, [file]);
-
-  const { students, subjects } = useClassroomData(classroom);
 
   const handleClickOpen = () => {
     setOpen(true);

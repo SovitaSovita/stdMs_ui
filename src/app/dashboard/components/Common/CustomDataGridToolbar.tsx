@@ -176,7 +176,8 @@ export function CustomDataGridToolbar(props: ToolbarProps) {
         average: row.average,
         mRanking: row.mRanking,
         mGrade: row.mGrade,
-        totalAvgSemester: row?.totalAvgSemester,
+        totalMonthlyAverage: row?.totalMonthlyAverage,
+        totalSemesterAverage: row?.totalSemesterAverage,
         tRanking: row?.tRanking,
         tGrade: row?.tGrade,
       };
@@ -184,7 +185,6 @@ export function CustomDataGridToolbar(props: ToolbarProps) {
       //When TAB Averaga Of Semesterly
       if (row?.monthlyAverage) {
         Object.keys(row.monthlyAverage).forEach((monthlyAverage) => {
-          rowData["totalAverage"] = row.totalAverage;
           rowData[monthlyAverage] = Number(
             row.monthlyAverage[monthlyAverage] || 0,
           ).toFixed(2);

@@ -42,11 +42,11 @@
     "address": "ទីលំនៅបច្ចុប្បន្ន",
     "subject": "មុខវិជ្ជា",
     "code": "កូដ",
-    "semester": "ប្រចាំឆមាស",
-    "averageSemester": "មធ្យមភាគប្រចាំឆមាស",
+    "semester": "ប្រចាំឆមាស {num}",
+    "averageSemester": "មធ្យមភាគប្រចាំឆមាស {num}",
     "ranking": "ចំ.ថ្នាក់",
     "totalScore": "ពិន្ទុសរុប",
-    "avgSemester": "ម.ប្រចាំឆមាស",
+    "avgSemester": "ម.ប្រចាំឆមាស {num}",
     "average": "ម.ភាគ",
     "grade": "និទ្ទេស"
   },
@@ -196,9 +196,9 @@
     "enterAverage": "សូមបញ្ចូលមេគុណ"
   },
   "SemesterExam": {
-    "viewRanking": "ចំណាត់ថ្នាក់ឆមាស",
-    "semesterScores": "បញ្ជីស្រង់ពិន្ទុឆមាស",
-    "semesterlyAverageRanking": "មធ្យមភាគប្រចាំឆមាស"
+    "viewRanking": "ចំណាត់ថ្នាក់ឆមាស {num}",
+    "semesterScores": "បញ្ជីស្រង់ពិន្ទុឆមាស {num}",
+    "semesterlyAverageRanking": "មធ្យមភាគប្រចាំឆមាស {num}"
   },
   "MenuList": {
     "home": "ទំព័រដើម",
