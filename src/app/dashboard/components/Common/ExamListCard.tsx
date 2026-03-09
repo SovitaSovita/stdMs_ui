@@ -188,6 +188,16 @@ export default function ExamListCard(props: ExamListCardProps) {
                   {exam?.meKun}
                 </Typography>
               </Box>
+              {exam?.examType === "SEMESTER" && (
+                <Box display={"flex"} gap={2} mt={1}>
+                  <Typography variant="subtitle2" component="h5" fontWeight={600}>
+                    {t("Common.mekunSemesterAverage")}:
+                  </Typography>
+                  <Typography variant="subtitle2" component="h5" fontWeight={600}>
+                    {exam?.meKunSemester ?? 3}
+                  </Typography>
+                </Box>
+              )}
               <Box display={"flex"} mt={1}>
                 <Typography
                   variant="body2"

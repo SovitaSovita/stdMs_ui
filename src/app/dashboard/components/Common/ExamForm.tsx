@@ -22,7 +22,10 @@ import { useAtom, useAtomValue } from "jotai";
 import { ScreenExamAtom } from "@/app/libs/jotai/commonAtom";
 import { useFormik } from "formik";
 import { useUpsertExamSchema } from "@/app/libs/hooks/Validation";
-import { classroomAtom, examAtom } from "@/app/libs/jotai/classroomAtom";
+import {
+  classroomAtom,
+  examAtom,
+} from "@/app/libs/jotai/classroomAtom";
 import { ExamResponse, ExamUpsertRequest } from "@/app/constants/type";
 import CustomDatePicker from "../CustomDatePicker";
 import ExamService from "@/app/service/ExamService";
@@ -60,6 +63,7 @@ export default function ExamForm() {
       examDate: exam?.examDate || "",
       semesterNumber: exam?.semesterNumber || "1",
       meKun: exam?.meKun || 1.0,
+      meKunSemester: exam?.meKunSemester || 3,
       classId: classroom?.id || "",
       time: exam?.time || "",
       description: exam?.description || "",
@@ -250,6 +254,36 @@ export default function ExamForm() {
                 />
               </FormControl>
             </Grid>
+            {formik.values.examType === "SEMESTER" && (
+              <Grid size={{ xs: 12, sm: 6, lg: 6 }}>
+                <FormControl fullWidth>
+                  <FormLabel sx={{ mb: 1, fontWeight: 400 }}>
+                    {t("mekunSemesterAverage")}
+                  </FormLabel>
+                  <TextField
+                    variant="outlined"
+                    size="small"
+                    name="meKunSemester"
+                    type="number"
+                    value={formik.values.meKunSemester ?? 3}
+                    slotProps={{
+                      htmlInput: {
+                        min: 1,
+                        step: 1,
+                      },
+                    }}
+                    onChange={(e) => {
+                      const value = Number(e.target.value);
+                      formik.setFieldValue(
+                        "meKunSemester",
+                        Number.isFinite(value) && value >= 1 ? value : 1,
+                      );
+                    }}
+                    onBlur={formik.handleBlur}
+                  />
+                </FormControl>
+              </Grid>
+            )}
           </Grid>
 
           <Grid container spacing={2}>

@@ -27,6 +27,7 @@ import {
   Button,
   Tab,
   Tabs,
+  TextField,
   Typography,
   useTheme,
 } from "@mui/material";
@@ -89,7 +90,6 @@ export const SemesterlyAverageGrid = (props: SemesterlyAverageGridProps) => {
       const result = await ClassroomService.getSemesterAvgs(
         classroom?.id,
         exam?.semesterNumber,
-        "3",
       );
       if (result) {
         setExamData(result);
@@ -100,15 +100,13 @@ export const SemesterlyAverageGrid = (props: SemesterlyAverageGridProps) => {
     } finally {
       setLoading(false);
     }
-  }, [classroom?.id, exam?.semesterNumber]);
+  }, [classroom?.id, exam?.semesterNumber, exam?.meKunSemester]);
 
   useEffect(() => {
     if (isValidType && isValidDate && classroom) {
       fetchExam();
     }
   }, [fetchExam, isValidType, isValidDate, classroom?.id]);
-
-
 
   // Compute scores, average, ranking, and grade
   const processedRows = useMemo(() => {
@@ -142,7 +140,10 @@ export const SemesterlyAverageGrid = (props: SemesterlyAverageGridProps) => {
       return { ...r, mRanking: rank, mGrade };
     });
     const monthlyMap = new Map<string, any>(
-      monthlyRanked.map((r) => [r.id, { mRanking: (r as any).mRanking, mGrade: (r as any).mGrade }]),
+      monthlyRanked.map((r) => [
+        r.id,
+        { mRanking: (r as any).mRanking, mGrade: (r as any).mGrade },
+      ]),
     );
 
     // compute semester ranking/grade using totalSemesterAverage
@@ -200,7 +201,7 @@ export const SemesterlyAverageGrid = (props: SemesterlyAverageGridProps) => {
   const ExamMonthKeys = useMemo(() => {
     return processedRows.length > 0 && processedRows[0]?.monthlyAverage
       ? Object.keys(processedRows[0].monthlyAverage).filter((key) => {
-          return typeof key === 'string' && !key.startsWith('SEMESTER_'); // exclude semester keys
+          return typeof key === "string" && !key.startsWith("SEMESTER_"); // exclude semester keys
         })
       : [];
   }, [processedRows]);
@@ -209,7 +210,7 @@ export const SemesterlyAverageGrid = (props: SemesterlyAverageGridProps) => {
   const ExamSemesterKeys = useMemo(() => {
     return processedRows.length > 0 && processedRows[0]?.monthlyAverage
       ? Object.keys(processedRows[0].monthlyAverage).filter((key) => {
-          return typeof key === 'string' && key.startsWith('SEMESTER_'); // only semester keys
+          return typeof key === "string" && key.startsWith("SEMESTER_"); // only semester keys
         })
       : [];
   }, [processedRows]);
@@ -262,8 +263,8 @@ export const SemesterlyAverageGrid = (props: SemesterlyAverageGridProps) => {
         sortable: true,
         disableColumnMenu: true,
         valueGetter: (value, row) => {
-            return row?.totalMonthlyAverage?.toFixed(2) || "0.00";
-          },
+          return row?.totalMonthlyAverage?.toFixed(2) || "0.00";
+        },
       },
 
       {
@@ -317,7 +318,9 @@ export const SemesterlyAverageGrid = (props: SemesterlyAverageGridProps) => {
       (key) => {
         const baseCol: GridColDef = {
           field: key,
-          headerName: t("CommonField.avgSemester", { num: exam?.semesterNumber || ""}),
+          headerName: t("CommonField.avgSemester", {
+            num: exam?.semesterNumber || "",
+          }),
           type: "string",
           width: 120,
           align: "center",
@@ -413,7 +416,7 @@ export const SemesterlyAverageGrid = (props: SemesterlyAverageGridProps) => {
     const groups: GridColumnGroupingModel = [
       {
         groupId: "monthlyAvg",
-        headerName: `${t("CommonField.averageSemester", { num: exam?.semesterNumber || ""})}`,
+        headerName: `${t("CommonField.averageSemester", { num: exam?.semesterNumber || "" })}`,
         headerAlign: "center",
         headerClassName: "font-siemreap",
         children: [
@@ -428,7 +431,7 @@ export const SemesterlyAverageGrid = (props: SemesterlyAverageGridProps) => {
     ExamSemesterKeys.forEach((key, idx) => {
       groups.push({
         groupId: `semester_${key}`,
-        headerName: `${t("CommonField.semester", { num: exam?.semesterNumber || ""})}`,
+        headerName: `${t("CommonField.semester", { num: exam?.semesterNumber || "" })}`,
         headerAlign: "center",
         headerClassName: "font-siemreap",
         children: [
@@ -482,7 +485,19 @@ export const SemesterlyAverageGrid = (props: SemesterlyAverageGridProps) => {
               search: true,
               export: true,
               settings: true,
-              extraControls: null,
+              extraControls: (
+                <TextField
+                  label={t("Common.mekunSemesterAverage")}
+                  variant="outlined"
+                  disabled
+                  size="small"
+                  name="averageMekun"
+                  type="number"
+                  value={exam?.meKunSemester ?? 3}
+                  inputProps={{ min: 1, step: 1 }}
+                  sx={{ mt: 1 }}
+                />
+              ),
             },
           },
         }}

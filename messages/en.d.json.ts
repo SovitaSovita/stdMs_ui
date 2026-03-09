@@ -98,6 +98,7 @@ declare const messages: {
     "examTitleTemplate": "{examType} Exam of {monthYear}",
     "semesterNum": "Semester {num}",
     "mekun": "Credit",
+    "mekunSemesterAverage": "Mekun Semester Average",
     "months": {
       "Jan": "January",
       "Feb": "February",

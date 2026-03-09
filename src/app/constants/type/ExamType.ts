@@ -5,6 +5,7 @@ export type ExamUpsertRequest = {
   examDate: string;
   semesterNumber: string;
   meKun: number;
+  meKunSemester?: number;
   classId?: string;
   time?: string;
   description?: string;
@@ -17,5 +18,6 @@ export type ExamResponse = {
   time?: string;
   semesterNumber: string;
   meKun: number;
+  meKunSemester?: number;
   description?: string;
 };

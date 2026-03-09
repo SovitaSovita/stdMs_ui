@@ -95,6 +95,7 @@
     "examTitleTemplate": "ប្រលង{examType} នៃ {monthYear}",
     "semesterNum": "ប្រចាំឆមាសលើកទី {num}",
     "mekun": "មេគុណ",
+    "mekunSemesterAverage": "មេគុណរកមធ្យមភាគប្រចាំឆមាស",
     "months": {
       "Jan": "ខែមករា",
       "Feb": "ខែកុម្ភៈ",
