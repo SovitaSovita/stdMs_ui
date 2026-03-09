@@ -37,6 +37,12 @@ const mainListItems = [
     icon: <AssignmentRoundedIcon />,
     path: "/exam",
   },
+  {
+    key: "annual",
+    text: "Annual Report",
+    icon: <AnalyticsRoundedIcon />,
+    path: "/annual",
+  },
 ];
 
 const secondaryListItems = [

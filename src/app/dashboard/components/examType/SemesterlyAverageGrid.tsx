@@ -20,6 +20,7 @@ import ClassroomService from "@/app/service/ClassroomService";
 import {
   getInitialSettings,
   SETTINGS_STORAGE_KEY,
+  truncateDecimal,
 } from "@/app/utils/axios/Common";
 import {
   AppBar,
@@ -62,7 +63,6 @@ export const SemesterlyAverageGrid = (props: SemesterlyAverageGridProps) => {
     localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settings));
   }, [settings]);
 
-  const [examData, setExamData] = useState<ClassAvgExamFilterResponseType>();
   const [rows, setRows] = useState<StudentMonthlyExamsAvgResponse[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
@@ -92,7 +92,6 @@ export const SemesterlyAverageGrid = (props: SemesterlyAverageGridProps) => {
         exam?.semesterNumber,
       );
       if (result) {
-        setExamData(result);
         setRows(result?.students);
       }
     } catch {
@@ -263,7 +262,7 @@ export const SemesterlyAverageGrid = (props: SemesterlyAverageGridProps) => {
         sortable: true,
         disableColumnMenu: true,
         valueGetter: (value, row) => {
-          return row?.totalMonthlyAverage?.toFixed(2) || "0.00";
+          return truncateDecimal(row?.totalMonthlyAverage || 0, 2);
         },
       },
 
@@ -307,7 +306,7 @@ export const SemesterlyAverageGrid = (props: SemesterlyAverageGridProps) => {
           const field = column?.field;
           const scoreArr = row?.monthlyAverage;
           if (!scoreArr) return "";
-          return scoreArr[field]?.toFixed(2) || 0;
+          return truncateDecimal(scoreArr[field] || 0, 2);
         },
       };
       return [baseCol];
@@ -334,9 +333,9 @@ export const SemesterlyAverageGrid = (props: SemesterlyAverageGridProps) => {
             if (!scoreArr) return "";
             const v = scoreArr[field];
             return typeof v === "number"
-              ? v.toFixed(2)
+              ? truncateDecimal(v, 2)
               : Number(v)
-                ? Number(v).toFixed(2)
+                ? truncateDecimal(Number(v), 2)
                 : "0.00";
           },
         };
@@ -351,8 +350,8 @@ export const SemesterlyAverageGrid = (props: SemesterlyAverageGridProps) => {
           editable: false,
           sortable: true,
           disableColumnMenu: true,
-          valueGetter: (value, row) => {
-            return row?.totalSemesterAverage?.toFixed(2) || "0.00";
+          valueGetter: (_, row) => {
+            return truncateDecimal(row?.totalSemesterAverage || 0, 2);
           },
         };
 

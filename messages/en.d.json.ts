@@ -212,6 +212,7 @@ declare const messages: {
     "exam": "Examing",
     "monthlyExam": "Monthly Exam",
     "SemesterExam": "Semester Exam",
+    "annual": "Annual",
     "setting": "Setting",
     "about": "About",
     "feedback": "Feedback",
@@ -236,6 +237,17 @@ declare const messages: {
     "honorRecognition": "Honor Recognition",
     "downloadReport": "Download Report",
     "shareSuccess": "Share Success"
+  },
+  "Annual": {
+    "title": "Annual Average",
+    "annualScores": "Annual Scores",
+    "semesterAverage": "Semester Average {num}",
+    "ranking": "Ranking",
+    "annualAverage": "Annual Average",
+    "annualAverageRanking": "Annual Average Ranking",
+    "average": "Average",
+    "grade": "Grade",
+    "honorRoll": "Honor Roll"
   }
 };
 export default messages;

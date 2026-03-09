@@ -109,3 +109,26 @@ export type StudentMonthlyExamsAvgResponse = {
   totalSemesterAverage: number; // provided by backend; may replicate monthlyAverage["SEMESTER_#"]
   [key: string]: string | number | Record<string, number> | undefined;
 };
+
+
+export interface ClassAnnualAvgResponse {
+  id: string;
+  name: string;
+  grade: string;
+  year: string;
+  students: StudentAnnualAvgResponse[];
+}
+
+export interface StudentAnnualAvgResponse {
+  id: string;
+  orderNo: number;
+  fullName: string;
+  idCard: string;
+  gender: "M" | "F";
+  dateOfBirth: string; // LocalDate -> string (YYYY-MM-DD)
+  annualAverage: number;
+  annualRanking: number;
+  annualGrade: string;
+  semester_1Average: number;
+  semester_2Average: number;
+}

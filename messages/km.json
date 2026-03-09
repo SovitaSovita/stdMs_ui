@@ -209,6 +209,7 @@
     "exam": "ការប្រលង",
     "monthlyExam": "ប្រលងប្រចាំខែ",
     "SemesterExam": "ប្រលងប្រចាំឆមាស",
+    "annual": "ប្រចាំឆ្នាំ",
     "about": "អំពីខ្ញុំ",
     "feedback": "មតិកែលម្អ",
     "setting": "ការកំណត់",
@@ -233,5 +234,16 @@
     "honorRecognition": "ការទទួលស្គាល់កិត្តិយស",
     "downloadReport": "ទាញយករបាយការណ៍",
     "shareSuccess": "ចែករំលែកជោគជ័យ"
+  },
+  "Annual": {
+    "title": "មធ្យមភាគប្រចាំឆ្នាំ",
+    "annualScores": "បញ្ជីស្រង់ពិន្ទុប្រចាំឆ្នាំ",
+    "semesterAverage": "ម.ប្រចាំឆមាសទី {num}",
+    "ranking": "ចំ.ថ្នាក់",
+    "annualAverage": "មធ្យមភាគប្រចាំឆ្នាំ",
+    "annualAverageRanking": "ចំណាត់ថ្នាក់ប្រចាំឆ្នាំ",
+    "honorRoll": "តារាងកិត្តិយស",
+    "average": "មធ្យមភាគ",
+    "grade": "និទ្ទេស"
   }
 }

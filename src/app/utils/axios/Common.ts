@@ -7,7 +7,7 @@ import { getSession, signOut } from "next-auth/react";
 
 export const handleTokenExpired = async (error: AxiosError) => {
   const status = error.response?.status;
-  if (status === 401 && (error?.response?.statusText == "TOKEN_EXPIRED")) {
+  if (status === 401 && (error?.response?.statusText == "TOKEN_EXPIRED" || error?.code === "ERR_BAD_REQUEST")) {
     // show user notification (client-side only)
     if (typeof window !== "undefined") {
       // avoid infinite redirect: don't redirect if already on signin
@@ -158,3 +158,9 @@ export const getInitialSettings = (): Settings => {
     return SETTINGS_DEFAULT;
   }
 };
+
+
+export function truncateDecimal(num: number, digits: number) {
+  const multiplier = Math.pow(10, digits);
+  return Math.floor(num * multiplier) / multiplier;
+}
