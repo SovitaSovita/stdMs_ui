@@ -216,7 +216,9 @@ declare const messages: {
     "setting": "Setting",
     "about": "About",
     "feedback": "Feedback",
-    "manageSubject": "Manage Subject"
+    "manageSubject": "Manage Subject",
+    "tracker": "Book Tracker",
+    "record": "Book Record"
   },
   "Subject": {
     "khmer": "Khmer",
@@ -241,6 +243,17 @@ declare const messages: {
   "Annual": {
     "title": "Annual Average",
     "annualScores": "Annual Scores",
+    "semesterAverage": "Semester Average {num}",
+    "ranking": "Ranking",
+    "annualAverage": "Annual Average",
+    "annualAverageRanking": "Annual Average Ranking",
+    "average": "Average",
+    "grade": "Grade",
+    "honorRoll": "Honor Roll"
+  },
+  "BookRecord": {
+    "title": "Book Record",
+    "studyAllSubject": "Studying all Subjects",
     "semesterAverage": "Semester Average {num}",
     "ranking": "Ranking",
     "annualAverage": "Annual Average",

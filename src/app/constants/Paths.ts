@@ -11,6 +11,8 @@ export const Paths = {
         getDetail: (id: string) => `/api/v1/class/${id}/filter`,
         getSemesterAvgs: (id: string, semesterNumber: string) => `/api/v1/class/${id}/semester/filter?semesterNumber=${semesterNumber}`,
         getAnnualAvgs: (id: string) => `/api/v1/class/${id}/annual`,
+        getBookTracker: `/api/v1/class/study/book-tracker`,
+        getBookRocord: `/api/v1/class/study/book-record`,
         upsertScore: (classId: string, examId: string) => `/api/v1/scores/${classId}/${examId}`,
     },
     student: {

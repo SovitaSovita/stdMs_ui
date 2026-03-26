@@ -43,6 +43,18 @@ const mainListItems = [
     icon: <AnalyticsRoundedIcon />,
     path: "/annual",
   },
+  {
+    key: "tracker",
+    text: "Book Tracker",
+    icon: <AnalyticsRoundedIcon />,
+    path: "/tracker",
+  },
+  {
+    key: "record",
+    text: "Book Record",
+    icon: <AnalyticsRoundedIcon />,
+    path: "/record",
+  },
 ];
 
 const secondaryListItems = [

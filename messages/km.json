@@ -213,7 +213,9 @@
     "about": "អំពីខ្ញុំ",
     "feedback": "មតិកែលម្អ",
     "setting": "ការកំណត់",
-    "manageSubject": "គ្រប់គ្រងមុខវិជ្ចា"
+    "manageSubject": "គ្រប់គ្រងមុខវិជ្ចា",
+    "tracker": "សៀវភៅតាមដាន",
+    "record": "សៀវភៅសិក្ខាគារិក"
   },
   "Subject": {
     "khmer": "ភាសាខ្មែរ",
@@ -238,6 +240,17 @@
   "Annual": {
     "title": "មធ្យមភាគប្រចាំឆ្នាំ",
     "annualScores": "បញ្ជីស្រង់ពិន្ទុប្រចាំឆ្នាំ",
+    "semesterAverage": "ម.ប្រចាំឆមាសទី {num}",
+    "ranking": "ចំ.ថ្នាក់",
+    "annualAverage": "មធ្យមភាគប្រចាំឆ្នាំ",
+    "annualAverageRanking": "ចំណាត់ថ្នាក់ប្រចាំឆ្នាំ",
+    "honorRoll": "តារាងកិត្តិយស",
+    "average": "មធ្យមភាគ",
+    "grade": "និទ្ទេស"
+  },
+  "BookRecord": {
+    "title": "សៀវភៅសិក្ខាគារិក",
+    "studyAllSubject": "ការសិក្សា គ្រប់មុខវិជ្ជា",
     "semesterAverage": "ម.ប្រចាំឆមាសទី {num}",
     "ranking": "ចំ.ថ្នាក់",
     "annualAverage": "មធ្យមភាគប្រចាំឆ្នាំ",

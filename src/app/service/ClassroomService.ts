@@ -9,7 +9,10 @@ import {
   ClassUpsertRequest,
   ScoreUpsertRequest,
   StudentAnnualAvgResponse,
+  StudyBookTrackerRequest,
+  StudyBookTrackerResponse,
 } from "../constants/type";
+import { BookRecordRequest, BookRecordResponse } from "../constants/type/Record";
 import RestService from "./RestService";
 
 const ClassroomService = {
@@ -69,6 +72,20 @@ const ClassroomService = {
   ): Promise<ClassAnnualAvgResponse> => {
     return await RestService.post<string, ClassAnnualAvgResponse>(
       Paths.class.getAnnualAvgs(id),
+    );
+  },
+  getBookTracker: async (
+    request: StudyBookTrackerRequest,
+  ): Promise<StudyBookTrackerResponse> => {
+    return await RestService.post<StudyBookTrackerRequest, StudyBookTrackerResponse>(
+      Paths.class.getBookTracker, request
+    );
+  },
+  getBookRocord: async (
+    request: BookRecordRequest,
+  ): Promise<BookRecordResponse> => {
+    return await RestService.post<BookRecordRequest, BookRecordResponse>(
+      Paths.class.getBookRocord, request
     );
   },
 };

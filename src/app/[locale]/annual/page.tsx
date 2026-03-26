@@ -43,7 +43,6 @@ export default function page() {
   const fetchAnnual = useCallback(async () => {
     try {
       if (!classroom?.id) return;
-      if (!exam?.semesterNumber) return;
 
       setIsLoading(true);
       const result = await ClassroomService.getAnnualAvgs(classroom?.id);
