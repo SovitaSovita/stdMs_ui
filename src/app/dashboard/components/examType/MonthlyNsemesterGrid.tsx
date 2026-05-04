@@ -52,6 +52,19 @@ export const MonthlyNsemesterGrid = (props: MonthlyNsemesterGridProps) => {
     localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settings));
   }, [settings]);
 
+  // Format the URL's MMYYYY param into a localized "Month YYYY" label
+  const monthYearLabel = useMemo(() => {
+    if (!/^\d{6}$/.test(examDate)) return "";
+    const monthIdx = parseInt(examDate.slice(0, 2), 10) - 1;
+    const year = examDate.slice(2);
+    const monthAbbrs = [
+      "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+    ];
+    if (monthIdx < 0 || monthIdx > 11) return "";
+    return `${t(`Common.months.${monthAbbrs[monthIdx]}`)} ${year}`;
+  }, [examDate, t]);
+
   const [examData, setExamData] = useState<ClassExamDataResponseType>();
   const [rows, setRows] = useState<StudentInfoScore[]>([]);
   const [originalRows, setOriginalRows] = useState<StudentInfoScore[]>([]);
@@ -526,6 +539,9 @@ export const MonthlyNsemesterGrid = (props: MonthlyNsemesterGridProps) => {
               search: true,
               export: true,
               settings: true,
+              exportTitle: monthYearLabel
+                ? `${t("MonthlyExam.monthlyScores")} · ${monthYearLabel}`
+                : t("MonthlyExam.monthlyScores"),
               extraControls: (
                 <>
                   <TextField

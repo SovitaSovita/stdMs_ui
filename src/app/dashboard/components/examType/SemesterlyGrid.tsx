@@ -10,7 +10,7 @@ import {
 } from "@/app/constants/type";
 import { CustomDataGridToolbar } from "@/app/dashboard/components/Common/CustomDataGridToolbar";
 import { showAlertAtom } from "@/app/libs/jotai/alertAtom";
-import { classroomAtom } from "@/app/libs/jotai/classroomAtom";
+import { classroomAtom, examAtom } from "@/app/libs/jotai/classroomAtom";
 import ClassroomService from "@/app/service/ClassroomService";
 import {
   getInitialSettings,
@@ -48,6 +48,21 @@ export const SemesterlyGrid = (props: SemesterlyGridProps) => {
   useEffect(() => {
     localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settings));
   }, [settings]);
+
+  const exam = useAtomValue(examAtom);
+
+  // Format the URL's MMYYYY param into a localized "Month YYYY" label
+  const monthYearLabel = useMemo(() => {
+    if (!/^\d{6}$/.test(examDate)) return "";
+    const monthIdx = parseInt(examDate.slice(0, 2), 10) - 1;
+    const year = examDate.slice(2);
+    const monthAbbrs = [
+      "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+    ];
+    if (monthIdx < 0 || monthIdx > 11) return "";
+    return `${t(`Common.months.${monthAbbrs[monthIdx]}`)} ${year}`;
+  }, [examDate, t]);
 
   const [examData, setExamData] = useState<ClassExamDataResponseType>();
   const [rows, setRows] = useState<StudentInfoScore[]>([]);
@@ -426,6 +441,12 @@ export const SemesterlyGrid = (props: SemesterlyGridProps) => {
               search: true,
               export: true,
               settings: true,
+              exportTitle: (() => {
+                const base = t("SemesterExam.semesterScores", {
+                  num: exam?.semesterNumber || "",
+                });
+                return monthYearLabel ? `${base} · ${monthYearLabel}` : base;
+              })(),
               extraControls: (
                 <>
                   <TextField

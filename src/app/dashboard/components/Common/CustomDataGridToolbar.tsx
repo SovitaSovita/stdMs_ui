@@ -32,6 +32,7 @@ import FileDownloadIcon from "@mui/icons-material/FileDownload";
 import { useTranslations } from "next-intl";
 import ExcelJS, { Column } from "exceljs";
 import { saveAs } from "file-saver";
+import dayjs from "dayjs";
 import { useAtomValue } from "jotai";
 import { classroomAtom } from "@/app/libs/jotai/classroomAtom";
 
@@ -46,6 +47,10 @@ declare module "@mui/x-data-grid" {
       toggleColumn?: boolean;
       search?: boolean;
       extraControls?: React.ReactNode;
+      /** Title row written to the Excel export (e.g. "Monthly Scores · Jan 2024") */
+      exportTitle?: string;
+      /** Optional file name (without extension). Defaults to "<classroom>_<date>". */
+      exportFileName?: string;
     };
   }
 }
@@ -100,127 +105,201 @@ export function CustomDataGridToolbar(props: ToolbarProps) {
 
   const handleExportExcel = async () => {
     const workbook = new ExcelJS.Workbook();
-    const worksheet = workbook.addWorksheet("Exam Scores");
+    const worksheet = workbook.addWorksheet("Export");
 
-    // --- 1. DEFINE COLUMNS ---
-    const columns: Partial<Column>[] = apiRef.current
+    // --- 1. DEFINE COLUMNS (dynamic from the grid's visible columns) ---
+    const visibleColumns = apiRef.current
       .getAllColumns()
-      .filter((col) => col.field !== "__check__" && col.field !== "actions") // Filter out checkboxes and action buttons
-      .map((col) => {
-        let customWidth = 10; // Default fallback
+      .filter(
+        (col) =>
+          col.field !== "__check__" &&
+          col.field !== "actions" &&
+          col.type !== "actions",
+      );
 
-        if (col.field === "fullName") {
-          customWidth = 30; // 'fullName'
-        } else if (col.field === "orderNo" || col.field === "gender") {
-          customWidth = 5; // 'orderNo', 'gender'
-        } else if (
-          col.field === "totalScore" ||
-          col.field === "average" ||
-          col.field === "mRanking" ||
-          col.field === "mGrade" ||
-          col.field === "totalAvgSemester" ||
-          col.field === "tRanking" ||
-          col.field === "tGrade"
-        ) {
-          customWidth = 10; // 'orderNo', 'gender'
-        } else if (col.width) {
-          customWidth = col.width / 10 - 1;
-        }
-
-        return {
-          header: col.headerName || "",
-          key: col.field,
-          width: customWidth,
-          style: {
-            alignment: {
-              horizontal: col.align || "left",
-            },
-          },
-        };
-      });
+    const columns: Partial<Column>[] = visibleColumns.map((col) => {
+      let customWidth = 10; // default
+      if (col.field === "fullName") {
+        customWidth = 30;
+      } else if (col.field === "orderNo" || col.field === "gender") {
+        customWidth = 5;
+      } else if (col.width) {
+        customWidth = Math.max(8, col.width / 10 - 1);
+      }
+      return {
+        header: col.headerName || col.field,
+        key: col.field,
+        width: customWidth,
+        style: {
+          alignment: { horizontal: col.align || "left" },
+        },
+      };
+    });
 
     worksheet.columns = columns;
 
-    // --- 3. INSERT TITLE ROWS ---
-    // We insert rows at the top (index 1). This pushes the existing Header Row down to Row 5.
+    // --- 2. INSERT TITLE ROWS ---
+    // Layout:
+    //   Row 1: Kingdom of Cambodia (Khmer formal header)
+    //   Row 2: National motto
+    //   Row 3: Decorative symbol
+    //   Row 4: Custom export title (e.g. "Monthly Scores · Jan 2024") — only when provided
+    //   Row N: Classroom context line ("Classroom 12B • Grade 12 • Year 2024")
+    //   Row N+1: column headers
+    const classroomLine = classroom
+      ? [
+          classroom.name && `${t("Common.classroom")} ${classroom.name}`,
+          classroom.grade && `${t("Common.grade")} ${classroom.grade}`,
+          classroom.year && `${t("Common.studyYear")} ${classroom.year}`,
+        ]
+          .filter(Boolean)
+          .join(" • ")
+      : "";
 
-    // Insert Row 1 (Kingdom) -> Header moves to Row 2
+    const customTitle = toolbarButtons?.exportTitle?.trim();
+
     worksheet.insertRow(1, ["ព្រះរាជាណាចក្រកម្ពុជា"]);
-    // Insert Row 2 (Nation) -> Header moves to Row 3
     worksheet.insertRow(2, ["ជាតិ សាសនា ព្រះមហាក្សត្រ"]);
-    // Insert Row 3 (Symbol) -> Header moves to Row 4
-    worksheet.insertRow(3, ["ÓÓÓ"]);
-    // Insert Row 4 (Title) -> Header moves to Row 5 (Correct Position!)
-    worksheet.insertRow(4, [
-      `បញ្ជីពិន្ទុ និងចំណាត់ថ្នាក់ សិស្សថ្នាក់ទី ${classroom?.name} ខែ ...`,
-    ]);
+    worksheet.insertRow(3, ["☘ ☘ ☘"]);
 
-    // --- 4. MERGE TITLE CELLS ---
+    let titleRowIdx: number | null = null;
+    let classroomRowIdx = 4;
+    if (customTitle) {
+      titleRowIdx = 4;
+      classroomRowIdx = 5;
+      worksheet.insertRow(titleRowIdx, [customTitle]);
+    }
+    worksheet.insertRow(classroomRowIdx, [classroomLine]);
+
+    // Header row is the row right after classroom info
+    const headerRowIdx = classroomRowIdx + 1;
+
     worksheet.mergeCells(1, 1, 1, columns.length);
     worksheet.mergeCells(2, 1, 2, columns.length);
     worksheet.mergeCells(3, 1, 3, columns.length);
-    worksheet.mergeCells(4, 1, 4, columns.length);
+    if (titleRowIdx !== null) {
+      worksheet.mergeCells(titleRowIdx, 1, titleRowIdx, columns.length);
+    }
+    worksheet.mergeCells(
+      classroomRowIdx,
+      1,
+      classroomRowIdx,
+      columns.length,
+    );
 
-    // --- 5. ADD DATA ---
+    // --- 3. ADD DATA (extract every column, not a hardcoded list) ---
     const rowIds = apiRef.current.getSortedRowIds();
-    const rowsToExport = rowIds.map((id) => {
-      return apiRef.current.getRow(id);
-    });
+    rowIds.forEach((id, index) => {
+      const row = apiRef.current.getRow(id);
+      const rowData: Record<string, unknown> = {};
 
-    rowsToExport.forEach((row, index) => {
-      const rowData: any = {
-        orderNo: index + 1,
-        fullName: row.fullName,
-        gender: row.gender,
-        totalScore: row.totalScore,
-        average: row.average,
-        mRanking: row.mRanking,
-        mGrade: row.mGrade,
-        totalMonthlyAverage: row?.totalMonthlyAverage,
-        totalSemesterAverage: row?.totalSemesterAverage,
-        tRanking: row?.tRanking,
-        tGrade: row?.tGrade,
-      };
+      visibleColumns.forEach((col) => {
+        const field = col.field;
 
-      //When TAB Averaga Of Semesterly
-      if (row?.monthlyAverage) {
-        Object.keys(row.monthlyAverage).forEach((monthlyAverage) => {
-          rowData[monthlyAverage] = Number(
-            row.monthlyAverage[monthlyAverage] || 0,
-          ).toFixed(2);
-        });
-      }
+        // orderNo is typically rendered via index, not stored on the row
+        if (field === "orderNo") {
+          const stored = row?.[field];
+          rowData[field] =
+            stored !== undefined && stored !== null && stored !== ""
+              ? stored
+              : index + 1;
+          return;
+        }
 
-      //When TAB Monthly and also បញ្ជីស្រង់ពិន្ទុឆមាស
+        // Use cell params to respect both valueGetter and valueFormatter.
+        // formattedValue is what the cell visually displays — perfect for export.
+        let value: unknown;
+        try {
+          const params = apiRef.current.getCellParams(id, field);
+          value =
+            params?.formattedValue !== undefined
+              ? params.formattedValue
+              : params?.value;
+        } catch {
+          value = row?.[field];
+        }
+
+        // Convert remaining Date objects to a readable string
+        if (value instanceof Date) {
+          value = dayjs(value).format("DD-MM-YYYY");
+        }
+
+        rowData[field] = value ?? "";
+      });
+
+      // Exam grids hold per-subject scores under `row.scores` and
+      // monthly averages under `row.monthlyAverage`. Only fill these
+      // when the corresponding column actually exists on the grid.
       if (row?.scores) {
         Object.keys(row.scores).forEach((subject) => {
-          rowData[subject] = row.scores[subject];
-          rowData[subject + "_Rank"] = row[subject + "_rank"]; ////When TAB បញ្ជីស្រង់ពិន្ទុឆមាស
+          if (rowData[subject] === undefined || rowData[subject] === "") {
+            rowData[subject] = row.scores[subject];
+          }
+          const rankField = `${subject}_Rank`;
+          if (
+            (rowData[rankField] === undefined || rowData[rankField] === "") &&
+            row[`${subject}_rank`] !== undefined
+          ) {
+            rowData[rankField] = row[`${subject}_rank`];
+          }
         });
       }
+      if (row?.monthlyAverage) {
+        Object.keys(row.monthlyAverage).forEach((key) => {
+          if (rowData[key] === undefined || rowData[key] === "") {
+            rowData[key] = Number(row.monthlyAverage[key] || 0).toFixed(2);
+          }
+        });
+      }
+
       worksheet.addRow(rowData);
     });
 
     // --- 6. STYLING ---
 
-    // Style Title Rows (1-4)
-    [1, 2, 4].forEach((rowNum) => {
+    // Kingdom + Nation rows (formal header)
+    [1, 2].forEach((rowNum) => {
       const row = worksheet.getRow(rowNum);
       row.font = {
         name: "Khmer OS Muol Light",
         bold: true,
-        size: rowNum === 4 ? 12 : 14,
+        size: 14,
       };
       row.alignment = { vertical: "middle", horizontal: "center" };
-      row.height = rowNum === 4 ? 30 : 25;
+      row.height = 25;
     });
+
+    // Decorative symbol row
     worksheet.getRow(3).alignment = {
       horizontal: "center",
       vertical: "middle",
     };
 
-    // Style Table Header (At Row 5)
-    const headerRow = worksheet.getRow(5);
+    // Custom export title (bigger, bolder than the classroom subtitle)
+    if (titleRowIdx !== null) {
+      const titleRow = worksheet.getRow(titleRowIdx);
+      titleRow.font = {
+        name: "Khmer OS Muol Light",
+        bold: true,
+        size: 14,
+        color: { argb: "FF1976D2" },
+      };
+      titleRow.alignment = { vertical: "middle", horizontal: "center" };
+      titleRow.height = 32;
+    }
+
+    // Classroom subtitle row
+    const classroomRow = worksheet.getRow(classroomRowIdx);
+    classroomRow.font = {
+      name: "Khmer OS Muol Light",
+      bold: true,
+      size: 12,
+    };
+    classroomRow.alignment = { vertical: "middle", horizontal: "center" };
+    classroomRow.height = 28;
+
+    // Style Table Header
+    const headerRow = worksheet.getRow(headerRowIdx);
     headerRow.height = 30;
     headerRow.eachCell((cell) => {
       cell.font = {
@@ -247,9 +326,9 @@ export function CustomDataGridToolbar(props: ToolbarProps) {
       };
     });
 
-    // Style Data Rows (Row 6 onwards)
+    // Style Data Rows (rows after the header)
     worksheet.eachRow((row, rowNumber) => {
-      if (rowNumber <= 5) return;
+      if (rowNumber <= headerRowIdx) return;
 
       //If Grade F
       // const gradeCellVal = row.getCell("mGrade").value?.toString();
@@ -293,10 +372,11 @@ export function CustomDataGridToolbar(props: ToolbarProps) {
     const blob = new Blob([buffer], {
       type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     });
-    saveAs(
-      blob,
-      `${t("MonthlyExam.monthlyScores")}_${new Date().toISOString().split("T")[0]}.xlsx`,
-    );
+    const today = new Date().toISOString().split("T")[0];
+    const fileBase =
+      toolbarButtons?.exportFileName?.trim() ||
+      (classroom?.name ? `${classroom.name}_${today}` : `Export_${today}`);
+    saveAs(blob, `${fileBase}.xlsx`);
   };
 
   return (

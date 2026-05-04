@@ -113,9 +113,11 @@ export default function SelectContent() {
         displayEmpty
         fullWidth
         inputProps={{ "aria-label": "Select classroom" }}
+        size="small"
         sx={{
           maxHeight: 56,
-          width: 215,
+          width: "100%",
+          borderRadius: 1.5,
           [`& .${selectClasses.select}`]: {
             display: "flex",
             alignItems: "center",

@@ -16,5 +16,9 @@ export type ToolbarProps = {
     toggleColumn?: boolean;
     search?: boolean;
     extraControls?: React.ReactNode;
+    /** Title row written into the Excel export (e.g. "Monthly Scores · Jan 2024") */
+    exportTitle?: string;
+    /** Optional file name (without .xlsx extension). Defaults to "<classroom>_<date>". */
+    exportFileName?: string;
   };
 };

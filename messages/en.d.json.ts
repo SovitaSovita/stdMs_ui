@@ -218,7 +218,9 @@ declare const messages: {
     "feedback": "Feedback",
     "manageSubject": "Manage Subject",
     "tracker": "Book Tracker",
-    "record": "Book Record"
+    "record": "Book Record",
+    "sectionMain": "Main",
+    "sectionReports": "Reports"
   },
   "Subject": {
     "khmer": "Khmer",
@@ -261,6 +263,30 @@ declare const messages: {
     "average": "Average",
     "grade": "Grade",
     "honorRoll": "Honor Roll"
+  },
+  "BookTracker": {
+    "title": "Book Tracker",
+    "tracker": "Study Book Tracker",
+    "studentName": "Student Name",
+    "subject": "Subject",
+    "score": "Score",
+    "date": "Date",
+    "status": "Status",
+    "addRecord": "Add Record",
+    "editRecord": "Edit Record",
+    "deleteRecord": "Delete Record",
+    "viewDetails": "View Details",
+    "monthlyResult": "Monthly Study Result",
+    "studyResult": "Study Result",
+    "maxScore": "Max",
+    "monthScore": "Month Score",
+    "honor": "Honor",
+    "honorExcellent": "Excellent",
+    "honorVeryGood": "Very Good",
+    "honorGood": "Good",
+    "honorFair": "Fair",
+    "honorPoor": "Poor",
+    "guardianPhone": "Guardian Phone"
   }
 };
 export default messages;

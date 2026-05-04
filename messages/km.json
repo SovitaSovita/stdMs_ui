@@ -215,7 +215,9 @@
     "setting": "ការកំណត់",
     "manageSubject": "គ្រប់គ្រងមុខវិជ្ចា",
     "tracker": "សៀវភៅតាមដាន",
-    "record": "សៀវភៅសិក្ខាគារិក"
+    "record": "សៀវភៅសិក្ខាគារិក",
+    "sectionMain": "មេនុយ",
+    "sectionReports": "របាយការណ៍"
   },
   "Subject": {
     "khmer": "ភាសាខ្មែរ",
@@ -258,5 +260,29 @@
     "honorRoll": "តារាងកិត្តិយស",
     "average": "មធ្យមភាគ",
     "grade": "និទ្ទេស"
+  },
+  "BookTracker": {
+    "title": "សៀវភៅតាមដាន",
+    "tracker": "សៀវភៅតាមដានសិក្សា",
+    "studentName": "ឈ្មោះសិស្ស",
+    "subject": "មុខវិជ្ជា",
+    "score": "ពិន្ទុ",
+    "date": "កាលបរិច្ឆេទ",
+    "status": "ស្ថានភាព",
+    "addRecord": "បន្ថែមកំណត់ត្រា",
+    "editRecord": "កែប្រែកំណត់ត្រា",
+    "deleteRecord": "លុបកំណត់ត្រា",
+    "viewDetails": "មើលព័ត៌មានលម្អិត",
+    "monthlyResult": "លទ្ធផលនៃការសិក្សាសម្រាប់ខែ",
+    "studyResult": "លទ្ធផលនៃការសិក្សា",
+    "maxScore": "អតិបរិមា",
+    "monthScore": "ពិន្ទុខែ",
+    "honor": "មូលវិធាន",
+    "honorExcellent": "ល្អប្រសើរ",
+    "honorVeryGood": "ល្អណាស់",
+    "honorGood": "ល្អ",
+    "honorFair": "មធ្យម",
+    "honorPoor": "ខ្សោយ",
+    "guardianPhone": "លេខទូរស័ព្ទអាណាព្យាបាល"
   }
 }

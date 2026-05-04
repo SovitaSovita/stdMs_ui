@@ -5,13 +5,25 @@ import {
   StudentCountType,
   StudentsInfo,
   StudentsRequestUpsertType,
-  StuInfoDetailResponseType,
 } from "@/app/constants/type";
 import { DeleteConfirmationDialog } from "@/app/dashboard/components/Dialog/DeleteConfirmationDialog";
 import { InsertOneStudentDialog } from "@/app/dashboard/components/Dialog/InsertOneStudentDialog";
-import { classroomAtom, examsAtom, studentsAtom } from "@/app/libs/jotai/classroomAtom";
+import { classroomAtom, studentsAtom } from "@/app/libs/jotai/classroomAtom";
 import StudentService from "@/app/service/StudentService";
-import { Box, Button, Typography } from "@mui/material";
+import {
+  Avatar,
+  Box,
+  Button,
+  Card,
+  CardContent,
+  Chip,
+  Divider,
+  Grid,
+  Stack,
+  Typography,
+  alpha,
+  useTheme,
+} from "@mui/material";
 import {
   DataGrid,
   GridColDef,
@@ -19,14 +31,19 @@ import {
   GridRowId,
   GridRowSelectionModel,
 } from "@mui/x-data-grid";
-import { useAtom, useAtomValue } from "jotai";
+import { useAtomValue } from "jotai";
 import { useTranslations } from "next-intl";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import useNotifications from "@/app/libs/hooks/useNotifications/useNotifications";
 import dayjs from "dayjs";
 import GroupAddIcon from "@mui/icons-material/GroupAdd";
 import DeleteSweepIcon from "@mui/icons-material/DeleteSweep";
-import { CustomStuInfoFooterComponent } from "@/app/dashboard/components/Common/CustomStuInfoFooterComponent";
+import GroupsIcon from "@mui/icons-material/Groups";
+import ManIcon from "@mui/icons-material/Man";
+import WomanIcon from "@mui/icons-material/Woman";
+import SchoolIcon from "@mui/icons-material/School";
+import { CustomDataGridToolbar } from "@/app/dashboard/components/Common/CustomDataGridToolbar";
+import EmptyStateCard from "@/app/dashboard/components/Common/EmptyStateCard";
 import {
   getInitialSettings,
   SETTINGS_STORAGE_KEY,
@@ -40,128 +57,85 @@ declare module "@mui/x-data-grid" {
   }
 }
 
+type StatTone = "primary" | "info" | "secondary";
+
+function StudentStatCard({
+  label,
+  value,
+  icon,
+  tone,
+}: {
+  label: string;
+  value: number;
+  icon: React.ReactNode;
+  tone: StatTone;
+}) {
+  const theme = useTheme();
+  const color = theme.palette[tone].main;
+
+  return (
+    <Card
+      variant="outlined"
+      sx={{
+        height: "100%",
+        position: "relative",
+        overflow: "hidden",
+        transition: "transform .2s ease, box-shadow .2s ease",
+        "&:hover": {
+          transform: "translateY(-2px)",
+          boxShadow: theme.shadows[3],
+        },
+      }}
+    >
+      <Box
+        sx={{
+          position: "absolute",
+          inset: 0,
+          background: `linear-gradient(135deg, ${alpha(color, 0.12)} 0%, ${alpha(
+            color,
+            0
+          )} 60%)`,
+          pointerEvents: "none",
+        }}
+      />
+      <CardContent sx={{ position: "relative" }}>
+        <Stack direction="row" alignItems="center" spacing={2}>
+          <Avatar
+            sx={{
+              bgcolor: alpha(color, 0.15),
+              color,
+              width: 48,
+              height: 48,
+            }}
+          >
+            {icon}
+          </Avatar>
+          <Box>
+            <Typography variant="body2" color="text.secondary">
+              {label}
+            </Typography>
+            <Typography variant="h4" sx={{ fontWeight: 700, lineHeight: 1.1 }}>
+              {String(value).padStart(2, "0")}
+            </Typography>
+          </Box>
+        </Stack>
+      </CardContent>
+    </Card>
+  );
+}
+
+function getInitials(name?: string) {
+  if (!name) return "?";
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "?";
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
+
 export default function Page() {
   const t = useTranslations();
+  const theme = useTheme();
 
-  const columns: GridColDef<(typeof rows)[number]>[] = [
-    {
-      field: "orderNo",
-      headerName: t("CommonField.id"),
-      headerClassName: "font-siemreap",
-      width: 90,
-      editable: false,
-      // renderCell: (params) =>
-      //   params.api.getRowIndexRelativeToVisibleRows(params.id) + 1,
-    },
-    {
-      field: "idCard",
-      headerName: t("CommonField.idCard"),
-      headerClassName: "font-siemreap",
-      width: 90,
-      editable: true,
-    },
-    {
-      field: "fullName",
-      headerName: t("CommonField.fullName"),
-      headerClassName: "font-siemreap",
-      width: 150,
-      editable: true,
-      sortable: true,
-      disableColumnMenu: true,
-    },
-    {
-      field: "gender",
-      headerName: t("CommonField.sex"),
-      headerClassName: "font-siemreap",
-      type: "singleSelect",
-      width: 100,
-      align: "center",
-      headerAlign: "center",
-      editable: true,
-      sortable: false,
-      disableColumnMenu: true,
-      valueOptions: [
-        { value: "M", label: t("Common.male") },
-        { value: "F", label: t("Common.female") },
-      ],
-    },
-    {
-      field: "dateOfBirth",
-      headerName: t("CommonField.dateOfBirth"),
-      type: "date",
-      headerClassName: "font-siemreap",
-      width: 150,
-      editable: true,
-      sortable: false,
-      disableColumnMenu: true,
-      valueGetter: (value) => {
-        return value ? new Date(value) : null;
-      },
-      valueFormatter: (value) => {
-        if (!value) return "";
-        return `${dayjs(value).format("DD-MM-YYYY")}`;
-      },
-    },
-    {
-      field: "fatherName",
-      headerName: t("CommonField.fatherName"),
-      headerClassName: "font-siemreap",
-      width: 150,
-      editable: true,
-      sortable: false,
-      disableColumnMenu: true,
-      renderCell: (params: GridRenderCellParams) => {
-        return <span>{params.value}</span>;
-      },
-    },
-    {
-      field: "fatherOccupation",
-      headerName: t("CommonField.occupation"),
-      headerClassName: "font-siemreap",
-      width: 150,
-      editable: true,
-      sortable: false,
-      disableColumnMenu: true,
-    },
-    {
-      field: "montherName",
-      headerName: t("CommonField.montherName"),
-      headerClassName: "font-siemreap",
-      width: 150,
-      editable: true,
-      sortable: false,
-      disableColumnMenu: true,
-    },
-    {
-      field: "montherOccupation",
-      headerName: t("CommonField.occupation"),
-      headerClassName: "font-siemreap",
-      width: 150,
-      editable: true,
-      sortable: false,
-      disableColumnMenu: true,
-    },
-    {
-      field: "placeOfBirth",
-      headerName: t("CommonField.placeOfBirth"),
-      headerClassName: "font-siemreap",
-      width: 200,
-      editable: true,
-      sortable: false,
-      disableColumnMenu: true,
-    },
-    {
-      field: "address",
-      headerName: t("CommonField.address"),
-      headerClassName: "font-siemreap",
-      width: 200,
-      editable: true,
-      sortable: false,
-      disableColumnMenu: true,
-    },
-  ];
-
-  // const [students, setStudents] = useState<StuInfoDetailResponseType>();
   const [rows, setRows] = useState<StudentsInfo[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const classroom = useAtomValue(classroomAtom);
@@ -171,7 +145,7 @@ export default function Page() {
 
   const [rowSelectionModel, setRowSelectionModel] =
     useState<GridRowSelectionModel>({
-      type: "include", // or 'exclude'
+      type: "include",
       ids: new Set<GridRowId>([]),
     });
 
@@ -187,6 +161,176 @@ export default function Page() {
     localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settings));
   }, [settings]);
 
+  const columns: GridColDef<StudentsInfo>[] = useMemo(
+    () => [
+      {
+        field: "orderNo",
+        headerName: t("CommonField.id"),
+        headerClassName: "font-siemreap",
+        width: 80,
+        editable: false,
+      },
+      {
+        field: "idCard",
+        headerName: t("CommonField.idCard"),
+        headerClassName: "font-siemreap",
+        width: 100,
+        editable: true,
+      },
+      {
+        field: "fullName",
+        headerName: t("CommonField.fullName"),
+        headerClassName: "font-siemreap",
+        width: 220,
+        editable: true,
+        sortable: true,
+        disableColumnMenu: true,
+        renderCell: (params: GridRenderCellParams<StudentsInfo>) => {
+          const isFemale = params.row.gender === "F";
+          const tone = isFemale
+            ? theme.palette.secondary.main
+            : theme.palette.info.main;
+          return (
+            <Stack
+              direction="row"
+              alignItems="center"
+              spacing={1.25}
+              sx={{ height: "100%" }}
+            >
+              <Avatar
+                sx={{
+                  width: 28,
+                  height: 28,
+                  fontSize: 12,
+                  fontWeight: 700,
+                  bgcolor: alpha(tone, 0.15),
+                  color: tone,
+                }}
+              >
+                {getInitials(params.value)}
+              </Avatar>
+              <Typography variant="body2" noWrap>
+                {params.value || "—"}
+              </Typography>
+            </Stack>
+          );
+        },
+      },
+      {
+        field: "gender",
+        headerName: t("CommonField.sex"),
+        headerClassName: "font-siemreap",
+        type: "singleSelect",
+        width: 110,
+        align: "center",
+        headerAlign: "center",
+        editable: true,
+        sortable: false,
+        disableColumnMenu: true,
+        valueOptions: [
+          { value: "M", label: t("Common.male") },
+          { value: "F", label: t("Common.female") },
+        ],
+        renderCell: (params: GridRenderCellParams<StudentsInfo>) => {
+          const isFemale = params.value === "F";
+          const tone = isFemale
+            ? theme.palette.secondary.main
+            : theme.palette.info.main;
+          return (
+            <Chip
+              size="small"
+              icon={
+                isFemale ? (
+                  <WomanIcon sx={{ fontSize: 16 }} />
+                ) : (
+                  <ManIcon sx={{ fontSize: 16 }} />
+                )
+              }
+              label={isFemale ? t("Common.female") : t("Common.male")}
+              sx={{
+                bgcolor: alpha(tone, 0.12),
+                color: tone,
+                border: `1px solid ${alpha(tone, 0.25)}`,
+                "& .MuiChip-icon": { color: tone },
+                fontWeight: 600,
+              }}
+            />
+          );
+        },
+      },
+      {
+        field: "dateOfBirth",
+        headerName: t("CommonField.dateOfBirth"),
+        type: "date",
+        headerClassName: "font-siemreap",
+        width: 140,
+        editable: true,
+        sortable: false,
+        disableColumnMenu: true,
+        valueGetter: (value) => (value ? new Date(value as string) : null),
+        valueFormatter: (value) => {
+          if (!value) return "";
+          return dayjs(value as Date).format("DD-MM-YYYY");
+        },
+      },
+      {
+        field: "fatherName",
+        headerName: t("CommonField.fatherName"),
+        headerClassName: "font-siemreap",
+        width: 150,
+        editable: true,
+        sortable: false,
+        disableColumnMenu: true,
+      },
+      {
+        field: "fatherOccupation",
+        headerName: t("CommonField.occupation"),
+        headerClassName: "font-siemreap",
+        width: 150,
+        editable: true,
+        sortable: false,
+        disableColumnMenu: true,
+      },
+      {
+        field: "montherName",
+        headerName: t("CommonField.montherName"),
+        headerClassName: "font-siemreap",
+        width: 150,
+        editable: true,
+        sortable: false,
+        disableColumnMenu: true,
+      },
+      {
+        field: "montherOccupation",
+        headerName: t("CommonField.occupation"),
+        headerClassName: "font-siemreap",
+        width: 150,
+        editable: true,
+        sortable: false,
+        disableColumnMenu: true,
+      },
+      {
+        field: "placeOfBirth",
+        headerName: t("CommonField.placeOfBirth"),
+        headerClassName: "font-siemreap",
+        width: 200,
+        editable: true,
+        sortable: false,
+        disableColumnMenu: true,
+      },
+      {
+        field: "address",
+        headerName: t("CommonField.address"),
+        headerClassName: "font-siemreap",
+        width: 200,
+        editable: true,
+        sortable: false,
+        disableColumnMenu: true,
+      },
+    ],
+    [t, theme.palette.info.main, theme.palette.secondary.main]
+  );
+
   const handleDeleteStudents = async () => {
     const ids = Array.from(rowSelectionModel.ids) as string[];
     if (ids.length === 0) return;
@@ -194,12 +338,10 @@ export default function Page() {
     const tempIds = ids.filter((id) => String(id).startsWith("temp-"));
     const dbIds = ids.filter((id) => !String(id).startsWith("temp-"));
 
-    // Remove unsaved (temp) rows immediately
     if (tempIds.length > 0) {
       setRows((prev) => prev.filter((r) => !tempIds.includes(r.id)));
     }
 
-    // Delete saved rows via API
     if (dbIds.length > 0 && classroom?.id) {
       const result = await StudentService.deleteList(dbIds, classroom?.id);
       if (result?.status === 200) {
@@ -213,12 +355,13 @@ export default function Page() {
         });
       }
     }
+
+    setRowSelectionModel({ type: "include", ids: new Set<GridRowId>([]) });
   };
 
   const processRowUpdate = async (
     newRow: StudentsInfo,
-    oldRow: StudentsInfo,
-    params: { rowId: GridRowId }
+    oldRow: StudentsInfo
   ): Promise<StudentsInfo> => {
     setIsLoading(true);
 
@@ -229,17 +372,16 @@ export default function Page() {
         });
         return oldRow;
       }
-      // ✅ Detect new rows using a special tempId prefix
       const isTempRow = String(newRow.id).startsWith("temp-");
 
       if (!newRow.fullName) {
         notification.show(
           t("CommonField.fullName") +
-          t("CommonValidate.cannotEmpty") +
-          " " +
-          t("CommonValidate.inputFirst", {
-            fullName: t("CommonField.fullName"),
-          }),
+            t("CommonValidate.cannotEmpty") +
+            " " +
+            t("CommonValidate.inputFirst", {
+              fullName: t("CommonField.fullName"),
+            }),
           { severity: "error" }
         );
         return oldRow;
@@ -248,10 +390,11 @@ export default function Page() {
       const sendData: StudentsRequestUpsertType = {
         ...newRow,
         classId: classroom?.id,
-        dateOfBirth: newRow.dateOfBirth ? dayjs(newRow.dateOfBirth).format("YYYY-MM-DD") : "",
+        dateOfBirth: newRow.dateOfBirth
+          ? dayjs(newRow.dateOfBirth).format("YYYY-MM-DD")
+          : "",
       };
 
-      // Remove id if new (backend will auto-generate one)
       if (isTempRow) delete (sendData as any).id;
 
       if (!sendData.classId) {
@@ -264,9 +407,7 @@ export default function Page() {
       if (result?.status === 200) {
         const updated = result?.payload;
 
-        //Insern new
         if (isTempRow && updated?.id) {
-          // Replace temp ID with real DB ID
           const newStudent = { ...newRow, id: updated.id };
           setRows((prev) =>
             prev.map((r) =>
@@ -278,7 +419,6 @@ export default function Page() {
           });
           return newStudent;
         } else {
-          //Update old
           setRows((prev) => prev.map((r) => (r.id === newRow.id ? newRow : r)));
           notification.show("Student updated successfully.", {
             severity: "success",
@@ -286,14 +426,12 @@ export default function Page() {
           return newRow;
         }
       } else {
-        notification.show("Failed to save student.", {
-          severity: "error",
-        });
+        notification.show("Failed to save student.", { severity: "error" });
         return oldRow;
       }
     } catch (error) {
       console.error("processRowUpdate error:", error);
-      return oldRow; // rollback
+      return oldRow;
     } finally {
       setIsLoading(false);
     }
@@ -305,7 +443,6 @@ export default function Page() {
       ...prev,
       {
         id: tempId,
-        // orderNo: "",
         classId: classroom?.id,
         fullName: "",
         idCard: "",
@@ -317,14 +454,13 @@ export default function Page() {
         montherOccupation: "",
         placeOfBirth: "",
         address: "",
-      },
+      } as StudentsInfo,
     ]);
   };
 
   const studentInfoCount = useMemo<StudentCountType>(() => {
-    const tMale = rows.filter((row) => row.gender == "M");
-    const tFemale = rows.filter((row) => row.gender == "F");
-
+    const tMale = rows.filter((row) => row.gender === "M");
+    const tFemale = rows.filter((row) => row.gender === "F");
     return {
       total: rows.length,
       totalMale: tMale.length,
@@ -332,57 +468,159 @@ export default function Page() {
     };
   }, [rows]);
 
-  return (
-    <>
-      <Box sx={{ width: "100%", maxWidth: { sm: "100%", md: "1700px" } }}>
-        <Box display={"flex"} mb={2} gap={1} justifyContent={"space-between"}>
-          <Typography
-            component="h2"
-            variant="h6"
-            sx={{ display: { xs: "none", sm: "block" } }}
-          >
-            Overview
-          </Typography>
-          <Box display={"flex"} gap={1}>
-            {/* This button is for inserting a single student */}
-            <InsertOneStudentDialog />
+  const selectedCount = rowSelectionModel.ids.size;
 
-            {/* this button is another option for Insert in table row */}
+  if (!classroom?.id) {
+    return (
+      <Box sx={{ width: "100%", maxWidth: { sm: "100%", md: "1700px" } }}>
+        <Card variant="outlined" sx={{ p: 4 }}>
+          <EmptyStateCard
+            title={t("Common.classroom")}
+            description={t("Common.createClassroom")}
+            buttonLabel={t("Common.createClassroom")}
+            onButtonClick={() => {}}
+            minHeight={320}
+          />
+        </Card>
+      </Box>
+    );
+  }
+
+  return (
+    <Box sx={{ width: "100%", maxWidth: { sm: "100%", md: "1700px" } }}>
+      {/* Page header */}
+      <Stack
+        direction={{ xs: "column", sm: "row" }}
+        alignItems={{ xs: "flex-start", sm: "center" }}
+        justifyContent="space-between"
+        spacing={1}
+        sx={{ mb: 3 }}
+      >
+        <Stack direction="row" alignItems="center" spacing={1.5}>
+          <Avatar
+            sx={{
+              bgcolor: alpha(theme.palette.primary.main, 0.12),
+              color: "primary.main",
+              width: 44,
+              height: 44,
+            }}
+          >
+            <SchoolIcon />
+          </Avatar>
+          <Box>
+            <Typography variant="h5" sx={{ fontWeight: 700, lineHeight: 1.2 }}>
+              {t("Student.title")}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              {[classroom?.name, classroom?.grade, classroom?.year]
+                .filter(Boolean)
+                .join(" • ")}
+            </Typography>
+          </Box>
+        </Stack>
+      </Stack>
+
+      {/* Stat cards */}
+      <Grid container spacing={2} sx={{ mb: 3 }}>
+        <Grid size={{ xs: 12, sm: 4 }}>
+          <StudentStatCard
+            label={t("Common.total")}
+            value={studentInfoCount.total}
+            icon={<GroupsIcon />}
+            tone="primary"
+          />
+        </Grid>
+        <Grid size={{ xs: 12, sm: 4 }}>
+          <StudentStatCard
+            label={t("Common.male")}
+            value={studentInfoCount.totalMale}
+            icon={<ManIcon />}
+            tone="info"
+          />
+        </Grid>
+        <Grid size={{ xs: 12, sm: 4 }}>
+          <StudentStatCard
+            label={t("Common.female")}
+            value={studentInfoCount.totalFemale}
+            icon={<WomanIcon />}
+            tone="secondary"
+          />
+        </Grid>
+      </Grid>
+
+      {/* Table card */}
+      <Card variant="outlined">
+        <CardContent
+          sx={{
+            display: "flex",
+            flexDirection: { xs: "column", md: "row" },
+            alignItems: { xs: "stretch", md: "center" },
+            justifyContent: "space-between",
+            gap: 1.5,
+            pb: 1.5,
+          }}
+        >
+          {/* Left: title or selection bar */}
+          {selectedCount > 0 ? (
+            <Stack direction="row" alignItems="center" spacing={1.5}>
+              <Chip
+                color="primary"
+                label={`${selectedCount} ${t("Common.student")}`}
+                sx={{ fontWeight: 600 }}
+              />
+              <Button
+                onClick={() => setDeleteDialogOpen(true)}
+                variant="outlined"
+                color="error"
+                size="small"
+                startIcon={<DeleteSweepIcon />}
+              >
+                {t("Student.btn.deleteStu")}
+              </Button>
+            </Stack>
+          ) : (
+            <Stack direction="row" alignItems="center" spacing={1}>
+              <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                {t("Student.title")}
+              </Typography>
+              <Chip
+                size="small"
+                variant="outlined"
+                label={`${studentInfoCount.total}/60`}
+              />
+            </Stack>
+          )}
+
+          {/* Right: action buttons */}
+          <Stack
+            direction="row"
+            spacing={1}
+            flexWrap="wrap"
+            useFlexGap
+            sx={{ rowGap: 1 }}
+          >
+            <InsertOneStudentDialog />
             <Button
               onClick={handleAddMulti}
-              variant="contained"
+              variant="outlined"
               size="small"
               startIcon={<GroupAddIcon />}
             >
               {t("Student.btn.multiAdd")}
             </Button>
-
-            {/* This button is for importing students from Excel */}
             {Number(students?.total) === 0 ? <ImportStudentsDialog /> : null}
+          </Stack>
+        </CardContent>
 
-            <Button
-              onClick={() => setDeleteDialogOpen(true)}
-              disabled={rowSelectionModel.ids.size === 0}
-              variant="contained"
-              color="error"
-              size="small"
-              startIcon={<DeleteSweepIcon />}
-            >
-              {t("Student.btn.deleteStu")}
-            </Button>
-          </Box>
-        </Box>
+        <Divider />
+
         <Box className="font-siemreap" sx={{ height: 600, width: "100%" }}>
           <DataGrid
             rows={rows}
             columns={columns}
             loading={isLoading}
             initialState={{
-              pagination: {
-                paginationModel: {
-                  pageSize: 40,
-                },
-              },
+              pagination: { paginationModel: { pageSize: 40 } },
             }}
             pageSizeOptions={[10, 15, 40, 60]}
             checkboxSelection
@@ -395,35 +633,48 @@ export default function Page() {
             density={settings.density}
             showCellVerticalBorder={settings.showCellBorders}
             showColumnVerticalBorder={settings.showColumnBorders}
-            slots={{
-              footer: CustomStuInfoFooterComponent,
-            }}
+            showToolbar
+            slots={{ toolbar: CustomDataGridToolbar }}
             slotProps={{
-              footer: {
-                studentInfoCount,
-                extraControls: null, // You can pass extra controls here if needed
+              toolbar: {
+                settings,
+                onSettingsChange: setSettings,
+                toolbarButtons: {
+                  search: true,
+                  settings: true,
+                  export: true,
+                  toggleColumn: true,
+                  exportTitle: t("Student.title"),
+                },
               },
             }}
             sx={{
+              border: 0,
               "& .MuiDataGrid-columnHeaderCheckbox .MuiCheckbox-root": {
                 display: "none",
+              },
+              "& .MuiDataGrid-columnHeaders": {
+                bgcolor: alpha(theme.palette.primary.main, 0.04),
+              },
+              "& .MuiDataGrid-row:hover": {
+                bgcolor: alpha(theme.palette.primary.main, 0.04),
               },
             }}
           />
         </Box>
+      </Card>
 
-        <DeleteConfirmationDialog
-          open={deleteDialogOpen}
-          onClose={() => setDeleteDialogOpen(false)}
-          onConfirm={handleDeleteStudents}
-          itemName="students"
-          itemCount={rowSelectionModel.ids.size}
-          title={t("Common.titleDeleteConfirm")}
-          message={t("Student.deleteConfirmation")}
-          confirmText={t("Common.delete")}
-          cancelText={t("Common.cancel")}
-        />
-      </Box>
-    </>
+      <DeleteConfirmationDialog
+        open={deleteDialogOpen}
+        onClose={() => setDeleteDialogOpen(false)}
+        onConfirm={handleDeleteStudents}
+        itemName="students"
+        itemCount={rowSelectionModel.ids.size}
+        title={t("Common.titleDeleteConfirm")}
+        message={t("Student.deleteConfirmation")}
+        confirmText={t("Common.delete")}
+        cancelText={t("Common.cancel")}
+      />
+    </Box>
   );
 }

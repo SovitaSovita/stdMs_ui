@@ -75,6 +75,19 @@ export const SemesterlyAverageGrid = (props: SemesterlyAverageGridProps) => {
   const parsedDate = dayjs(examDate, "MMYYYY", true); // strict
   const isValidDate = parsedDate.isValid();
 
+  // Format the URL's MMYYYY param into a localized "Month YYYY" label
+  const monthYearLabel = useMemo(() => {
+    if (!/^\d{6}$/.test(examDate)) return "";
+    const monthIdx = parseInt(examDate.slice(0, 2), 10) - 1;
+    const year = examDate.slice(2);
+    const monthAbbrs = [
+      "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+    ];
+    if (monthIdx < 0 || monthIdx > 11) return "";
+    return `${t(`Common.months.${monthAbbrs[monthIdx]}`)} ${year}`;
+  }, [examDate, t]);
+
   useEffect(() => {
     if (!isValidType || !isValidDate) {
       notFound(); // redirects to closest `not-found.tsx` or 404 page
@@ -484,6 +497,16 @@ export const SemesterlyAverageGrid = (props: SemesterlyAverageGridProps) => {
               search: true,
               export: true,
               settings: true,
+              exportTitle: (() => {
+                const base = isShow
+                  ? t("SemesterExam.viewRanking", {
+                      num: exam?.semesterNumber || "",
+                    })
+                  : t("SemesterExam.semesterlyAverageRanking", {
+                      num: exam?.semesterNumber || "",
+                    });
+                return monthYearLabel ? `${base} · ${monthYearLabel}` : base;
+              })(),
               extraControls: (
                 <TextField
                   label={t("Common.mekunSemesterAverage")}

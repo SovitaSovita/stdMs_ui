@@ -1,25 +1,38 @@
-import React, { use, useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Button from "@mui/material/Button";
-import TextField from "@mui/material/TextField";
 import Dialog from "@mui/material/Dialog";
 import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
 import DialogTitle from "@mui/material/DialogTitle";
 import {
+  Avatar,
   Box,
+  Card,
+  CardContent,
+  Chip,
   CircularProgress,
+  Divider,
+  IconButton,
   LinearProgress,
+  Stack,
+  Tooltip,
   Typography,
+  alpha,
+  useTheme,
 } from "@mui/material";
 import { ScoreUpsertRequest, StudentsInfo } from "@/app/constants/type";
-import {
-  classroomAtom,
-  studentsAtom,
-  subjectsAtom,
-} from "@/app/libs/jotai/classroomAtom";
+import { classroomAtom } from "@/app/libs/jotai/classroomAtom";
 import { useAtomValue } from "jotai";
 import { useTranslations } from "next-intl";
 import SmartToyIcon from "@mui/icons-material/SmartToy";
+import CloseIcon from "@mui/icons-material/Close";
+import CloudUploadIcon from "@mui/icons-material/CloudUpload";
+import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
+import RestartAltIcon from "@mui/icons-material/RestartAlt";
+import DeleteSweepIcon from "@mui/icons-material/DeleteSweep";
+import LoopIcon from "@mui/icons-material/Loop";
+import SaveIcon from "@mui/icons-material/Save";
+import AutoFixHighIcon from "@mui/icons-material/AutoFixHigh";
 import {
   DataGrid,
   GridColDef,
@@ -30,7 +43,6 @@ import useNotifications from "@/app/libs/hooks/useNotifications/useNotifications
 import { GoogleGenAI, ThinkingLevel } from "@google/genai";
 import ClassroomService from "@/app/service/ClassroomService";
 import { AskForConfirmationDialog } from "./AskForConfirmationDialog";
-import LoopIcon from "@mui/icons-material/Loop";
 import useClassroomData from "@/app/libs/hooks/useClassroomData";
 
 const GEMINI_API_KEY = process.env.NEXT_PUBLIC_GEMINI_API_KEY as string;
@@ -43,18 +55,27 @@ type ImportScoreByAiProps = {
   callback?: () => Promise<void> | void;
 };
 
+function formatBytes(bytes?: number) {
+  if (!bytes) return "0 KB";
+  if (bytes < 1024) return `${bytes} B`;
+  const kb = bytes / 1024;
+  if (kb < 1024) return `${kb.toFixed(2)} KB`;
+  return `${(kb / 1024).toFixed(2)} MB`;
+}
+
 export const ImportScoreByAi = (props: ImportScoreByAiProps) => {
   const { examId, callback } = props;
+  const theme = useTheme();
 
-  const [progress, setProgress] = React.useState(0);
-  const [statusText, setStatusText] = React.useState("Initializing...");
-  const [open, setOpen] = React.useState(false);
+  const [progress, setProgress] = useState(0);
+  const [statusText, setStatusText] = useState("Initializing...");
+  const [open, setOpen] = useState(false);
   const [saveConfirmDialogOpen, setSaveConfirmDeleteDialogOpen] =
-    React.useState(false);
+    useState(false);
   const [
     beforeUploadConfirmDialogOpen,
     setBeforeUploadConfirmDeleteDialogOpen,
-  ] = React.useState(false);
+  ] = useState(false);
   const classroom = useAtomValue(classroomAtom);
   const t = useTranslations();
   const [file, setFile] = useState<File | null>(null);
@@ -62,11 +83,10 @@ export const ImportScoreByAi = (props: ImportScoreByAiProps) => {
   const fileReaderRef = useRef<FileReader | null>(null);
   const [previewUrl, setPreviewUrl] = useState("");
 
-  const { students, subjects } = useClassroomData(classroom, { autoFetch: true });
-  // const students = useAtomValue(studentsAtom);
-  // const subjects = useAtomValue(subjectsAtom);
+  const { students, subjects } = useClassroomData(classroom, {
+    autoFetch: true,
+  });
 
-  /* ================= Image Preview ================= */
   useEffect(() => {
     if (!file) return;
     const url = URL.createObjectURL(file);
@@ -74,9 +94,7 @@ export const ImportScoreByAi = (props: ImportScoreByAiProps) => {
     return () => URL.revokeObjectURL(url);
   }, [file]);
 
-  const handleClickOpen = () => {
-    setOpen(true);
-  };
+  const handleClickOpen = () => setOpen(true);
 
   const handleClose = () => {
     if (isLoading) {
@@ -85,14 +103,13 @@ export const ImportScoreByAi = (props: ImportScoreByAiProps) => {
     handleClear();
     setOpen(false);
   };
+
   const [rows, setRows] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [abortController, setAbortController] =
-    useState<AbortController | null>(null);
   const [preview, setPreview] = useState<any>(null);
   const [rowSelectionModel, setRowSelectionModel] =
     useState<GridRowSelectionModel>({
-      type: "include", // or 'exclude'
+      type: "include",
       ids: new Set<GridRowId>([]),
     });
   const notification = useNotifications();
@@ -167,13 +184,12 @@ export const ImportScoreByAi = (props: ImportScoreByAiProps) => {
     });
 
     if (preview) {
-      return [...baseColumns, ...dynamicScoreColumns] as GridColDef[]; // Use dynamicScoreColumns when preview AI exists
+      return [...baseColumns, ...dynamicScoreColumns] as GridColDef[];
     }
-    return [...baseColumns, ...baseSubjectColumns] as GridColDef[]; // Fallback to baseSubjectColumns if no preview
-  }, [preview]);
+    return [...baseColumns, ...baseSubjectColumns] as GridColDef[];
+  }, [preview, subjects, t]);
 
-  // Initialize rows
-  React.useEffect(() => {
+  useEffect(() => {
     if (students?.student) {
       setRows(students.student);
     }
@@ -193,8 +209,6 @@ export const ImportScoreByAi = (props: ImportScoreByAiProps) => {
         const file = input.files[0];
         setFile(file);
         setIsLoading(true);
-
-        // 1. Reset Progress
         setProgress(0);
         setStatusText("Reading file...");
 
@@ -204,10 +218,8 @@ export const ImportScoreByAi = (props: ImportScoreByAiProps) => {
         const reader = new FileReader();
         fileReaderRef.current = reader;
 
-        // Optional: Track real file reading progress (usually very fast)
         reader.onprogress = (event) => {
           if (event.lengthComputable) {
-            // Map file reading to the first 20% of the bar
             const readPercent = (event.loaded / event.total) * 20;
             setProgress(Math.min(readPercent, 20));
           }
@@ -217,15 +229,11 @@ export const ImportScoreByAi = (props: ImportScoreByAiProps) => {
           try {
             if (controller.signal.aborted) return;
 
-            //Start "AI Thinking" Simulation (20% -> 90%)
             setStatusText("Digitizing & Extracting Data...");
 
             const progressInterval = setInterval(() => {
               setProgress((prev) => {
-                if (prev >= 90) {
-                  return 90; // Cap at 90% and wait for real response
-                }
-                // random increment
+                if (prev >= 90) return 90;
                 const increment = Math.random() * 5 + 1;
                 return prev + increment;
               });
@@ -234,29 +242,22 @@ export const ImportScoreByAi = (props: ImportScoreByAiProps) => {
             const buffer = e.target?.result as ArrayBuffer;
             const base64ImageData = Buffer.from(buffer).toString("base64");
 
-            // --- AI CALL ---
             const result = await ai.models.generateContent({
               model: "gemini-3-flash-preview",
-
               config: {
                 temperature: 1,
-
                 abortSignal: controller.signal,
-
                 thinkingConfig: {
                   thinkingLevel: ThinkingLevel.HIGH,
                 },
               },
-
               contents: [
                 {
                   inlineData: {
                     mimeType: file.type,
-
                     data: base64ImageData,
                   },
                 },
-
                 {
                   text:
                     "Extract the data from this grade sheet.\n" +
@@ -266,14 +267,12 @@ export const ImportScoreByAi = (props: ImportScoreByAiProps) => {
               ],
             });
 
-            //Request Complete - Snap to 100%
             clearInterval(progressInterval);
             setProgress(100);
             setStatusText("Complete!");
 
             if (controller.signal.aborted) return;
 
-            // --- PROCESS DATA ---
             console.log("result.text >", result.text);
             const cleanJson = (result.text || "")
               .replace(/```json|```/g, "")
@@ -283,7 +282,7 @@ export const ImportScoreByAi = (props: ImportScoreByAiProps) => {
 
             if (Array.isArray(previewData)) {
               const aiDataMap = new Map(
-                previewData.map((item: any) => [item.id, item]),
+                previewData.map((item: any) => [item.id, item])
               );
 
               const filterSubjects = subjects.map((sub) => sub.name);
@@ -291,20 +290,17 @@ export const ImportScoreByAi = (props: ImportScoreByAiProps) => {
               const mergedRows = (students?.student || []).map(
                 (student: StudentsInfo) => ({
                   ...student,
-
                   scores:
                     filterSubjects.reduce(
                       (acc, subject) => {
                         acc[subject] =
                           aiDataMap.get(student.orderNo)?.scores?.[subject] ||
                           0;
-
                         return acc;
                       },
-
-                      {} as Record<string, number>,
+                      {} as Record<string, number>
                     ) || {},
-                }),
+                })
               );
               setRows(mergedRows);
             }
@@ -313,10 +309,8 @@ export const ImportScoreByAi = (props: ImportScoreByAiProps) => {
               console.log("AI request aborted");
             } else {
               console.error("AI error:", err);
-              // notification.show(...)
             }
           } finally {
-            // Wait a moment so user sees the 100% bar before closing/resetting
             setTimeout(() => {
               setIsLoading(false);
               setProgress(0);
@@ -331,9 +325,9 @@ export const ImportScoreByAi = (props: ImportScoreByAiProps) => {
       };
     } catch (err) {
       setIsLoading(false);
-      // notification.show(...)
     }
   };
+
   const handleCancel = () => {
     abortControllerRef.current?.abort();
     fileReaderRef.current?.abort();
@@ -352,6 +346,7 @@ export const ImportScoreByAi = (props: ImportScoreByAiProps) => {
     setPreviewUrl("");
     setRows([]);
     setPreview(null);
+    setRowSelectionModel({ type: "include", ids: new Set<GridRowId>([]) });
   };
 
   const handleDelete = () => {
@@ -360,10 +355,7 @@ export const ImportScoreByAi = (props: ImportScoreByAiProps) => {
       notification.show(
         t("Student.ImportDialog.noRowsSelected") ||
           "Please select rows to delete",
-        {
-          severity: "warning",
-          autoHideDuration: 3000,
-        },
+        { severity: "warning", autoHideDuration: 3000 }
       );
       return;
     }
@@ -376,24 +368,18 @@ export const ImportScoreByAi = (props: ImportScoreByAiProps) => {
     });
 
     notification.show(
-      t("Student.ImportDialog.rowsDeleted") ||
-        `${selectedIds.length} row(s) deleted`,
-      {
-        severity: "success",
-        autoHideDuration: 3000,
-      },
+      t("Student.ImportDialog.rowsDeleted", { count: selectedIds.length }),
+      { severity: "success", autoHideDuration: 3000 }
     );
   };
 
   const getSelectedIds = (
     rowSelectionModel: GridRowSelectionModel,
-    rows: { id: GridRowId }[],
+    rows: { id: GridRowId }[]
   ): GridRowId[] => {
     if (rowSelectionModel.type === "include") {
       return Array.from(rowSelectionModel.ids);
     }
-
-    // type === "exclude" → all rows selected except excluded ones
     return rows
       .map((row) => row.id)
       .filter((id) => !rowSelectionModel.ids.has(id));
@@ -406,10 +392,7 @@ export const ImportScoreByAi = (props: ImportScoreByAiProps) => {
         notification.show(
           t("Student.ImportDialog.noRowsSelected") ||
             "Please select rows to save",
-          {
-            severity: "warning",
-            autoHideDuration: 3000,
-          },
+          { severity: "warning", autoHideDuration: 3000 }
         );
         return;
       }
@@ -441,7 +424,7 @@ export const ImportScoreByAi = (props: ImportScoreByAiProps) => {
         const response = await ClassroomService.upsertStuScores(
           classroom?.id,
           examId,
-          sendData,
+          sendData
         );
 
         if (response) {
@@ -464,13 +447,8 @@ export const ImportScoreByAi = (props: ImportScoreByAiProps) => {
     }
   };
 
-  const processRowUpdate = async (
-    newRow: any,
-    oldRow: any,
-    params: { rowId: GridRowId },
-  ): Promise<any> => {
+  const processRowUpdate = async (newRow: any, oldRow: any): Promise<any> => {
     setIsLoading(true);
-
     try {
       if (!oldRow?.scores) {
         notification.show(t("Student.ImportDialog.noScoresData"), {
@@ -486,37 +464,250 @@ export const ImportScoreByAi = (props: ImportScoreByAiProps) => {
         return newVal !== oldVal;
       });
 
-      if (!changedField) {
-        return oldRow;
-      }
+      if (!changedField) return oldRow;
 
-      // Merge this field into scores
       const updatedScores = {
         ...oldRow.scores,
         [changedField]: Number(newRow[changedField]),
       };
 
-      // Build the updated row
-      const updatedRow = {
-        ...oldRow,
-        scores: updatedScores,
-      };
-
-      // Update the row locally
+      const updatedRow = { ...oldRow, scores: updatedScores };
       setRows((prev) =>
-        prev.map((r) => (r.id === updatedRow.id ? updatedRow : r)),
+        prev.map((r) => (r.id === updatedRow.id ? updatedRow : r))
       );
       return updatedRow;
     } catch (error) {
       console.error("processRowUpdate error:", error);
-      return oldRow; // rollback
+      return oldRow;
     } finally {
       setIsLoading(false);
     }
   };
 
-  // console.log("rows", rows);
-  // console.log("columns", columns);
+  const selectedCount = rowSelectionModel.ids.size;
+  const hasFile = !!file;
+  const hasPreview = !!preview;
+
+  /* ================= Upload Zone States ================= */
+
+  const renderEmptyUpload = () => (
+    <Box
+      sx={{
+        borderRadius: 3,
+        border: "2px dashed",
+        borderColor: alpha(theme.palette.primary.main, 0.4),
+        bgcolor: alpha(theme.palette.primary.main, 0.02),
+        py: 5,
+        px: 3,
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 2,
+        transition: "all .2s ease",
+        "&:hover": {
+          borderColor: "primary.main",
+          bgcolor: alpha(theme.palette.primary.main, 0.04),
+        },
+      }}
+    >
+      <Avatar
+        sx={{
+          width: 64,
+          height: 64,
+          bgcolor: alpha(theme.palette.primary.main, 0.12),
+          color: "primary.main",
+        }}
+      >
+        <AutoFixHighIcon sx={{ fontSize: 32 }} />
+      </Avatar>
+      <Stack spacing={0.5} alignItems="center" sx={{ textAlign: "center" }}>
+        <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
+          {t("Common.aiHelp")}
+        </Typography>
+        <Typography variant="caption" color="text.secondary">
+          .xlsx, .xls
+        </Typography>
+      </Stack>
+      <Button
+        variant="contained"
+        size="medium"
+        startIcon={<CloudUploadIcon />}
+        onClick={() => setBeforeUploadConfirmDeleteDialogOpen(true)}
+      >
+        {t("Common.uploadPhoto")}
+      </Button>
+    </Box>
+  );
+
+  const renderLoadingUpload = () => (
+    <Card variant="outlined">
+      <Stack
+        direction={{ xs: "column", sm: "row" }}
+        spacing={2}
+        sx={{ p: 2 }}
+        alignItems="center"
+      >
+        {previewUrl ? (
+          <Box
+            sx={{
+              width: { xs: "100%", sm: 140 },
+              height: 100,
+              borderRadius: 2,
+              overflow: "hidden",
+              flexShrink: 0,
+              backgroundImage: `url(${previewUrl})`,
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+              filter: "grayscale(40%)",
+              border: 1,
+              borderColor: "divider",
+            }}
+          />
+        ) : (
+          <Avatar
+            variant="rounded"
+            sx={{
+              width: 100,
+              height: 100,
+              bgcolor: alpha(theme.palette.primary.main, 0.12),
+              color: "primary.main",
+            }}
+          >
+            <InsertDriveFileIcon sx={{ fontSize: 40 }} />
+          </Avatar>
+        )}
+
+        <Box sx={{ flex: 1, width: "100%", minWidth: 0 }}>
+          <Stack
+            direction="row"
+            alignItems="center"
+            spacing={1}
+            sx={{ mb: 0.5 }}
+          >
+            <LoopIcon
+              fontSize="small"
+              sx={{
+                color: "primary.main",
+                animation: "spin 1s linear infinite",
+                "@keyframes spin": {
+                  "0%": { transform: "rotate(0deg)" },
+                  "100%": { transform: "rotate(360deg)" },
+                },
+              }}
+            />
+            <Typography variant="subtitle2" sx={{ fontWeight: 700 }} noWrap>
+              {statusText}
+            </Typography>
+            <Box sx={{ flex: 1 }} />
+            <Typography variant="caption" color="text.secondary">
+              {Math.round(progress)}%
+            </Typography>
+          </Stack>
+          <LinearProgress
+            variant="determinate"
+            value={progress}
+            sx={{
+              height: 8,
+              borderRadius: 999,
+              "& .MuiLinearProgress-bar": {
+                transition: "transform 0.2s linear",
+              },
+            }}
+          />
+          {file ? (
+            <Typography
+              variant="caption"
+              color="text.secondary"
+              sx={{ mt: 1, display: "block" }}
+              noWrap
+            >
+              {file.name} • {formatBytes(file.size)}
+            </Typography>
+          ) : null}
+        </Box>
+
+        <Button
+          variant="outlined"
+          color="inherit"
+          size="small"
+          onClick={handleCancel}
+          startIcon={<CircularProgress size={14} />}
+        >
+          {t("Common.cancel")}
+        </Button>
+      </Stack>
+    </Card>
+  );
+
+  const renderLoadedUpload = () => (
+    <Card variant="outlined">
+      <Stack
+        direction={{ xs: "column", sm: "row" }}
+        spacing={2}
+        alignItems={{ xs: "stretch", sm: "center" }}
+        sx={{ p: 2 }}
+      >
+        <Avatar
+          variant="rounded"
+          sx={{
+            width: 56,
+            height: 56,
+            bgcolor: alpha(theme.palette.success.main, 0.12),
+            color: "success.main",
+            flexShrink: 0,
+          }}
+        >
+          <InsertDriveFileIcon />
+        </Avatar>
+        <Box sx={{ flex: 1, minWidth: 0 }}>
+          <Typography variant="subtitle2" sx={{ fontWeight: 700 }} noWrap>
+            {file?.name}
+          </Typography>
+          <Stack direction="row" spacing={1} sx={{ mt: 0.5 }} flexWrap="wrap">
+            <Chip size="small" label={formatBytes(file?.size)} />
+            <Chip
+              size="small"
+              color="success"
+              variant="outlined"
+              label={`${t("Common.success")}`}
+            />
+            {Array.isArray(preview) && (
+              <Chip
+                size="small"
+                variant="outlined"
+                label={`${preview.length} ${t("Common.student")}`}
+              />
+            )}
+          </Stack>
+        </Box>
+        <Stack direction="row" spacing={1}>
+          <Button
+            variant="outlined"
+            size="small"
+            startIcon={<RestartAltIcon />}
+            onClick={handleClear}
+          >
+            {t("Common.clear")}
+          </Button>
+          <Button
+            variant="contained"
+            size="small"
+            startIcon={<CloudUploadIcon />}
+            onClick={() => setBeforeUploadConfirmDeleteDialogOpen(true)}
+          >
+            {t("Student.ImportDialog.replaceFile")}
+          </Button>
+        </Stack>
+      </Stack>
+    </Card>
+  );
+
+  const renderUploadZone = () => {
+    if (isLoading) return renderLoadingUpload();
+    if (hasFile && hasPreview) return renderLoadedUpload();
+    return renderEmptyUpload();
+  };
 
   return (
     <>
@@ -530,287 +721,153 @@ export const ImportScoreByAi = (props: ImportScoreByAiProps) => {
       </Button>
       <Dialog
         open={open}
-        onClose={(event, reason) => {
+        onClose={(_event, reason) => {
           if (reason === "backdropClick") return;
           handleClose();
         }}
         fullWidth
         maxWidth="lg"
       >
-        <DialogTitle>
-          <Box
-            sx={{ mb: 2 }}
-            display="flex"
-            justifyContent="space-between"
+        <DialogTitle sx={{ pb: 1.5 }}>
+          <Stack
+            direction="row"
             alignItems="center"
+            justifyContent="space-between"
+            spacing={1.5}
           >
-            <Typography variant="h6" component="div">
-              {t("Student.ImportDialog.title")}
-            </Typography>
-            <Button onClick={handleClose}>{t("Common.cancel")}</Button>
-          </Box>
-        </DialogTitle>
-        <DialogContent>
-          {/* Main Workspace Grid */}
-          <Box
-            sx={{
-              display: "grid",
-              gridTemplateColumns: { xs: "1fr", lg: "2fr 1fr" },
-              gap: "24px",
-              alignItems: "start",
-            }}
-          >
-            {/* Left Side: File & Preview Data Grid */}
-            <Box sx={{ display: "flex", flexDirection: "column", gap: "24px" }}>
-              {/* Upload Zone (Hidden once file uploaded, but shown here for UI flow) */}
-              <Box
+            <Stack direction="row" alignItems="center" spacing={1.5}>
+              <Avatar
                 sx={{
-                  borderRadius: "12px",
-                  border: "2px dashed",
-                  borderColor: "action.disabled",
-                  padding: "32px",
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: "16px",
-                  "&:hover": {
-                    borderColor: "primary.main",
-                    transition: "border-color 0.3s ease-in-out",
-                  },
+                  bgcolor: alpha(theme.palette.primary.main, 0.12),
+                  color: "primary.main",
+                  width: 40,
+                  height: 40,
                 }}
               >
-                <Box
-                  sx={{
-                    width: "64px",
-                    height: "64px",
-                    borderRadius: "50%",
-                    backgroundColor: "rgba(33, 150, 243, 0.1)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  <SmartToyIcon
-                    sx={{
-                      color: "primary.main",
-                      fontSize: "32px",
-                    }}
-                  />
-                </Box>
-                <Box sx={{ textAlign: "center" }}>
-                  <Typography
-                    variant="h6"
-                    sx={{
-                      fontWeight: "bold",
-                      marginBottom: "8px",
-                    }}
-                  >
-                    {t("Common.aiHelp")}
-                  </Typography>
-                  <Typography
-                    variant="h6"
-                    sx={{
-                      fontWeight: "bold",
-                      marginBottom: "8px",
-                    }}
-                  >
-                    {file && file.name}
-                  </Typography>
-                  <Typography variant="caption">
-                    {t("Student.ImportDialog.fileSize", {
-                      size: file?.size
-                        ? (file.size / 1024).toFixed(2) + " KB"
-                        : "0 KB",
-                      rows: preview?.length || "0",
-                    })}
-                  </Typography>
-                </Box>
-                <Box sx={{ display: "flex", gap: "8px" }}>
-                  {isLoading ? (
-                    <Button
-                      variant="contained"
-                      color="inherit"
-                      onClick={handleCancel}
-                      startIcon={<CircularProgress size={16} />}
-                    >
-                      {t("Common.cancel")}
-                    </Button>
-                  ) : (
-                    <Button
-                      loading={isLoading}
-                      variant="contained"
-                      color="primary"
-                      onClick={() =>
-                        setBeforeUploadConfirmDeleteDialogOpen(true)
-                      }
-                    >
-                      {t("Common.uploadPhoto")}
-                    </Button>
-                  )}
-                </Box>
+                <SmartToyIcon />
+              </Avatar>
+              <Box>
+                <Typography variant="h6" sx={{ fontWeight: 700, lineHeight: 1.2 }}>
+                  {t("Student.ImportDialog.title")}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  {t("Student.ImportDialog.proTipText")}
+                </Typography>
               </Box>
-            </Box>
+            </Stack>
+            <IconButton onClick={handleClose} size="small" aria-label="close">
+              <CloseIcon />
+            </IconButton>
+          </Stack>
+        </DialogTitle>
+        <Divider />
 
-            {/* Right side */}
-            {isLoading && (
-              <Box
+        <DialogContent sx={{ pt: 2 }}>
+          {/* Upload zone */}
+          {renderUploadZone()}
+
+          {/* Review section */}
+          {(hasPreview || rows.length > 0) && (
+            <Card variant="outlined" sx={{ mt: 2.5 }}>
+              <CardContent
                 sx={{
-                  position: "relative",
-                  borderRadius: 3,
-                  overflow: "hidden",
-                  aspectRatio: "4/3",
                   display: "flex",
                   alignItems: "center",
-                  justifyContent: "center",
-                  bgcolor: "background.paper", // Optional: prevents transparency issues
-                  border: 1,
-                  borderColor: "divider",
+                  justifyContent: "space-between",
+                  gap: 1.5,
+                  pb: 1.5,
+                  flexWrap: "wrap",
+                  rowGap: 1,
                 }}
               >
-                {/* Background Image Layer (Optional) */}
-                <Box
+                {selectedCount > 0 ? (
+                  <Stack direction="row" alignItems="center" spacing={1.5}>
+                    <Chip
+                      color="primary"
+                      label={`${selectedCount} ${t("Common.student")}`}
+                      sx={{ fontWeight: 600 }}
+                    />
+                    <Button
+                      onClick={handleDelete}
+                      variant="outlined"
+                      color="error"
+                      size="small"
+                      startIcon={<DeleteSweepIcon />}
+                    >
+                      {t("Common.delete")}
+                    </Button>
+                  </Stack>
+                ) : (
+                  <Stack direction="row" alignItems="center" spacing={1}>
+                    <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+                      {t("Student.ImportDialog.plsReview")}
+                    </Typography>
+                    <Chip
+                      size="small"
+                      variant="outlined"
+                      label={`${rows.length} ${t("Common.student")}`}
+                    />
+                  </Stack>
+                )}
+              </CardContent>
+              <Divider />
+              <Box
+                className="font-siemreap"
+                sx={{ height: 480, width: "100%" }}
+              >
+                <DataGrid
+                  rows={rows}
+                  columns={columns}
+                  loading={isLoading}
+                  hideFooterSelectedRowCount
+                  disableRowSelectionOnClick
+                  checkboxSelection
+                  onRowSelectionModelChange={(newRowSelectionModel) => {
+                    setRowSelectionModel(newRowSelectionModel);
+                  }}
+                  rowSelectionModel={rowSelectionModel}
+                  processRowUpdate={processRowUpdate}
+                  pageSizeOptions={[40]}
+                  initialState={{
+                    pagination: { paginationModel: { pageSize: 40 } },
+                  }}
                   sx={{
-                    position: "absolute",
-                    inset: 0,
-                    opacity: 0.2, // Lower opacity to make text readable
-                    backgroundImage: `url(${previewUrl || "https://lh3.googleusercontent.com/aida-public/AB6AXuDLV5RjkXItwQelnoZbFD_L2eziKFYvxD22bo0gM55TtScSpsww4zbTFJ-rj7Ux7tTAZTWIF04GEAaF2GqPMEejlbUiBa1bkKga5AV1lEQa7xUjZ2seU8vlSDf-C6uMpSuEQnXO-FvZ8db9T9YvfTtbKX4d_PeMRfAcVBrQuew2yMUFxCCEBTbfoGnXei4oi_e7288VlCPiRPaSbIMwrFiBsAAXsgMHjDoJhUwJ68HfHt6CscGzyb8VrmVLnJl5TLo0gg3GdHbmingV"})`,
-                    backgroundSize: "cover",
-                    filter: "grayscale(100%)", // Nice effect for "processing" state
+                    border: 0,
+                    "& .MuiDataGrid-columnHeaders": {
+                      bgcolor: alpha(theme.palette.primary.main, 0.04),
+                    },
+                    "& .MuiDataGrid-row:hover": {
+                      bgcolor: alpha(theme.palette.primary.main, 0.04),
+                    },
                   }}
                 />
-
-                {/* Progress / Status Overlay */}
-                <Box
-                  sx={{
-                    position: "absolute",
-                    inset: 0,
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    zIndex: 10,
-                  }}
-                >
-                  {/* Progress Bar Container */}
-                  <Box sx={{ width: 256, mb: 2 }}>
-                    <LinearProgress
-                      variant="determinate"
-                      value={progress} // LINKED TO STATE
-                      sx={{
-                        height: 8,
-                        borderRadius: "999px",
-                        // Smooth transition for the bar animation
-                        "& .MuiLinearProgress-bar": {
-                          transition: "transform 0.2s linear",
-                        },
-                      }}
-                    />
-                  </Box>
-
-                  {/* Dynamic Status Text */}
-                  <Typography
-                    variant="h6"
-                    fontWeight="bold"
-                    sx={{ display: "flex", alignItems: "center", gap: 1.5 }}
-                  >
-                    <LoopIcon
-                      sx={{
-                        animation: "spin 1s linear infinite",
-                        "@keyframes spin": {
-                          "0%": { transform: "rotate(0deg)" },
-                          "100%": { transform: "rotate(360deg)" },
-                        },
-                      }}
-                    />
-                    {/* Show integer percentage */}
-                    Digitizing... {Math.round(progress)}%
-                  </Typography>
-
-                  <Typography variant="body2" sx={{ opacity: 0.8, mt: 0.5 }}>
-                    {statusText}
-                  </Typography>
-                </Box>
               </Box>
-            )}
-          </Box>
-
-          <Box mt={2}>
-            <Typography variant="subtitle2" sx={{ fontWeight: "bold" }}>
-              {t("Student.ImportDialog.plsReview")}
-            </Typography>
-          </Box>
-
-          {/* <!-- Preview Table Card --> */}
-          {/* Form fields would go here */}
-          <Box
-            className="font-siemreap"
-            sx={{ height: 500, width: "100%", mt: 2 }}
-          >
-            <DataGrid
-              rows={rows}
-              columns={columns}
-              loading={isLoading}
-              hideFooterSelectedRowCount
-              disableRowSelectionOnClick
-              checkboxSelection={true}
-              onRowSelectionModelChange={(newRowSelectionModel) => {
-                setRowSelectionModel(newRowSelectionModel);
-              }}
-              rowSelectionModel={rowSelectionModel}
-              processRowUpdate={processRowUpdate}
-              pageSizeOptions={[40]}
-              initialState={{
-                pagination: { paginationModel: { pageSize: 40 } },
-              }}
-            />
-          </Box>
-
-          {/* Display AI Response as JSON */}
-          {preview && (
-            <Box
-              sx={{
-                mt: 2,
-                p: 2,
-                borderRadius: "8px",
-                border: "1px solid",
-                borderColor: "action.disabled",
-                maxHeight: "300px",
-                overflow: "auto",
-              }}
-            >
-              {/* <Typography
-                variant="subtitle2"
-                sx={{ fontWeight: "bold", mb: 1 }}
-              >
-                AI Response Data:
-              </Typography>
-              <Box
-                component="pre"
-                sx={{
-                  p: 1.5,
-                  borderRadius: "4px",
-                  fontSize: "12px",
-                  fontFamily: "monospace",
-                  border: "1px solid",
-                  borderColor: "action.disabled",
-                  overflow: "auto",
-                }}
-              >
-                {JSON.stringify(preview, null, 2)}
-              </Box> */}
-            </Box>
+            </Card>
           )}
         </DialogContent>
-        <DialogActions>
-          <Button onClick={handleClose}>{t("Common.cancel")}</Button>
-          <Button
-            disabled={!preview}
-            variant="contained"
-            onClick={() => setSaveConfirmDeleteDialogOpen(true)}
-          >
-            {t("Common.save")}
+
+        <Divider />
+        <DialogActions sx={{ px: 3, py: 2 }}>
+          <Button onClick={handleClose} color="inherit">
+            {t("Common.cancel")}
           </Button>
+          <Tooltip
+            title={!hasPreview ? t("Student.ImportDialog.noPreviewData") : ""}
+            placement="top"
+          >
+            <span>
+              <Button
+                disabled={!hasPreview}
+                variant="contained"
+                startIcon={<SaveIcon />}
+                onClick={() => setSaveConfirmDeleteDialogOpen(true)}
+              >
+                {selectedCount > 0
+                  ? `${t("Common.save")} · ${selectedCount}`
+                  : t("Common.save")}
+              </Button>
+            </span>
+          </Tooltip>
         </DialogActions>
       </Dialog>
 

@@ -229,6 +229,9 @@ export default function AnnualReport({ isShow, rows }: AnnualReportProps) {
               search: true,
               export: true,
               settings: true,
+              exportTitle: isShow
+                ? t("Annual.annualAverage")
+                : t("Annual.annualAverageRanking"),
             },
           },
         }}
