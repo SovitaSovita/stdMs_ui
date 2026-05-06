@@ -26,6 +26,9 @@ export default function OptionsMenu() {
 
   const handleLogout = async () => {
     await signOut({ redirect: false }); // ✅ do not reload or redirect
+    if (typeof window !== "undefined") {
+      localStorage.clear();
+    }
     router.push("/auth/signin");             // ✅ navigate manually
   };
 
