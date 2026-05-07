@@ -13,6 +13,7 @@ import DashboardRoundedIcon from '@mui/icons-material/DashboardRounded';
 import SideMenuMobile from './SideMenuMobile';
 import MenuButton from './MenuButton';
 import ColorModeIconDropdown from '@/app/shared-theme/ColorModeIconDropdown';
+import LanguageIconDropdown from './LanguageIconDropdown';
 
 const Toolbar = styled(MuiToolbar)({
   width: '100%',
@@ -70,6 +71,7 @@ export default function AppNavbar() {
               Dashboard
             </Typography>
           </Stack>
+          <LanguageIconDropdown />
           <ColorModeIconDropdown />
           <MenuButton aria-label="menu" onClick={toggleDrawer(true)}>
             <MenuRoundedIcon />

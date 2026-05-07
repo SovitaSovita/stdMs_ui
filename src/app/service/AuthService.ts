@@ -37,6 +37,22 @@ const AuthService = {
     }
   },
 
+  changePassword: async (sendData: {
+    currentPassword: string;
+    newPassword: string;
+    confirmPassword: string;
+  }): Promise<any> => {
+    return await RestService.put(Paths.auth.changePassword, sendData);
+  },
+
+  updateProfile: async (sendData: {
+    fullname?: string;
+    email?: string;
+    profile?: string;
+  }): Promise<any> => {
+    return await RestService.put(Paths.auth.profile, sendData);
+  },
+
   // otpVerify: async (sendData: VerifyOtpValues): Promise<any> => {
   //   try {
   //     await RestService.post(Paths.auth.verify, sendData);

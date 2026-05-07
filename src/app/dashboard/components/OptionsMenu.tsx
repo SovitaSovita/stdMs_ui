@@ -14,6 +14,8 @@ import MoreVertRoundedIcon from "@mui/icons-material/MoreVertRounded";
 import MenuButton from "./MenuButton";
 import { useRouter } from "next/navigation";
 import { signOut } from "next-auth/react";
+import ChangePasswordDialog from "./Dialog/ChangePasswordDialog";
+import MyAccountDialog from "./Dialog/MyAccountDialog";
 
 const MenuItem = styled(MuiMenuItem)({
   margin: "2px 0",
@@ -21,6 +23,8 @@ const MenuItem = styled(MuiMenuItem)({
 
 export default function OptionsMenu() {
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+  const [changePwOpen, setChangePwOpen] = React.useState(false);
+  const [accountOpen, setAccountOpen] = React.useState(false);
   const open = Boolean(anchorEl);
   const theme = useTheme();
 
@@ -68,8 +72,22 @@ export default function OptionsMenu() {
           },
         }}
       >
-        <MenuItem onClick={handleClose}>My account</MenuItem>
-        <MenuItem onClick={handleClose}>Settings</MenuItem>
+        <MenuItem
+          onClick={() => {
+            handleClose();
+            setAccountOpen(true);
+          }}
+        >
+          My account
+        </MenuItem>
+        <MenuItem
+          onClick={() => {
+            handleClose();
+            setChangePwOpen(true);
+          }}
+        >
+          Settings
+        </MenuItem>
         <Divider />
         <MenuItem
           onClick={handleLogout}
@@ -87,6 +105,14 @@ export default function OptionsMenu() {
           </ListItemIcon>
         </MenuItem>
       </Menu>
+      <ChangePasswordDialog
+        open={changePwOpen}
+        onClose={() => setChangePwOpen(false)}
+      />
+      <MyAccountDialog
+        open={accountOpen}
+        onClose={() => setAccountOpen(false)}
+      />
     </React.Fragment>
   );
 }

@@ -11,6 +11,7 @@ import Stack from '@mui/material/Stack';
 import AppNavbar from './components/AppNavbar';
 import Header from './components/Header';
 import SideMenu from './components/SideMenu';
+import { SidebarProvider } from './components/SidebarContext';
 import AppTheme from '@/app/shared-theme/AppTheme';
 import { chartsCustomizations, dataGridCustomizations, datePickersCustomizations, treeViewCustomizations } from './theme/customizations';
 
@@ -26,6 +27,7 @@ export default function DashboardLayout(props: { disableCustomTheme?: boolean, c
   return (
     <AppTheme {...props} themeComponents={xThemeComponents}>
       <CssBaseline enableColorScheme />
+      <SidebarProvider>
       <Box sx={{ display: 'flex' }}>
         <SideMenu />
         <AppNavbar />
@@ -54,6 +56,7 @@ export default function DashboardLayout(props: { disableCustomTheme?: boolean, c
           </Stack>
         </Box>
       </Box>
+      </SidebarProvider>
     </AppTheme>
   );
 }

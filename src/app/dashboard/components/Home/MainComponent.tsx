@@ -34,6 +34,7 @@ import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import useClassroomData from "@/app/libs/hooks/useClassroomData";
 import CustomClassTab from "../Common/Classroom/CustomClassTab";
+import OnboardingChecklistDialog from "../Dialog/OnboardingChecklistDialog";
 
 type StatTone = "primary" | "info" | "secondary" | "success" | "warning";
 
@@ -208,6 +209,13 @@ export default function MainComponent() {
     () => (exams ?? []).filter((e) => e.examType === "SEMESTER").length,
     [exams]
   );
+
+  const hasClassroom = Boolean(classroom?.id);
+  const hasStudents = total > 0;
+  const hasSubjects = totalSubjects > 0;
+  const [onboardingDismissed, setOnboardingDismissed] = React.useState(false);
+  const showOnboarding =
+    hasClassroom && (!hasStudents || !hasSubjects) && !onboardingDismissed;
 
   return (
     <Box sx={{ width: "100%", maxWidth: { sm: "100%", md: "1700px" } }}>
@@ -443,6 +451,14 @@ export default function MainComponent() {
           <CustomClassTab />
         </Box>
       </Card>
+
+      <OnboardingChecklistDialog
+        open={showOnboarding}
+        onClose={() => setOnboardingDismissed(true)}
+        hasClassroom={hasClassroom}
+        hasStudents={hasStudents}
+        hasSubjects={hasSubjects}
+      />
     </Box>
   );
 }

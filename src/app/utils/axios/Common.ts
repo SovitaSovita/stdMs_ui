@@ -4,6 +4,41 @@ import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
 import dayjs, { Dayjs } from "dayjs";
 import { getToken } from "next-auth/jwt";
 import { getSession, signOut } from "next-auth/react";
+import type { Session } from "next-auth";
+
+// In-memory session cache.
+// next-auth's getSession() always hits /api/auth/session — without this, every
+// axios request triggers a session fetch. We reuse the session while the JWT's
+// expiresAt is still in the future, and invalidate on 401 / signOut.
+let cachedSession: Session | null = null;
+let inFlight: Promise<Session | null> | null = null;
+const SAFETY_WINDOW_MS = 30_000; // refetch a bit before expiry
+
+function isSessionFresh(s: Session | null): boolean {
+  if (!s?.accessToken) return false;
+  if (!s.expiresAt) return true; // no expiry info — trust it for this tick
+  return s.expiresAt - SAFETY_WINDOW_MS > Date.now();
+}
+
+async function getCachedSession(forceRefresh = false): Promise<Session | null> {
+  if (!forceRefresh && isSessionFresh(cachedSession)) return cachedSession;
+  if (inFlight) return inFlight;
+  inFlight = (async () => {
+    try {
+      const s = await getSession();
+      cachedSession = s ?? null;
+      return cachedSession;
+    } finally {
+      inFlight = null;
+    }
+  })();
+  return inFlight;
+}
+
+export function invalidateSessionCache() {
+  cachedSession = null;
+  inFlight = null;
+}
 
 export const handleTokenExpired = async (error: AxiosError) => {
   const status = error.response?.status;
@@ -12,6 +47,7 @@ export const handleTokenExpired = async (error: AxiosError) => {
     if (typeof window !== "undefined") {
       // avoid infinite redirect: don't redirect if already on signin
       if (!window.location.pathname.startsWith("/signin")) {
+        invalidateSessionCache();
         // signOut clears session cookie
         await signOut({ redirect: false });
         localStorage.clear();
@@ -26,14 +62,12 @@ export const handleTokenExpired = async (error: AxiosError) => {
 export const handleRequestSuccess = async (
   config: InternalAxiosRequestConfig
 ): Promise<InternalAxiosRequestConfig> => {
-  const session = await getSession();
+  const session = await getCachedSession();
   const token = session?.accessToken;
   config.headers = config.headers || {};
   if (typeof token === "string" && token.length > 0) {
-    // only set when token exists
     config.headers.Authorization = `Bearer ${token}`;
   } else {
-    // ensure no stale header
     delete config.headers.Authorization;
   }
   return config;
@@ -41,22 +75,21 @@ export const handleRequestSuccess = async (
 
 export const handleResponseError = async (error: any) => {
   const { config: originalRequest } = error;
-  const session = await getSession();
-  // 인증 실패가 아니거나, 재발급 리퀘스트 실패할 경우
   if (error.response?.status !== 401) {
     return Promise.reject(error);
   }
 
-  // const isAdmin = JSON.parse(localStorage.getItem("isAdminMode") || "false");
-
-  try {
+  // Token may have just expired — invalidate and retry once with a fresh one.
+  if (originalRequest && !originalRequest._retried) {
+    originalRequest._retried = true;
+    invalidateSessionCache();
+    const session = await getCachedSession(true);
     const accessToken = session?.accessToken;
-    if (typeof accessToken === "string") {
-      originalRequest.headers.Authorization = "Bearer " + accessToken;
+    if (typeof accessToken === "string" && accessToken.length > 0) {
+      originalRequest.headers = originalRequest.headers || {};
+      originalRequest.headers.Authorization = `Bearer ${accessToken}`;
       return axios(originalRequest);
     }
-  } catch (e) {
-    return Promise.reject(e);
   }
 
   return Promise.reject(error);

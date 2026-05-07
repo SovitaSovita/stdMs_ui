@@ -63,6 +63,56 @@ function formatBytes(bytes?: number) {
   return `${(kb / 1024).toFixed(2)} MB`;
 }
 
+type AiErrorDescriptor = {
+  severity: "error" | "warning" | "info";
+  message: string;
+};
+
+// The Gemini SDK throws ApiError with a JSON-encoded `message` field that
+// embeds { error: { code, message, status } }. We extract those when present.
+function describeAiError(
+  err: any,
+  t: (key: string) => string
+): AiErrorDescriptor {
+  const raw = err?.message ?? "";
+
+  let code: number | undefined;
+  let status: string | undefined;
+  let apiMessage: string | undefined;
+
+  try {
+    const start = raw.indexOf("{");
+    if (start >= 0) {
+      const parsed = JSON.parse(raw.slice(start));
+      code = parsed?.error?.code ?? err?.status;
+      status = parsed?.error?.status;
+      apiMessage = parsed?.error?.message;
+    }
+  } catch {
+    // not JSON — fall through and use raw text
+  }
+
+  code = code ?? err?.status;
+
+  if (code === 429 || status === "RESOURCE_EXHAUSTED") {
+    return { severity: "warning", message: t("Common.aiQuotaExceeded") };
+  }
+  if (code === 401 || code === 403 || status === "PERMISSION_DENIED") {
+    return { severity: "error", message: t("Common.aiAuthError") };
+  }
+  if (code === 400 || status === "INVALID_ARGUMENT") {
+    return { severity: "warning", message: t("Common.aiBadFile") };
+  }
+  if (code === 503 || status === "UNAVAILABLE") {
+    return { severity: "warning", message: t("Common.aiUnavailable") };
+  }
+
+  return {
+    severity: "error",
+    message: apiMessage || t("Common.errorOccurred"),
+  };
+}
+
 export const ImportScoreByAi = (props: ImportScoreByAiProps) => {
   const { examId, callback } = props;
   const theme = useTheme();
@@ -199,8 +249,21 @@ export const ImportScoreByAi = (props: ImportScoreByAiProps) => {
     try {
       const input = document.createElement("input");
       input.type = "file";
-      input.accept =
-        ".xls,.xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel";
+      input.accept = [
+        // Images — phone photos of paper score sheets
+        "image/*",
+        ".jpg",
+        ".jpeg",
+        ".png",
+        ".webp",
+        ".heic",
+        ".heif",
+        // Spreadsheets — exported gradebooks
+        ".xls",
+        ".xlsx",
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "application/vnd.ms-excel",
+      ].join(",");
       input.click();
 
       input.onchange = async () => {
@@ -309,6 +372,12 @@ export const ImportScoreByAi = (props: ImportScoreByAiProps) => {
               console.log("AI request aborted");
             } else {
               console.error("AI error:", err);
+              const { severity, message } = describeAiError(err, t);
+              notification.show(message, {
+                severity,
+                autoHideDuration: 6000,
+              });
+              handleClear();
             }
           } finally {
             setTimeout(() => {
@@ -526,7 +595,7 @@ export const ImportScoreByAi = (props: ImportScoreByAiProps) => {
           {t("Common.aiHelp")}
         </Typography>
         <Typography variant="caption" color="text.secondary">
-          .xlsx, .xls
+          {t("Common.aiAcceptedFormats")}
         </Typography>
       </Stack>
       <Button

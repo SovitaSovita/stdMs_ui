@@ -20,10 +20,10 @@ export default function ClientLayout({
   }
 
   return (
-    <DashboardLayout>
-      <NotificationsProvider>
-        <DialogsProvider>{children}</DialogsProvider>
-      </NotificationsProvider>
-    </DashboardLayout>
+    <NotificationsProvider>
+      <DialogsProvider>
+        <DashboardLayout>{children}</DashboardLayout>
+      </DialogsProvider>
+    </NotificationsProvider>
   );
 }

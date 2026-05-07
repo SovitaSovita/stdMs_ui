@@ -71,7 +71,17 @@ async function refreshAccessToken(token: JWT): Promise<JWT> {
   }
 }
 
-export const jwt = async ({ token, user }: { token: JWT; user: any }) => {
+export const jwt = async ({
+  token,
+  user,
+  trigger,
+  session,
+}: {
+  token: JWT;
+  user: any;
+  trigger?: "signIn" | "signUp" | "update";
+  session?: any;
+}) => {
   // First login
   if (user) {
     return {
@@ -86,15 +96,23 @@ export const jwt = async ({ token, user }: { token: JWT; user: any }) => {
     };
   }
 
+  // Profile update from client via useSession().update({...}).
+  // Only the whitelisted user-profile fields are merged in.
+  if (trigger === "update" && session) {
+    return {
+      ...token,
+      fullname: session.fullname ?? token.fullname,
+      email: session.email ?? token.email,
+      profile: session.profile ?? token.profile,
+    };
+  }
+
   // If token still valid → keep it
   if (token.expiresAt && token.expiresAt > Date.now()) {
-    // console.log("1 >", token.expiresAt);
-    // console.log("2 >", Date.now());
     return token;
   }
 
   // Expired → refresh
-  // console.log("call refrect");
   return await refreshAccessToken(token);
 };
 
@@ -126,18 +144,28 @@ export const options: NextAuthOptions = {
         password: { label: "Password", type: "text" },
       },
       async authorize(credentials) {
-        const result = await fetch(`${API_BASE_URL}/api/v1/auth/login`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(credentials),
-        });
-        const data = await result.json();
-        if (!result.ok) {
-          return null;
+        try {
+          const result = await fetch(`${API_BASE_URL}/api/v1/auth/login`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(credentials),
+          });
+          const data = await result.json().catch(() => ({}));
+          if (!result.ok) {
+            // Surface the API's message to the client through next-auth's
+            // result.error (signIn with redirect:false returns it).
+            throw new Error(
+              data?.message ||
+                `Authentication failed (status ${result.status})`
+            );
+          }
+          return data;
+        } catch (err: any) {
+          if (err instanceof Error && err.message) throw err;
+          throw new Error("Unable to reach authentication server");
         }
-        return data;
       },
     }),
   ],

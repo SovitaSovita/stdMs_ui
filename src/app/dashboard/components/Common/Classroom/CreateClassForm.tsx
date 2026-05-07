@@ -6,10 +6,12 @@ import Grid from "@mui/material/Grid";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
 import dayjs, { Dayjs } from "dayjs";
 import { useRouter } from "next/navigation";
 import { useAtom } from "jotai";
 import { useFormik } from "formik";
+import { signOut } from "next-auth/react";
 import { useUpsertClassSchema } from "@/app/libs/hooks/Validation";
 import { ClassInitform, DialogModeType } from "@/app/constants/type";
 import CustomDatePicker from "../../CustomDatePicker";
@@ -96,6 +98,14 @@ export default function CreateClassForm(props: CreateClassFormProps) {
     formik.resetForm();
   }, []);
 
+  const handleLogout = React.useCallback(async () => {
+    await signOut({ redirect: false });
+    if (typeof window !== "undefined") {
+      localStorage.clear();
+    }
+    navigate.push("/auth/signin");
+  }, [navigate]);
+
   return (
     <Box
       component="form"
@@ -170,14 +180,24 @@ export default function CreateClassForm(props: CreateClassFormProps) {
         </Grid>
       </FormGroup>
       <Stack direction="row" spacing={2} justifyContent="space-between">
-        <Button
-          sx={{ visibility: mode === "INIT" ? "hidden" : "visible" }}
-          variant="contained"
-          startIcon={<ArrowBackIcon />}
-          onClick={handleClose}
-        >
-          Back
-        </Button>
+        {mode === "INIT" ? (
+          <Button
+            variant="outlined"
+            color="error"
+            startIcon={<LogoutRoundedIcon />}
+            onClick={handleLogout}
+          >
+            {tCommon("logout")}
+          </Button>
+        ) : (
+          <Button
+            variant="contained"
+            startIcon={<ArrowBackIcon />}
+            onClick={handleClose}
+          >
+            {tCommon("back")}
+          </Button>
+        )}
         <Button
           type="submit"
           variant="contained"

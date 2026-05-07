@@ -8,7 +8,7 @@ import MenuItem from '@mui/material/MenuItem';
 import { useColorScheme } from '@mui/material/styles';
 
 export default function ColorModeIconDropdown(props: IconButtonOwnProps) {
-  const { mode, systemMode, setMode } = useColorScheme();
+  const { mode, setMode } = useColorScheme();
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
   const handleClick = (event: React.MouseEvent<HTMLElement>) => {
@@ -17,7 +17,7 @@ export default function ColorModeIconDropdown(props: IconButtonOwnProps) {
   const handleClose = () => {
     setAnchorEl(null);
   };
-  const handleMode = (targetMode: 'system' | 'light' | 'dark') => () => {
+  const handleMode = (targetMode: 'light' | 'dark') => () => {
     setMode(targetMode);
     handleClose();
   };
@@ -37,7 +37,7 @@ export default function ColorModeIconDropdown(props: IconButtonOwnProps) {
       />
     );
   }
-  const resolvedMode = (systemMode || mode) as 'light' | 'dark';
+  const resolvedMode = (mode === 'dark' ? 'dark' : 'light') as 'light' | 'dark';
   const icon = {
     light: <LightModeIcon />,
     dark: <DarkModeIcon />,
@@ -74,9 +74,6 @@ export default function ColorModeIconDropdown(props: IconButtonOwnProps) {
         transformOrigin={{ horizontal: 'right', vertical: 'top' }}
         anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
       >
-        <MenuItem selected={mode === 'system'} onClick={handleMode('system')}>
-          System
-        </MenuItem>
         <MenuItem selected={mode === 'light'} onClick={handleMode('light')}>
           Light
         </MenuItem>

@@ -3,7 +3,13 @@
     "allow": [
       "Bash(npx tsc *)",
       "Bash(echo \"EXITCODE=$?\")",
-      "Bash(npx tsx *)"
+      "Bash(npx tsx *)",
+      "Bash(mkdir \"d:\\\\Kosign Project\\\\stdMs_ui\\\\src\\\\app\\\\[locale]\\\\picker\")",
+      "Bash(mkdir \"d:\\\\Kosign Project\\\\stdMs_ui\\\\src\\\\app\\\\[locale]\\\\teams\" \"d:\\\\Kosign Project\\\\stdMs_ui\\\\src\\\\app\\\\[locale]\\\\timer\" \"d:\\\\Kosign Project\\\\stdMs_ui\\\\src\\\\app\\\\[locale]\\\\points\")",
+      "Bash(mkdir \"d:\\\\Kosign Project\\\\stdMs_ui\\\\src\\\\app\\\\[locale]\\\\quiz\")"
+    ],
+    "additionalDirectories": [
+      "d:\\Kosign Project\\stdMs_ui\\src\\app\\[locale]"
     ]
   }
 }

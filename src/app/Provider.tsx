@@ -12,7 +12,7 @@ interface Props {
 function Provider(props: Props) {
   const { children } = props;
   return (
-    <SessionProvider>
+    <SessionProvider refetchOnWindowFocus={false} refetchInterval={0}>
         <SWRConfig
           value={{
             fetcher,

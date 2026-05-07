@@ -2,6 +2,66 @@
 
 import * as React from 'react';
 import SvgIcon from '@mui/material/SvgIcon';
+import Box from '@mui/material/Box';
+import Stack from '@mui/material/Stack';
+import Typography from '@mui/material/Typography';
+import SchoolRoundedIcon from '@mui/icons-material/SchoolRounded';
+
+type AppLogoProps = {
+  size?: number;
+  showText?: boolean;
+  textColor?: string;
+};
+
+export function AppLogo({ size = 40, showText = true, textColor }: AppLogoProps) {
+  return (
+    <Stack direction="row" alignItems="center" spacing={1.25}>
+      <Box
+        sx={(theme) => ({
+          width: size,
+          height: size,
+          borderRadius: 2,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.info.main} 100%)`,
+          color: theme.palette.primary.contrastText,
+          boxShadow: theme.shadows[2],
+        })}
+      >
+        <SchoolRoundedIcon sx={{ fontSize: size * 0.6 }} />
+      </Box>
+      {showText && (
+        <Box sx={{ lineHeight: 1 }}>
+          <Typography
+            component="span"
+            sx={{
+              display: 'block',
+              fontWeight: 800,
+              fontSize: size * 0.45,
+              letterSpacing: '-0.02em',
+              color: textColor || 'text.primary',
+            }}
+          >
+            Student MS
+          </Typography>
+          <Typography
+            component="span"
+            variant="caption"
+            sx={{
+              display: 'block',
+              color: 'text.secondary',
+              fontWeight: 500,
+              mt: 0.25,
+            }}
+          >
+            Classroom & exam management
+          </Typography>
+        </Box>
+      )}
+    </Stack>
+  );
+}
 
 export function SitemarkIcon() {
   return (

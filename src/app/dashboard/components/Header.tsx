@@ -9,7 +9,7 @@ import MenuButton from "./MenuButton";
 import ColorModeIconDropdown from "@/app/shared-theme/ColorModeIconDropdown";
 
 import Search from "./Search";
-import LanguageSwitcher from "./LanguageSwitcher";
+import LanguageIconDropdown from "./LanguageIconDropdown";
 
 export default function Header() {
   return (
@@ -28,12 +28,12 @@ export default function Header() {
       <NavbarBreadcrumbs />
       <Stack direction="row" sx={{ gap: 1 }}>
         {/* <Search /> */}
-        <LanguageSwitcher />
+        <LanguageIconDropdown />
 
         {/* <CustomDatePicker /> */}
-        <MenuButton showBadge aria-label="Open notifications">
+        {/* <MenuButton showBadge aria-label="Open notifications">
           <NotificationsRoundedIcon />
-        </MenuButton>
+        </MenuButton> */}
         <ColorModeIconDropdown />
       </Stack>
     </Stack>

@@ -10,17 +10,14 @@ export default function ColorModeSelect(props: SelectProps) {
   }
   return (
     <Select
-      value={mode}
-      onChange={(event) =>
-        setMode(event.target.value as 'system' | 'light' | 'dark')
-      }
+      value={mode === 'dark' ? 'dark' : 'light'}
+      onChange={(event) => setMode(event.target.value as 'light' | 'dark')}
       SelectDisplayProps={{
         // @ts-ignore
         'data-screenshot': 'toggle-mode',
       }}
       {...props}
     >
-      <MenuItem value="system">System</MenuItem>
       <MenuItem value="light">Light</MenuItem>
       <MenuItem value="dark">Dark</MenuItem>
     </Select>

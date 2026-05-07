@@ -2,6 +2,8 @@ export const Paths = {
     auth: {
         login: "/api/v1/auth/login",
         register: "/api/v1/auth/register",
+        changePassword: "/api/v1/auth/change-password",
+        profile: "/api/v1/auth/profile",
     },
     class: {
         upsert: "/api/v1/class",
@@ -18,6 +20,7 @@ export const Paths = {
     student: {
         getInfoList: (stuId: string) => `/api/v1/students/${stuId}`,
         upsert: "/api/v1/student",
+        upsertMany: (classroomId: string) => `/api/v1/student/all?classroomId=${classroomId}`,
         deleteList: (id: string) => `/api/v1/students/delete?classId=${id}`,
         excelPreview: `/api/v1/students/preview`,
         excelImport: (id: string) => `/api/v1/students/import?classroomId=${id}`,
@@ -32,5 +35,8 @@ export const Paths = {
         upsert: "/api/v1/subject",
         getById: "/api/v1/subject",
         delete: (id: string) => `/api/v1/subject/${id}`,
-    }
+    },
+    upload: {
+        file: "/api/v1/upload-file",
+    },
 }

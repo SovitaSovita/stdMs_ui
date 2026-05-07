@@ -14,6 +14,15 @@ const StudentService = {
   upsertStudent: async (sentData: StudentsRequestUpsertType): Promise<any> => {
     return await RestService.post(Paths.student.upsert, sentData);
   },
+  upsertMany: async (
+    classroomId: string,
+    sentData: StudentsRequestUpsertType[]
+  ): Promise<any> => {
+    return await RestService.post(
+      Paths.student.upsertMany(classroomId),
+      sentData
+    );
+  },
   deleteList: async (ids: string[], classroomId: string): Promise<any> => {
     return await RestService.delete(Paths.student.deleteList(classroomId), ids);
   },

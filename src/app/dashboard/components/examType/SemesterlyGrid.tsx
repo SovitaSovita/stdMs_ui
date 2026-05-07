@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useCallback, useRef } from "react";
 import {
   ClassExamDataResponseType,
   ClassReqFilterDetailType,
@@ -10,28 +10,42 @@ import {
 } from "@/app/constants/type";
 import { CustomDataGridToolbar } from "@/app/dashboard/components/Common/CustomDataGridToolbar";
 import { showAlertAtom } from "@/app/libs/jotai/alertAtom";
-import { classroomAtom, examAtom } from "@/app/libs/jotai/classroomAtom";
+import {
+  classroomAtom,
+  examAtom,
+  subjectsAtom,
+} from "@/app/libs/jotai/classroomAtom";
 import ClassroomService from "@/app/service/ClassroomService";
+import useNotifications from "@/app/libs/hooks/useNotifications/useNotifications";
+import useClassroomData from "@/app/libs/hooks/useClassroomData";
 import {
   getInitialSettings,
   SETTINGS_STORAGE_KEY,
 } from "@/app/utils/axios/Common";
 import {
-  AppBar,
   Box,
   Button,
-  Tab,
-  Tabs,
+  Paper,
+  Slide,
   TextField,
+  Tooltip,
   Typography,
-  useTheme,
+  alpha,
 } from "@mui/material";
-import { DataGrid, GridColDef, GridDensity, GridRowId } from "@mui/x-data-grid";
+import SaveIcon from "@mui/icons-material/Save";
+import RestoreIcon from "@mui/icons-material/Restore";
+import EditNoteIcon from "@mui/icons-material/EditNote";
+import {
+  DataGrid,
+  GridColDef,
+  GridRowId,
+  useGridApiRef,
+} from "@mui/x-data-grid";
 import dayjs from "dayjs";
 import { useAtom, useAtomValue } from "jotai";
 import { useTranslations } from "next-intl";
 import { notFound } from "next/navigation";
-import { ChangeEvent, use, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 type SemesterlyGridProps = {
   examType: string;
@@ -50,6 +64,13 @@ export const SemesterlyGrid = (props: SemesterlyGridProps) => {
   }, [settings]);
 
   const exam = useAtomValue(examAtom);
+  const classroom = useAtomValue(classroomAtom);
+  const subjects = useAtomValue(subjectsAtom);
+  const notifications = useNotifications();
+  const [, showAlert] = useAtom(showAlertAtom);
+
+  // Ensure subjects are loaded so we can validate against maxScore.
+  useClassroomData(classroom, { autoFetch: subjects.length === 0 });
 
   // Format the URL's MMYYYY param into a localized "Month YYYY" label
   const monthYearLabel = useMemo(() => {
@@ -66,8 +87,68 @@ export const SemesterlyGrid = (props: SemesterlyGridProps) => {
 
   const [examData, setExamData] = useState<ClassExamDataResponseType>();
   const [rows, setRows] = useState<StudentInfoScore[]>([]);
+  const [originalRows, setOriginalRows] = useState<StudentInfoScore[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [showSubjects, setShowSubjects] = useState<boolean>(true);
+  const [showSubjects] = useState<boolean>(true);
+  const [modifiedRows, setModifiedRows] = useState<
+    Map<GridRowId, StudentInfoScore>
+  >(new Map());
+  const [focusedCell, setFocusedCell] = useState<{
+    rowId: GridRowId;
+    field: string;
+  } | null>(null);
+  const gridWrapperRef = useRef<HTMLDivElement | null>(null);
+  const isEditingRef = useRef(false);
+  const apiRef = useGridApiRef();
+
+  const maxScoreByField = useMemo(() => {
+    const map: Record<string, number> = {};
+    subjects.forEach((s) => {
+      if (s?.name && Number.isFinite(Number(s.maxScore))) {
+        map[s.name] = Number(s.maxScore);
+      }
+    });
+    return map;
+  }, [subjects]);
+
+  const originalRowMap = useMemo(() => {
+    const m = new Map<GridRowId, StudentInfoScore>();
+    originalRows.forEach((r) => m.set(r.id, r));
+    return m;
+  }, [originalRows]);
+
+  const isCellModified = useCallback(
+    (rowId: GridRowId, field: string): boolean => {
+      const orig = originalRowMap.get(rowId);
+      const current = rows.find((r) => r.id === rowId);
+      if (!orig || !current) return false;
+      const a = Number(orig.scores?.[field] ?? 0);
+      const b = Number(current.scores?.[field] ?? 0);
+      return a !== b;
+    },
+    [originalRowMap, rows]
+  );
+
+  const getOriginalScore = useCallback(
+    (rowId: GridRowId, field: string): number => {
+      return Number(originalRowMap.get(rowId)?.scores?.[field] ?? 0);
+    },
+    [originalRowMap]
+  );
+
+  const clampScore = useCallback(
+    (raw: any, field: string): { value: number; clamped: boolean; max?: number } => {
+      const max = maxScoreByField[field];
+      let n = Number(raw);
+      if (!Number.isFinite(n)) n = 0;
+      if (n < 0) return { value: 0, clamped: true, max };
+      if (typeof max === "number" && max > 0 && n > max) {
+        return { value: max, clamped: true, max };
+      }
+      return { value: n, clamped: false, max };
+    },
+    [maxScoreByField]
+  );
 
   const columns = useMemo(() => {
     const staticColumns: GridColDef<StudentInfoScore>[] = [
@@ -76,16 +157,12 @@ export const SemesterlyGrid = (props: SemesterlyGridProps) => {
         headerName: t("CommonField.id"),
         headerClassName: "font-siemreap",
         width: 50,
-        // renderCell: (params) =>
-        //   params.api.getRowIndexRelativeToVisibleRows(params.id) + 1,
       },
       {
         field: "fullName",
         headerName: t("CommonField.fullName"),
         headerClassName: "font-siemreap",
         width: showSubjects ? 170 : 190,
-        // valueGetter: (value, row) =>
-        //   `${row.firstName || ""} ${row.lastName || ""}`,
         sortable: true,
         disableColumnMenu: true,
       },
@@ -151,14 +228,15 @@ export const SemesterlyGrid = (props: SemesterlyGridProps) => {
       },
     ];
 
-    // Safely extract score keys with null checks
     const scoreKeys =
       rows.length > 0 && rows[0].scores ? Object.keys(rows[0].scores) : [];
 
     const dynamicScoreColumns: GridColDef[] = scoreKeys.flatMap((key) => {
+      const max = maxScoreByField[key];
       const baseCol: GridColDef = {
         field: key,
         headerName: key.toUpperCase().slice(0, 2),
+        description: max ? `${key} · max ${max}` : key,
         type: "string",
         width: showSubjects ? 70 : 90,
         align: "center",
@@ -172,9 +250,25 @@ export const SemesterlyGrid = (props: SemesterlyGridProps) => {
           if (!scoreArr) return "";
           return scoreArr[field] || 0;
         },
+        cellClassName: (params) =>
+          isCellModified(params.id, params.field) ? "score-cell-modified" : "",
+        renderCell: (params) => {
+          const modified = isCellModified(params.id, params.field);
+          const value = params.value;
+          if (!modified) return <span>{value as any}</span>;
+          const original = getOriginalScore(params.id, params.field);
+          return (
+            <Tooltip
+              title={`${t("MonthlyExam.previousScore")}: ${original}`}
+              placement="top"
+              arrow
+            >
+              <span style={{ fontWeight: 700 }}>{value as any}</span>
+            </Tooltip>
+          );
+        },
       };
 
-      //If examType = "semester", also create ranking column for this subject
       if (examType === "semester") {
         const rankCol: GridColDef = {
           field: `${key}_Rank`,
@@ -193,20 +287,26 @@ export const SemesterlyGrid = (props: SemesterlyGridProps) => {
     return showSubjects
       ? [...staticColumns, ...dynamicScoreColumns, ...staticColumns2]
       : [...staticColumns, ...staticColumns2];
-  }, [rows, showSubjects]);
+  }, [
+    rows,
+    showSubjects,
+    examType,
+    maxScoreByField,
+    isCellModified,
+    getOriginalScore,
+    t,
+  ]);
 
   const [loading, setLoading] = useState(true);
-  const classroom = useAtomValue(classroomAtom);
-  const [, showAlert] = useAtom(showAlertAtom);
 
   const validTypes = ["monthly", "semester"] as const;
   const isValidType = validTypes.includes(examType as any);
-  const parsedDate = dayjs(examDate, "MMYYYY", true); // strict
+  const parsedDate = dayjs(examDate, "MMYYYY", true);
   const isValidDate = parsedDate.isValid();
 
   useEffect(() => {
     if (!isValidType || !isValidDate) {
-      notFound(); // redirects to closest `not-found.tsx` or 404 page
+      notFound();
     }
   }, [isValidType, isValidDate]);
 
@@ -214,7 +314,6 @@ export const SemesterlyGrid = (props: SemesterlyGridProps) => {
     async function fetchExam() {
       try {
         if (!classroom?.id) return;
-
         const formatted = `${examDate.slice(2)}-${examDate.slice(0, 2)}-01`;
         const sendData: ClassReqFilterDetailType = {
           examType: examType.toUpperCase(),
@@ -222,100 +321,316 @@ export const SemesterlyGrid = (props: SemesterlyGridProps) => {
         };
         const result = await ClassroomService.getDetail(
           classroom?.id,
-          sendData,
+          sendData
         );
         if (result) {
           setExamData(result);
           setRows(result?.students);
+          setOriginalRows(JSON.parse(JSON.stringify(result?.students)));
         }
       } catch {
-        // swallow – we just show “no data”
+        // swallow – we just show "no data"
       } finally {
         setLoading(false);
       }
     }
 
     if (isValidType && isValidDate && classroom) fetchExam();
-  }, [classroom, isValidType, isValidDate]);
+  }, [classroom, isValidType, isValidDate, examType, examDate]);
 
   const processRowUpdate = async (
     newRow: StudentInfoScore,
     oldRow: StudentInfoScore,
-    params: { rowId: GridRowId },
+    params: { rowId: GridRowId }
   ): Promise<StudentInfoScore> => {
-    setIsLoading(true);
-
     try {
-      // Find which subject (field) changed
-      // Find which top-level field was edited
       const changedField = Object.keys(newRow).find((key) => {
-        if (key === "scores") return false; // skip nested if subject name = scores
+        if (key === "scores") return false;
         const newVal = newRow[key];
         const oldVal = oldRow[key];
         return newVal !== oldVal;
       });
 
-      if (!changedField) {
-        console.warn("No changed field detected");
-        return oldRow;
+      if (!changedField) return oldRow;
+
+      const { value: clamped, clamped: wasClamped, max } = clampScore(
+        newRow[changedField],
+        changedField
+      );
+      if (wasClamped) {
+        notifications.show(
+          t("MonthlyExam.scoreClamped", {
+            subject: changedField,
+            max: max ?? 0,
+          }),
+          { severity: "warning", autoHideDuration: 4000 }
+        );
       }
 
-      // Merge this field into scores
       const updatedScores = {
         ...oldRow.scores,
-        [changedField]: Number(newRow[changedField]),
+        [changedField]: clamped,
       };
-
-      // Build the newRow correctly
       const updatedRow = {
         ...newRow,
+        [changedField]: clamped,
         scores: updatedScores,
       };
 
-      // Prepare request payload
-      const sendData: ScoreUpsertRequest[] = [
-        {
-          studentId: updatedRow.id,
-          subjectName: changedField,
-          score: Number(updatedScores[changedField]),
-        },
-      ];
+      const originalScore = Number(
+        originalRowMap.get(params.rowId)?.scores?.[changedField] ?? 0
+      );
+      const sameAsOriginal = clamped === originalScore;
 
-      if (!classroom || !examData?.exams) return oldRow;
+      setRows((prev) =>
+        prev.map((r) => (r.id === updatedRow.id ? updatedRow : r))
+      );
+
+      setModifiedRows((prev) => {
+        const next = new Map(prev);
+        if (sameAsOriginal) {
+          const orig = originalRowMap.get(params.rowId);
+          const stillDirty =
+            orig &&
+            Object.keys(updatedScores).some((k) => {
+              const a = Number(updatedScores[k] ?? 0);
+              const b = Number(orig.scores?.[k] ?? 0);
+              return a !== b;
+            });
+          if (stillDirty) next.set(params.rowId, updatedRow);
+          else next.delete(params.rowId);
+        } else {
+          next.set(params.rowId, updatedRow);
+        }
+        return next;
+      });
+
+      return updatedRow;
+    } catch (error) {
+      console.error("processRowUpdate error:", error);
+      return oldRow;
+    }
+  };
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Clipboard paste — fill score cells starting at the focused cell.
+  // ─────────────────────────────────────────────────────────────────────────
+  const handlePasteScores = useCallback(
+    (event: ClipboardEvent) => {
+      if (!focusedCell) return;
+      const wrapper = gridWrapperRef.current;
+      if (
+        wrapper &&
+        document.activeElement &&
+        !wrapper.contains(document.activeElement as Node)
+      ) {
+        return;
+      }
+      const startField = focusedCell.field;
+      const scoreFieldSet = new Set(Object.keys(rows[0]?.scores ?? {}));
+      if (!scoreFieldSet.has(startField)) return;
+
+      const text = event.clipboardData?.getData("text");
+      if (!text) return;
+
+      const matrix = text
+        .replace(/\r/g, "")
+        .split("\n")
+        .filter((line, idx, arr) => idx < arr.length - 1 || line.length > 0)
+        .map((line) => line.split("\t"));
+
+      if (matrix.length === 0) return;
+
+      event.preventDefault();
+      event.stopPropagation();
+
+      if (isEditingRef.current && apiRef.current) {
+        try {
+          apiRef.current.stopCellEditMode({
+            id: focusedCell.rowId,
+            field: focusedCell.field,
+            ignoreModifications: true,
+          });
+        } catch {
+          /* ignore */
+        }
+        isEditingRef.current = false;
+      }
+
+      const scoreFields = Object.keys(rows[0]?.scores ?? {});
+      const startColIdx = scoreFields.indexOf(startField);
+      if (startColIdx < 0) return;
+      const startRowIdx = rows.findIndex((r) => r.id === focusedCell.rowId);
+      if (startRowIdx < 0) return;
+
+      let clampedCount = 0;
+      const next = [...rows];
+      const nextModified = new Map(modifiedRows);
+
+      for (let r = 0; r < matrix.length; r++) {
+        const targetRowIdx = startRowIdx + r;
+        if (targetRowIdx >= next.length) break;
+        const cells = matrix[r];
+        const updatedScores = { ...(next[targetRowIdx].scores ?? {}) };
+        for (let c = 0; c < cells.length; c++) {
+          const targetColIdx = startColIdx + c;
+          if (targetColIdx >= scoreFields.length) break;
+          const field = scoreFields[targetColIdx];
+          const raw = cells[c]?.trim();
+          if (raw === "" || raw === undefined) continue;
+          const { value, clamped: wasClamped } = clampScore(raw, field);
+          if (wasClamped) clampedCount++;
+          updatedScores[field] = value;
+        }
+        const updatedRow = { ...next[targetRowIdx], scores: updatedScores };
+        next[targetRowIdx] = updatedRow;
+
+        const orig = originalRowMap.get(updatedRow.id);
+        const stillDirty =
+          orig &&
+          Object.keys(updatedScores).some((k) => {
+            const a = Number(updatedScores[k] ?? 0);
+            const b = Number(orig.scores?.[k] ?? 0);
+            return a !== b;
+          });
+        if (stillDirty) nextModified.set(updatedRow.id, updatedRow);
+        else nextModified.delete(updatedRow.id);
+      }
+
+      setRows(next);
+      setModifiedRows(nextModified);
+
+      const filled =
+        matrix.length *
+        Math.min(matrix[0]?.length ?? 0, scoreFields.length - startColIdx);
+      notifications.show(
+        clampedCount > 0
+          ? t("MonthlyExam.pastedWithClamp", {
+              filled,
+              clamped: clampedCount,
+            })
+          : t("MonthlyExam.pasted", { filled }),
+        {
+          severity: clampedCount > 0 ? "warning" : "success",
+          autoHideDuration: 4000,
+        }
+      );
+    },
+    [
+      focusedCell,
+      rows,
+      modifiedRows,
+      originalRowMap,
+      clampScore,
+      maxScoreByField,
+      notifications,
+      t,
+      apiRef,
+    ]
+  );
+
+  useEffect(() => {
+    const listener = (e: ClipboardEvent) => handlePasteScores(e);
+    document.addEventListener("paste", listener, true);
+    return () => document.removeEventListener("paste", listener, true);
+  }, [handlePasteScores]);
+
+  const handleSaveChanges = async () => {
+    if (modifiedRows.size === 0) {
+      showAlert({
+        message: t("MonthlyExam.noChanges"),
+        severity: "info",
+      });
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      if (!classroom || !examData?.exams) {
+        showAlert({
+          message: t("MonthlyExam.missingData"),
+          severity: "error",
+        });
+        return;
+      }
+
+      const sendData: ScoreUpsertRequest[] = [];
+      modifiedRows.forEach((modifiedRow) => {
+        Object.keys(modifiedRow.scores || {}).forEach((subjectName) => {
+          const score = modifiedRow.scores?.[subjectName];
+          const originalRow = originalRows.find((r) => r.id === modifiedRow.id);
+          const originalScore = originalRow?.scores?.[subjectName];
+
+          if (score !== originalScore) {
+            sendData.push({
+              studentId: modifiedRow.id,
+              subjectName: subjectName,
+              score: Number(score),
+            });
+          }
+        });
+      });
+
+      if (sendData.length === 0) {
+        showAlert({
+          message: t("MonthlyExam.noChanges"),
+          severity: "info",
+        });
+        return;
+      }
 
       const result = await ClassroomService.upsertStuScores(
         classroom.id,
         examData.exams.id,
-        sendData,
+        sendData
       );
 
       if (result) {
-        setRows((prev) =>
-          prev.map((r) => (r.id === updatedRow.id ? updatedRow : r)),
-        );
-
+        const updatedRows = JSON.parse(JSON.stringify(rows));
+        setModifiedRows(new Map());
+        setRows(updatedRows);
+        setOriginalRows(updatedRows);
         showAlert({
-          message: "Student score updated.",
+          message: t("MonthlyExam.scoresUpdated", { count: sendData.length }),
           severity: "success",
         });
-        return updatedRow;
       }
-
-      return oldRow;
     } catch (error) {
-      console.error("processRowUpdate error:", error);
-      return oldRow; // rollback
+      console.error("handleSaveChanges error:", error);
+      showAlert({
+        message: t("MonthlyExam.saveFailed"),
+        severity: "error",
+      });
     } finally {
       setIsLoading(false);
     }
   };
+
+  const handleDiscard = useCallback(() => {
+    setRows(JSON.parse(JSON.stringify(originalRows)));
+    setModifiedRows(new Map());
+  }, [originalRows]);
+
+  // Ctrl/Cmd+S to save when there are pending edits.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") {
+        if (modifiedRows.size === 0) return;
+        e.preventDefault();
+        handleSaveChanges();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [modifiedRows.size]);
 
   // Compute scores, average, ranking, and grade
   const processedRows = useMemo(() => {
     if (!rows.length) return [];
     const subjectNames = Object.keys(rows[0].scores || {});
 
-    // Step 1: Calculate totalScore & average
     const withTotals = rows.map((row) => {
       const scores = row.scores || {};
       const values = Object.values(scores).map(Number);
@@ -330,11 +645,10 @@ export const SemesterlyGrid = (props: SemesterlyGridProps) => {
       };
     });
 
-    // Step 2: Per-subject ranking (only for semester)
     if (examType === "semester") {
       subjectNames.forEach((subject) => {
         const sorted = [...withTotals].sort(
-          (a, b) => (b.scores?.[subject] || 0) - (a.scores?.[subject] || 0),
+          (a, b) => (b.scores?.[subject] || 0) - (a.scores?.[subject] || 0)
         );
 
         let prevScore: number | null = null;
@@ -351,12 +665,10 @@ export const SemesterlyGrid = (props: SemesterlyGridProps) => {
           }
 
           if (score !== prevScore) {
-            // Move rank by number of students already ranked
             rank = index + 1;
             prevScore = score;
             countAtRank = 1;
           } else {
-            // Same score = same rank
             countAtRank++;
           }
 
@@ -366,9 +678,8 @@ export const SemesterlyGrid = (props: SemesterlyGridProps) => {
       });
     }
 
-    // Step 3: Total score ranking (overall)
     const sortedByTotal = [...withTotals].sort(
-      (a, b) => b.totalScore - a.totalScore,
+      (a, b) => b.totalScore - a.totalScore
     );
 
     let prevTotal: number | null = null;
@@ -399,13 +710,11 @@ export const SemesterlyGrid = (props: SemesterlyGridProps) => {
       return { ...row, mRanking: rank, mGrade };
     });
 
-    // Step 4: Reorder back to original
     return withTotals.map(
-      (r) => withRank.find((w) => w.id === r.id) ?? r,
+      (r) => withRank.find((w) => w.id === r.id) ?? r
     ) as StudentInfoScore[];
   }, [rows, meKun, examType]);
 
-  // Notify parent of processedRows changes
   useEffect(() => {
     if (onProcessedRowsChange) {
       onProcessedRowsChange(processedRows);
@@ -414,58 +723,180 @@ export const SemesterlyGrid = (props: SemesterlyGridProps) => {
   }, [processedRows]);
 
   return (
-    <>
-      <DataGrid
-        rows={processedRows}
-        columns={columns}
-        initialState={{
-          pagination: {
-            paginationModel: {
-              pageSize: 15,
-            },
+    <div style={{ display: "flex", flexDirection: "column", position: "relative" }}>
+      <Box
+        sx={{
+          mb: 2,
+          display: "flex",
+          gap: 1,
+          alignItems: "center",
+          justifyContent: "space-between",
+          flexWrap: "wrap",
+        }}
+      >
+        {modifiedRows.size > 0 ? (
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: 1,
+              px: 1.25,
+              py: 0.5,
+              borderRadius: 999,
+              bgcolor: (theme) => alpha(theme.palette.warning.main, 0.12),
+              border: (theme) =>
+                `1px solid ${alpha(theme.palette.warning.main, 0.35)}`,
+            }}
+          >
+            <EditNoteIcon fontSize="small" sx={{ color: "warning.main" }} />
+            <Typography
+              variant="caption"
+              sx={{ color: "warning.dark", fontWeight: 700 }}
+            >
+              {t("MonthlyExam.unsavedRows", { count: modifiedRows.size })}
+            </Typography>
+          </Box>
+        ) : (
+          <Typography variant="caption" color="text.secondary">
+            {t("MonthlyExam.editHint")}
+          </Typography>
+        )}
+      </Box>
+      <Box
+        ref={gridWrapperRef}
+        tabIndex={-1}
+        sx={{
+          outline: "none",
+          "& .score-cell-modified": {
+            backgroundColor: (theme) => alpha(theme.palette.warning.main, 0.18),
+            position: "relative",
+          },
+          "& .score-cell-modified::after": {
+            content: '""',
+            position: "absolute",
+            top: 4,
+            right: 4,
+            width: 6,
+            height: 6,
+            borderRadius: "50%",
+            backgroundColor: (theme) => theme.palette.warning.main,
           },
         }}
-        processRowUpdate={processRowUpdate}
-        pageSizeOptions={[15, 25, 50]}
-        checkboxSelection
-        disableRowSelectionOnClick
-        density={settings.density}
-        showCellVerticalBorder={settings.showCellBorders}
-        showColumnVerticalBorder={settings.showColumnBorders}
-        slots={{ toolbar: CustomDataGridToolbar }}
-        slotProps={{
-          toolbar: {
-            settings,
-            onSettingsChange: setSettings,
-            toolbarButtons: {
-              search: true,
-              export: true,
-              settings: true,
-              exportTitle: (() => {
-                const base = t("SemesterExam.semesterScores", {
-                  num: exam?.semesterNumber || "",
-                });
-                return monthYearLabel ? `${base} · ${monthYearLabel}` : base;
-              })(),
-              extraControls: (
-                <>
-                  <TextField
-                    label={t("MonthlyExam.enterAverage")}
-                    variant="outlined"
-                    size="small"
-                    name="meKun"
-                    type="number"
-                    disabled
-                    value={meKun}
-                    sx={{ mt: 1 }}
-                  />
-                </>
-              ),
+      >
+        <DataGrid
+          apiRef={apiRef}
+          rows={processedRows}
+          columns={columns}
+          initialState={{
+            pagination: {
+              paginationModel: {
+                pageSize: 15,
+              },
             },
-          },
-        }}
-        showToolbar
-      />
-    </>
+          }}
+          processRowUpdate={processRowUpdate}
+          onCellClick={(params) => {
+            setFocusedCell({ rowId: params.id, field: params.field });
+          }}
+          onCellEditStart={(params) => {
+            isEditingRef.current = true;
+            setFocusedCell({ rowId: params.id, field: params.field });
+          }}
+          onCellEditStop={() => {
+            isEditingRef.current = false;
+          }}
+          pageSizeOptions={[15, 25, 50]}
+          checkboxSelection
+          disableRowSelectionOnClick
+          density={settings.density}
+          showCellVerticalBorder={settings.showCellBorders}
+          showColumnVerticalBorder={settings.showColumnBorders}
+          slots={{ toolbar: CustomDataGridToolbar }}
+          slotProps={{
+            toolbar: {
+              settings,
+              onSettingsChange: setSettings,
+              toolbarButtons: {
+                search: true,
+                export: true,
+                settings: true,
+                exportTitle: (() => {
+                  const base = t("SemesterExam.semesterScores", {
+                    num: exam?.semesterNumber || "",
+                  });
+                  return monthYearLabel ? `${base} · ${monthYearLabel}` : base;
+                })(),
+                extraControls: (
+                  <>
+                    <TextField
+                      label={t("MonthlyExam.enterAverage")}
+                      variant="outlined"
+                      size="small"
+                      name="meKun"
+                      type="number"
+                      disabled
+                      value={meKun}
+                      sx={{ mt: 1 }}
+                    />
+                  </>
+                ),
+              },
+            },
+          }}
+          showToolbar
+        />
+      </Box>
+
+      <Slide in={modifiedRows.size > 0} direction="up" mountOnEnter unmountOnExit>
+        <Paper
+          elevation={6}
+          sx={{
+            position: "fixed",
+            bottom: 16,
+            left: "50%",
+            transform: "translateX(-50%)",
+            zIndex: (theme) => theme.zIndex.appBar + 1,
+            px: 2,
+            py: 1.25,
+            borderRadius: 999,
+            display: "flex",
+            alignItems: "center",
+            gap: 1.5,
+            border: (theme) => `1px solid ${theme.palette.divider}`,
+          }}
+        >
+          <EditNoteIcon sx={{ color: "warning.main" }} />
+          <Typography variant="body2" sx={{ fontWeight: 700 }}>
+            {t("MonthlyExam.unsavedRows", { count: modifiedRows.size })}
+          </Typography>
+          <Button
+            variant="outlined"
+            size="small"
+            color="inherit"
+            startIcon={<RestoreIcon />}
+            onClick={handleDiscard}
+            disabled={isLoading}
+          >
+            {t("MonthlyExam.discard")}
+          </Button>
+          <Tooltip title="Ctrl/Cmd + S" placement="top">
+            <span>
+              <Button
+                variant="contained"
+                color="primary"
+                size="small"
+                startIcon={<SaveIcon />}
+                onClick={handleSaveChanges}
+                disabled={isLoading}
+              >
+                {isLoading
+                  ? t("MonthlyExam.saving")
+                  : t("MonthlyExam.saveChanges")}
+              </Button>
+            </span>
+          </Tooltip>
+        </Paper>
+      </Slide>
+    </div>
   );
 };
