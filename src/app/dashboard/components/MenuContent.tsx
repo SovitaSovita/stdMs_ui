@@ -47,7 +47,6 @@ const classroomFunItems: NavItem[] = [
   { key: "picker", icon: <CasinoRoundedIcon />, path: "/picker" },
   { key: "teams", icon: <Diversity3RoundedIcon />, path: "/teams" },
   { key: "timer", icon: <TimerRoundedIcon />, path: "/timer" },
-  { key: "points", icon: <EmojiEventsRoundedIcon />, path: "/points" },
   { key: "quiz", icon: <QuizRoundedIcon />, path: "/quiz" },
 ];
 
